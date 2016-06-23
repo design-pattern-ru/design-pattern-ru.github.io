@@ -1,0 +1,60 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <link rel="icon" type="image/x-icon" href="http://design-pattern.ru/favicon.ico">
+    <link rel="stylesheet" type="text/css" href="../css/commons.css">
+    <link rel="search" type="application/opensearchdescription+xml" title="Поиск паттернов" href="../search.xml">
+    <title>Паттерн Repository - Репозиторий. Описания паттернов проектирования. Паттерны проектирования. Design pattern ru</title>    <meta name="keywords" content="Описания паттернов проектирования, Паттерны проектирования, Design pattern ru, Паттерн Repository" >    <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<body>
+    <div id="wrapper">
+        <div id="header">
+            <p><a href="../index.html">Справочник &laquo;Паттерны проектирования&raquo;</a><a style="position:absolute" title="design pattern в twitter" href="http://twitter.com/design_pattern"><img title="Твиттер воробей" alt="паттерны проектирования на твиттере" src="../i/twitter.png"></a></p>
+        </div>
+<!--		<div id="tags">-->
+<!--			<h3>Теги для паттернов проектирования</h3>-->
+<!--        	
+<ul class="Zend_Tag_Cloud"><li><a href="/tag/design" style="font-size: 30pt;">design</a></li> <li><a href="/tag/mapper" style="font-size: 26pt;">mapper</a></li> <li><a href="/tag/pattern" style="font-size: 10pt;">pattern</a></li></ul>-->
+<!--        </div>-->
+		<div id="content">
+            			<h1>Repository <em>(Репозиторий)</em></h1>
+			<p><img src="../i/repository.gif" alt="Паттерн проектирования Repository"></p>
+			<p><span class="quot">Паттерн проектирования Repository</span></p>
+			<h2>Описание Repository</h2>
+			<p>Посредничает между уровнями области определения и распределения данных (domain and data mapping layers), используя интерфейс, схожий с коллекциями для доступа к объектам области определения.</p>
+<p>Система со сложной моделью области определения может быть упрощена при помощи дополнительного уровня, например Data <a href="mapper.html" title="Паттерн проектирования Mapper (Распределитель)">Mapper</a>, который бы изолировал объекты от кода доступа к БД. В таких системах может быть полезным добавление ещё одного слоя абстракции поверх слоя распределения данных (Data <a href="mapper.html" title="Паттерн проектирования Mapper (Распределитель)">Mapper</a>), в котором бы был собран код создания запросов. Это становится ещё более важным, когда в области определения множество классов или при сложных, тяжелых запросах. В таких случаях добавление этого уровня особенно помогает сократить дублирование кода запросов.</p>
+<p>Паттерн <acronym title="Паттерн Repository (Репозиторий)">Repository</acronym> посредничает между слоем области определения и слоем распределения данных, работая, как обычная колекция объектов области определения. Объекты-клиенты создают описание запроса декларативно и направляют их к объекту-репозиторию (<acronym title="Паттерн Repository (Репозиторий)">Repository</acronym>) для обработки. Объекты могут быть добавлены или удалены из репозитория, как будто они формируют простую коллекцию объектов. А код распределения данных, скрытый в объекте <acronym title="Паттерн Repository (Репозиторий)">Repository</acronym>, позаботится о соответсвующих операциях в незаметно для разработчика. В двух словах, паттерн <acronym title="Паттерн Repository (Репозиторий)">Repository</acronym> инкапсулирует объекты, представленыые в хранилище данных и операции, производимые над ними, предоставляя более объектно-ориентированное представление реальных данных. <acronym title="Паттерн Repository (Репозиторий)">Repository</acronym> также преследует цель достижения полного разделения и односторонней зависимости между уровнями области определения и распределения данных.</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/repository.html">Источник</a></noindex></p>        </div>
+        <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
+    </div>
+    <ul id="footer-menu">
+    	<li><a href="../index.html">Главная</a></li>
+        <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
+        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+    </ul>
+    <script type="text/javascript">
+        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+        document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <script type="text/javascript">
+        try {
+        var pageTracker = _gat._getTracker("UA-10786597-1");
+        pageTracker._trackPageview();
+        } catch(err) {}
+    </script><!-- Yandex.Metrika counter -->
+<div style="display:none;"><script type="text/javascript">
+(function(w, c) {
+    (w[c] = w[c] || []).push(function() {
+        try {
+            w.yaCounter6876103 = new Ya.Metrika({id:6876103,
+                    clickmap:true,
+                    trackLinks:true,
+                    accurateTrackBounce:true});
+        }
+        catch(e) { }
+    });
+})(window, 'yandex_metrika_callbacks');
+</script></div>
+<script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
+<noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter --></body>
+</html>

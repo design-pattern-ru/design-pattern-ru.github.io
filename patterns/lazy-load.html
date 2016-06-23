@@ -1,0 +1,68 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <link rel="icon" type="image/x-icon" href="http://design-pattern.ru/favicon.ico">
+    <link rel="stylesheet" type="text/css" href="../css/commons.css">
+    <link rel="search" type="application/opensearchdescription+xml" title="Поиск паттернов" href="../search.xml">
+    <title>Паттерн Lazy Load - Ленивая загрузка. Описания паттернов проектирования. Паттерны проектирования. Design pattern ru</title>    <meta name="keywords" content="Описания паттернов проектирования, Паттерны проектирования, Design pattern ru, Паттерн Lazy Load" >    <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<body>
+    <div id="wrapper">
+        <div id="header">
+            <p><a href="../index.html">Справочник &laquo;Паттерны проектирования&raquo;</a><a style="position:absolute" title="design pattern в twitter" href="http://twitter.com/design_pattern"><img title="Твиттер воробей" alt="паттерны проектирования на твиттере" src="../i/twitter.png"></a></p>
+        </div>
+<!--		<div id="tags">-->
+<!--			<h3>Теги для паттернов проектирования</h3>-->
+<!--        	
+<ul class="Zend_Tag_Cloud"><li><a href="/tag/design" style="font-size: 30pt;">design</a></li> <li><a href="/tag/mapper" style="font-size: 26pt;">mapper</a></li> <li><a href="/tag/pattern" style="font-size: 10pt;">pattern</a></li></ul>-->
+<!--        </div>-->
+		<div id="content">
+            			<h1>Lazy Load <em>(Ленивая загрузка)</em></h1>
+			<p><img src="../i/lazy-load.gif" alt="Паттерн проектирования Lazy Load"></p>
+			<p><span class="quot">Паттерн проектирования Lazy Load</span></p>
+			<h2>Описание Lazy Load</h2>
+						<p>Объект, не содержит данных, но знает, где их взять.</p>
+            <p>Для загрузки данных из БД в память приложения удобно пользоваться загрузкой не только данных об объекте, но и о сопряжённых с ним объектах. Это делает загрузку данных проще для разработчика: он просто использует объект, который, тем не менее вынужден загружать все данные в явном виде.</p>
+            <p>Но это ведёт к случаям, когда будет загружаться огромное количество сопряжённых объектов, что плохо скажется на производительности в случаях, когда эти данные реально не нужны.</p>
+            <p>Паттерн <acronym title="Паттерн Lazy Load (Ленивая загрузка)">Lazy Load</acronym> (Ленивая Загрузка) подразумевает отказ от загрузки дополнительных данных, когда в этом нет необходимости. Вместо этого ставится маркер о том, что данные не загружены и их надо загрузить в случае, если они понадобятся. Как известно, если Вы ленивы, то вы выигрываете в том случае, если дело, которое вы не делали на самом деле и не надо было делать.</p>
+            <p>Существует четыре основных варианта ленивой загрузки.</p>
+			<ul>
+	            <li><strong>Lazy Initialization</strong> <em>(Ленивая Инициализация)</em> использует специальный макер (обычно null), чтобы пометить поле, как не загруженное. При каждом обращении к полю проверяется значение маркера и, если значение поля не загружено - оно загружается.</li>
+	            <li><strong>Virtual Proxy</strong> <em>(Виртуальный Прокси)</em> - объект с таким же интерфейсом, как и настоящий объект. При первом обращении к методу объекта, виртуальный прокси загружает настоящий объект и перенаправляет выполнение.</li>
+	            <li><strong>Value Holder</strong> <em>(Контейнер значения)</em> - объект с методом getValue. Клиент вызывает метод getValue, чтобы получить реальный объект. getValue вызывает загрузку.</li>
+            	<li><strong>Ghost</strong> <em>(Призрак)</em> - объект без каких-либо данных. При первом обращении к его методу, призрак загружает все данные сразу.</li>
+            </ul>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/lazyLoad.html">Источник</a></noindex></p>        </div>
+        <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
+    </div>
+    <ul id="footer-menu">
+    	<li><a href="../index.html">Главная</a></li>
+        <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
+        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+    </ul>
+    <script type="text/javascript">
+        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+        document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <script type="text/javascript">
+        try {
+        var pageTracker = _gat._getTracker("UA-10786597-1");
+        pageTracker._trackPageview();
+        } catch(err) {}
+    </script><!-- Yandex.Metrika counter -->
+<div style="display:none;"><script type="text/javascript">
+(function(w, c) {
+    (w[c] = w[c] || []).push(function() {
+        try {
+            w.yaCounter6876103 = new Ya.Metrika({id:6876103,
+                    clickmap:true,
+                    trackLinks:true,
+                    accurateTrackBounce:true});
+        }
+        catch(e) { }
+    });
+})(window, 'yandex_metrika_callbacks');
+</script></div>
+<script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
+<noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter --></body>
+</html>

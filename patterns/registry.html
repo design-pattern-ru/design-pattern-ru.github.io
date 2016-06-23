@@ -1,0 +1,60 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <link rel="icon" type="image/x-icon" href="http://design-pattern.ru/favicon.ico">
+    <link rel="stylesheet" type="text/css" href="../css/commons.css">
+    <link rel="search" type="application/opensearchdescription+xml" title="Поиск паттернов" href="../search.xml">
+    <title>Паттерн Registry - Реестр. Описания паттернов проектирования. Паттерны проектирования. Design pattern ru</title>    <meta name="keywords" content="Описания паттернов проектирования, Паттерны проектирования, Design pattern ru, Паттерн Registry" >    <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<body>
+    <div id="wrapper">
+        <div id="header">
+            <p><a href="../index.html">Справочник &laquo;Паттерны проектирования&raquo;</a><a style="position:absolute" title="design pattern в twitter" href="http://twitter.com/design_pattern"><img title="Твиттер воробей" alt="паттерны проектирования на твиттере" src="../i/twitter.png"></a></p>
+        </div>
+<!--		<div id="tags">-->
+<!--			<h3>Теги для паттернов проектирования</h3>-->
+<!--        	
+<ul class="Zend_Tag_Cloud"><li><a href="/tag/design" style="font-size: 30pt;">design</a></li> <li><a href="/tag/mapper" style="font-size: 26pt;">mapper</a></li> <li><a href="/tag/pattern" style="font-size: 10pt;">pattern</a></li></ul>-->
+<!--        </div>-->
+		<div id="content">
+            			<h1>Registry <em>(Реестр)</em></h1>
+			<p><img src="../i/registry.gif" alt="Паттерн проектирования Registry"></p>
+			<p><span class="quot">Паттерн проектирования Registry</span></p>
+			<h2>Описание Registry</h2>
+			<p>Хорошо известный объект, который используется другими объектами для получения общих объектов и сервисов.</p>
+            <p>Когда нужно найти какой-нибудь объект, обычно начинают с другого объекта, связанного с целевым. Например, если нужно найти все счета для покупателя, начинают, как раз с покупателя и используют его метод получения счетов. Тем не менее, в некоторых случаях нет подходящего объекта, с которого начать. Например, известен ID покупателя, но нет ссылки на него. Тогда нужен своего рода объект-поисковик, но тогда возникает вопрос - как вы найдёте сам поисковик?</p>
+            <p>Реестр (<acronym title="Паттерн Registry (Реестр)">Registry</acronym>) - это глобальный объект по сути своей или, по крайней мере, так выглядит - он может функционировать только будучи глобальным.</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/registry.html">Источник</a></noindex></p>        </div>
+        <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
+    </div>
+    <ul id="footer-menu">
+    	<li><a href="../index.html">Главная</a></li>
+        <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
+        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+    </ul>
+    <script type="text/javascript">
+        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+        document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <script type="text/javascript">
+        try {
+        var pageTracker = _gat._getTracker("UA-10786597-1");
+        pageTracker._trackPageview();
+        } catch(err) {}
+    </script><!-- Yandex.Metrika counter -->
+<div style="display:none;"><script type="text/javascript">
+(function(w, c) {
+    (w[c] = w[c] || []).push(function() {
+        try {
+            w.yaCounter6876103 = new Ya.Metrika({id:6876103,
+                    clickmap:true,
+                    trackLinks:true,
+                    accurateTrackBounce:true});
+        }
+        catch(e) { }
+    });
+})(window, 'yandex_metrika_callbacks');
+</script></div>
+<script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
+<noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter --></body>
+</html>

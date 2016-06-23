@@ -1,0 +1,60 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <link rel="icon" type="image/x-icon" href="http://design-pattern.ru/favicon.ico">
+    <link rel="stylesheet" type="text/css" href="../css/commons.css">
+    <link rel="search" type="application/opensearchdescription+xml" title="Поиск паттернов" href="../search.xml">
+    <title>Паттерн Separated Interface - Выделенный интерфейс. Описания паттернов проектирования. Паттерны проектирования. Design pattern ru</title>    <meta name="keywords" content="Описания паттернов проектирования, Паттерны проектирования, Design pattern ru, Паттерн Separated Interface" >    <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<body>
+    <div id="wrapper">
+        <div id="header">
+            <p><a href="../index.html">Справочник &laquo;Паттерны проектирования&raquo;</a><a style="position:absolute" title="design pattern в twitter" href="http://twitter.com/design_pattern"><img title="Твиттер воробей" alt="паттерны проектирования на твиттере" src="../i/twitter.png"></a></p>
+        </div>
+<!--		<div id="tags">-->
+<!--			<h3>Теги для паттернов проектирования</h3>-->
+<!--        	
+<ul class="Zend_Tag_Cloud"><li><a href="/tag/design" style="font-size: 30pt;">design</a></li> <li><a href="/tag/mapper" style="font-size: 26pt;">mapper</a></li> <li><a href="/tag/pattern" style="font-size: 10pt;">pattern</a></li></ul>-->
+<!--        </div>-->
+		<div id="content">
+            			<h1>Separated Interface <em>(Выделенный интерфейс)</em></h1>
+			<p><img src="../i/separated-Interface.gif" alt="Паттерн проектирования Separated Interface"></p>
+			<p><span class="quot">Паттерн проектирования Separated Interface</span></p>
+			<h2>Описание Separated Interface</h2>
+			<p>Выделение какого-либо интерфейса к объекту в отдельный от объекта пакет</p>
+            <p>При разработке какой-либо системы, можно добиться улучшение её архитектуры, уменьшая связанность между её частями. Это можно сделать так - распределив классы по отдельным пакетам и контролировать зависимости этими пакетами. Тогда можно следовать правилам о том, как классы из одного пакета могут обращаться к классам из другого пакета. Например, то, которое запрещает классам с уровня данных обращаться к классам с уровня представления.</p>
+            <p>Тем не менее, может возникнуть необходимость реализовать методы, которые противоречат основной структуре зависимостей. В таком случае можно использовать Выделенный Интерфейс, чтобы определить какой-либо интерфейс в одном пакете, а реализовать в другом. Таким образом, любой клиент, которому нужна зависимость от этого интерфейса может совершенно не думать о реализации доступа. Паттерн <acronym title="Паттерн Separated Interface (Выделенный интерфейс)">Separated Interface</acronym> (Выделенный Интерфейс) предоставляет хорошую точку подключения паттерна <strong> <a href="gateway.html" title="Паттерн проектирования Gateway (Шлюз)">Gateway</a></strong> <em>(Шлюз)</em></p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/separatedInterface.html">Источник</a></noindex></p>        </div>
+        <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
+    </div>
+    <ul id="footer-menu">
+    	<li><a href="../index.html">Главная</a></li>
+        <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
+        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+    </ul>
+    <script type="text/javascript">
+        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+        document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <script type="text/javascript">
+        try {
+        var pageTracker = _gat._getTracker("UA-10786597-1");
+        pageTracker._trackPageview();
+        } catch(err) {}
+    </script><!-- Yandex.Metrika counter -->
+<div style="display:none;"><script type="text/javascript">
+(function(w, c) {
+    (w[c] = w[c] || []).push(function() {
+        try {
+            w.yaCounter6876103 = new Ya.Metrika({id:6876103,
+                    clickmap:true,
+                    trackLinks:true,
+                    accurateTrackBounce:true});
+        }
+        catch(e) { }
+    });
+})(window, 'yandex_metrika_callbacks');
+</script></div>
+<script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
+<noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter --></body>
+</html>

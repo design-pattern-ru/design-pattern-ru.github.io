@@ -1,0 +1,60 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <link rel="icon" type="image/x-icon" href="http://design-pattern.ru/favicon.ico">
+    <link rel="stylesheet" type="text/css" href="../css/commons.css">
+    <link rel="search" type="application/opensearchdescription+xml" title="Поиск паттернов" href="../search.xml">
+    <title>Паттерн Association Table Mapping - Разметка таблиц связей. Описания паттернов проектирования. Паттерны проектирования. Design pattern ru</title>    <meta name="keywords" content="Описания паттернов проектирования, Паттерны проектирования, Design pattern ru, Паттерн Association Table Mapping" >    <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<body>
+    <div id="wrapper">
+        <div id="header">
+            <p><a href="../index.html">Справочник &laquo;Паттерны проектирования&raquo;</a><a style="position:absolute" title="design pattern в twitter" href="http://twitter.com/design_pattern"><img title="Твиттер воробей" alt="паттерны проектирования на твиттере" src="../i/twitter.png"></a></p>
+        </div>
+<!--		<div id="tags">-->
+<!--			<h3>Теги для паттернов проектирования</h3>-->
+<!--        	
+<ul class="Zend_Tag_Cloud"><li><a href="/tag/design" style="font-size: 30pt;">design</a></li> <li><a href="/tag/mapper" style="font-size: 26pt;">mapper</a></li> <li><a href="/tag/pattern" style="font-size: 10pt;">pattern</a></li></ul>-->
+<!--        </div>-->
+		<div id="content">
+            			<h1>Association Table Mapping <em>(Разметка таблиц связей)</em></h1>
+			<p><img src="../i/association-table-mapping.gif" alt="Паттерн проектирования Association Table Mapping"></p>
+			<p><span class="quot">Паттерн проектирования Association Table Mapping</span></p>
+			<h2>Описание Association Table Mapping</h2>
+			<p>Сохраняет соответствие в виде таблицы с внешними ключами к таблицам, которые объединены этим соответствием.</p>
+<p>Объекты с лёгкостью могут управлять наборами из нескольких значений при использовании коллекций в качестве собственных свойств. Реляционные базы данных не предоставляют такой возможности и ограничиваются полями с одним значением. При разметке соответствия "один ко многим", можно использовать паттерн <a href="foreign-key-mapping.html" title="Паттерн проектирования Foreign Key Mapping (Разметка внешних ключей)">Foreign Key Mapping</a> <em>(Разметка внешних ключей)</em>, используя внешний ключ для однозначного соответствия. Но отношения "многие ко многим" не могут обеспечить этого, потому что нет однозначной сущности на которую ссылался бы внешний ключ.</p>
+<p>Решением здесь является классическое разрешение, используемое в реляционных БД годами: создание дополнительной таблицы, для хранения множественных связей. Тогда использование <acronym title="Паттерн Association Table Mapping (Разметка таблиц связей)">Association Table Mapping</acronym> позволит разметить многозначные поля через связующую таблицу</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/associationTableMapping.html">Источник</a></noindex></p>        </div>
+        <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
+    </div>
+    <ul id="footer-menu">
+    	<li><a href="../index.html">Главная</a></li>
+        <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
+        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+    </ul>
+    <script type="text/javascript">
+        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+        document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <script type="text/javascript">
+        try {
+        var pageTracker = _gat._getTracker("UA-10786597-1");
+        pageTracker._trackPageview();
+        } catch(err) {}
+    </script><!-- Yandex.Metrika counter -->
+<div style="display:none;"><script type="text/javascript">
+(function(w, c) {
+    (w[c] = w[c] || []).push(function() {
+        try {
+            w.yaCounter6876103 = new Ya.Metrika({id:6876103,
+                    clickmap:true,
+                    trackLinks:true,
+                    accurateTrackBounce:true});
+        }
+        catch(e) { }
+    });
+})(window, 'yandex_metrika_callbacks');
+</script></div>
+<script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
+<noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter --></body>
+</html>

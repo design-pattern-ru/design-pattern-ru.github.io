@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <link rel="icon" type="image/x-icon" href="http://design-pattern.ru/favicon.ico">
+    <link rel="stylesheet" type="text/css" href="../css/commons.css">
+    <link rel="search" type="application/opensearchdescription+xml" title="Поиск паттернов" href="../search.xml">
+    <title>Паттерн Pessimistic Offline Lock - Пессимистичная блокировка. Описания паттернов проектирования. Паттерны проектирования. Design pattern ru</title>    <meta name="keywords" content="Описания паттернов проектирования, Паттерны проектирования, Design pattern ru, Паттерн Pessimistic Offline Lock" >    <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<body>
+    <div id="wrapper">
+        <div id="header">
+            <p><a href="../index.html">Справочник &laquo;Паттерны проектирования&raquo;</a><a style="position:absolute" title="design pattern в twitter" href="http://twitter.com/design_pattern"><img title="Твиттер воробей" alt="паттерны проектирования на твиттере" src="../i/twitter.png"></a></p>
+        </div>
+<!--		<div id="tags">-->
+<!--			<h3>Теги для паттернов проектирования</h3>-->
+<!--        	
+<ul class="Zend_Tag_Cloud"><li><a href="/tag/design" style="font-size: 30pt;">design</a></li> <li><a href="/tag/mapper" style="font-size: 26pt;">mapper</a></li> <li><a href="/tag/pattern" style="font-size: 10pt;">pattern</a></li></ul>-->
+<!--        </div>-->
+		<div id="content">
+            			<h1>Pessimistic Offline Lock <em>(Пессимистичная блокировка)</em></h1>
+			<p><img src="../i/pessimistic-offline-lock.gif" alt="Паттерн проектирования Pessimistic Offline Lock"></p>
+			<p><span class="quot">Паттерн проектирования Pessimistic Offline Lock</span></p>
+			<h2>Описание Pessimistic Offline Lock</h2>
+			<p>Предотвращает конфликты между конкурирующими бизнес-транзакциями, разрешая доступ к одинм данным только одной бизнес-транзакции за раз.</p>
+<p>Так как локальная конкуренция включает в себя работу с данными бизнес-транзакции, которая содержит несколько запросов, то наиболее простой подход был бы держать транзакцию открытой на протяжении всей бизнес-транзакции. Но, к сожалению, этот подход не всегда работает хорошо, потому что системы управления транзакциями не заточены под работу с длинными транзацкиями. По этому приходится делать несколько системных транзакций, а остальную конкуренцию отслеживать самостоятельно.</p>
+<p>Первый из подходов, который следует попробовать в этом случае - <a href="optimistic-offline-lock.html" title="Паттерн проектирования Optimistic Offline Lock (Оптимистичная блокировка)">Optimistic Offline Lock</a>. Однако, этот паттерн имеет свои недостатки. Например, если несколько людей пытаются получить доступ к одним данным в одной бизнес-транзакции, один из них легко сможет сделать commit, но остальные получат конфликт и не смогут продолжить работу. Из-за того, что конфликты определяются только в конце бизнес-транзакции (а не предотвращаются), жертвы будут делать все действия тразакции и в последний момент обнаружат, что вся их работа псу под хвост. Если так будет происходить, системы с длинными транзакциями вскоре станут непопулярны.</p>
+<p><acronym title="Паттерн Pessimistic Offline Lock (Пессимистичная блокировка)">Pessimistic Offline Lock</acronym> предотвращает конфликты, исключая их вообще. Этот паттерн заставляет бизнес-транзакцию накладывать блокировку на ту часть данных, с которыми она работает, так что чтобы начать работу с данными другой пользователь сначала ждёт, пока данные освободятся.</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/pessimisticOfflineLock.html">Источник</a></noindex></p>        </div>
+        <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
+    </div>
+    <ul id="footer-menu">
+    	<li><a href="../index.html">Главная</a></li>
+        <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
+        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+    </ul>
+    <script type="text/javascript">
+        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+        document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <script type="text/javascript">
+        try {
+        var pageTracker = _gat._getTracker("UA-10786597-1");
+        pageTracker._trackPageview();
+        } catch(err) {}
+    </script><!-- Yandex.Metrika counter -->
+<div style="display:none;"><script type="text/javascript">
+(function(w, c) {
+    (w[c] = w[c] || []).push(function() {
+        try {
+            w.yaCounter6876103 = new Ya.Metrika({id:6876103,
+                    clickmap:true,
+                    trackLinks:true,
+                    accurateTrackBounce:true});
+        }
+        catch(e) { }
+    });
+})(window, 'yandex_metrika_callbacks');
+</script></div>
+<script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
+<noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter --></body>
+</html>
