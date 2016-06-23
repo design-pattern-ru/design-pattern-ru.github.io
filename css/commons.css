@@ -1,0 +1,40 @@
+* { padding: 0; margin: 0; }
+img { border: 0; }
+*:focus { outline: none !important; }
+html { font-family: 'Trebuchet MS', Arial; font-size: 100%; background-color: #dedede; height: 100%; } 
+body { font-size: 0.625em; text-align: center; padding: 0 30px; background-color: #dedede; height: 100%; }
+
+#wrapper { height: auto; min-height: 100%; margin: auto; width: 900px; text-align: left; background-color: #fff; border-left: solid 1px #ccc; border-right: solid 1px #ccc; }
+#header { height: 105px; padding-top: 1px; background: url('/i/bg.png') repeat-x; }
+#header h1, #header p { font-size: 3.6em; font-weight: normal; color: #fff; margin: 27px 0 0 35px; }
+#header p a {text-decoration:none; color:#fff}
+#header p a:hover {text-decoration:none; color:#fff}
+
+#content { padding: 20px 15px 10px 35px; font-size: 1.4em; border-top: solid 1px #ccc; }
+#content p { margin: 1em 0; line-height: 1.6em; text-align: justify; }
+#content p strong.description { font-size: 1.2em; }
+#content ul { margin: 1em 0; margin-left: 2.5em; }
+#content ul li { margin: .5em 0; }
+#content a { color: #06f; }
+#content a.uc{ color: gray }
+#content a.uc:visited{ color: gray }
+#content a:hover { color: #c00; }
+#content a:visited { color: #339; }
+#content p em { color: #666; }
+#content h1 { font-size: 2em; font-weight: normal; margin: 14px 0 .7em 0; }
+#content h2 { font-size: 1.8em; font-weight: normal; padding-bottom: .1em; border-bottom: solid 1px #999; margin: 1em 0 .7em 0; }
+#content p.note { font-size: .85em; color: #333; padding-left: 1.3em; border-left: solid 1px #999; }
+#content p img { margin-top: 1em; }
+.quot { display: block; text-align: right; font-style: italic; color: #333; font-size: .85em; }
+
+ul#footer-menu { background-color: #4082bd; list-style: none; width: 900px; margin: auto; ; font-size: 1.2em; height: 30px; line-height: 27px; }
+ul#footer-menu li { float: left; margin-left: 2.5em; color: #fff; }
+ul#footer-menu a { color: #fff; }
+ul#footer-menu a:hover { color: #000; }
+
+#tags {float:right; width:30%; margin:50px 10px 10px 10px; padding:20px; border:1px solid #ccc; background-color:#fff}
+#tags a {color: gray;}
+#tags ul li {display:inline; margin: 5px 5px}
+
+.hit {margin:10px}
+#query {width:50%}
