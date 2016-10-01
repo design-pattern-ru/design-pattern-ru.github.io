@@ -4,56 +4,82 @@
     <link rel="icon" type="image/x-icon" href="http://design-pattern.ru/favicon.ico">
     <link rel="stylesheet" type="text/css" href="../css/commons.css">
     <link rel="search" type="application/opensearchdescription+xml" title="Поиск паттернов" href="../search.xml">
-    <title>Паттерн Abstract Factory - Абстрактная фабрика. Описания паттернов проектирования. Паттерны проектирования. Design pattern ru</title>
-    <meta name="keywords" content="Описания паттернов проектирования, Паттерны проектирования, Design pattern ru, Паттерн Active Record" >
+    <title>Паттерн Abstract Factory - Абстрактная фабрика. Описания паттернов проектирования. Паттерны проектирования.
+        Design pattern ru</title>
+    <meta name="keywords"
+          content="Описания паттернов проектирования, Паттерны проектирования, Design pattern ru, Паттерн Active Record">
     <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
 </head>
 <body>
-<a href="https://github.com/design-pattern-ru/design-pattern-ru.github.io"><img style="position: absolute; top: 0; left: 0; border: 0;" src="https://camo.githubusercontent.com/82b228a3648bf44fc1163ef44c62fcc60081495e/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f6c6566745f7265645f6161303030302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_left_red_aa0000.png"></a>
-    <div id="wrapper">
-        <div id="header">
-            <p><a href="../index.html">Справочник &laquo;Паттерны проектирования&raquo;</a><a style="position:absolute" title="design pattern в twitter" href="http://twitter.com/design_pattern"><img title="Твиттер воробей" alt="паттерны проектирования на твиттере" src="../i/twitter.png"></a></p>
-        </div>
-
-		<div id="content">
-            			<h1>Abstract Factory <em>(Абстрактная фабрика)</em></h1>
-			<p><img src="../i/active-record.gif" alt="Паттерн проектирования Active Record"></p>
-			<p><span class="quot">Паттерн проектирования Abstract Factory</span></p>
-			<h2>Описание Abstract Factory</h2>
-			<p>Один объект управляет и данными, и поведением. Большинство этих данных постоянны и их надо хранить в БД. Этот паттерн использует наиболее очевидный подход - хранение логики доступа к данным в объекте сущности.</p>
-			<p>Объект является "обёрткой" одной строки из БД или представления, включает в себя доступ к БД и логику обращения с данными.</p>
-			<p class="expamle"><span class="ex_title">Пример:</span> объект "Работник" содержит данные об одном работнике и методы: добавить, обновить или удалить. Помимо прочего, отдельным методом вынесена <em>смена имени.</em></p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a> со страницы о паттерне <noindex><a href="http://martinfowler.com/eaaCatalog/activeRecord.html">Active Record</a></noindex></p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/activeRecord.html">Источник</a></noindex></p>        </div>
-        <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
+<a href="https://github.com/design-pattern-ru/design-pattern-ru.github.io"><img
+        style="position: absolute; top: 0; left: 0; border: 0;"
+        src="https://camo.githubusercontent.com/82b228a3648bf44fc1163ef44c62fcc60081495e/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f6c6566745f7265645f6161303030302e706e67"
+        alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_left_red_aa0000.png"></a>
+<div id="wrapper">
+    <div id="header">
+        <p><a href="../index.html">Справочник &laquo;Паттерны проектирования&raquo;</a>
+            <a style="position:absolute" title="design pattern в twitter" href="http://twitter.com/design_pattern"><img
+                title="Твиттер воробей" alt="паттерны проектирования на твиттере" src="../i/twitter.png"></a></p>
     </div>
-    <ul id="footer-menu">
-    	<li><a href="../index.html">Главная</a></li>
-        <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
-        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
-    </ul>
-    <script type="text/javascript">
-        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-        document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-    </script>
-    <script type="text/javascript">
-        try {
+
+    <div id="content">
+        <h1>Abstract Factory <em>(Абстрактная фабрика)</em></h1>
+        <p><img src="../i/abstract_factory.png" alt="Паттерн проектирования Active Record"></p>
+        <p><span class="quot">Паттерн проектирования Abstract Factory</span></p>
+        <h2>Описание Abstract Factory</h2>
+        <p>Один объект управляет и данными, и поведением. Большинство этих данных постоянны и их надо хранить в БД. Этот
+            паттерн использует наиболее очевидный подход - хранение логики доступа к данным в объекте сущности.</p>
+        <p>Объект является "обёрткой" одной строки из БД или представления, включает в себя доступ к БД и логику
+            обращения с данными.</p>
+        <p class="expamle"><span class="ex_title">Пример:</span> объект "Работник" содержит данные об одном работнике и
+            методы: добавить, обновить или удалить. Помимо прочего, отдельным методом вынесена <em>смена имени.</em></p>
+        <p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a> со страницы
+            о паттерне
+            <noindex><a href="http://martinfowler.com/eaaCatalog/activeRecord.html">Active Record</a></noindex>
+        </p>
+        <p class="note">
+            <noindex><a href="http://martinfowler.com/eaaCatalog/activeRecord.html">Источник</a></noindex>
+        </p>
+    </div>
+    <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
+</div>
+<ul id="footer-menu">
+    <li><a href="../index.html">Главная</a></li>
+    <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
+    <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+</ul>
+<script type="text/javascript">
+    var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+    document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+    try {
         var pageTracker = _gat._getTracker("UA-10786597-1");
         pageTracker._trackPageview();
-        } catch(err) {}
-    </script><!-- Yandex.Metrika counter -->
-<div style="display:none;"><script type="text/javascript">
-(function(w, c) {
-    (w[c] = w[c] || []).push(function() {
-        try {
-            w.yaCounter6876103 = new Ya.Metrika({id:6876103,
-                    clickmap:true,
-                    trackLinks:true,
-                    accurateTrackBounce:true});
-        }
-        catch(e) { }
-    });
-})(window, 'yandex_metrika_callbacks');
-</script></div>
+    } catch (err) {
+    }
+</script><!-- Yandex.Metrika counter -->
+<div style="display:none;">
+    <script type="text/javascript">
+        (function (w, c) {
+            (w[c] = w[c] || []).push(function () {
+                try {
+                    w.yaCounter6876103 = new Ya.Metrika({
+                        id: 6876103,
+                        clickmap: true,
+                        trackLinks: true,
+                        accurateTrackBounce: true
+                    });
+                }
+                catch (e) {
+                }
+            });
+        })(window, 'yandex_metrika_callbacks');
+    </script>
+</div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
-<noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<noscript>
+    <div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt=""/></div>
+</noscript>
 <!-- /Yandex.Metrika counter --></body>
 </html>
