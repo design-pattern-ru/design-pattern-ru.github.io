@@ -1,0 +1,88 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <link rel="icon" type="image/x-icon" href="http://design-pattern.ru/favicon.ico">
+    <link rel="stylesheet" type="text/css" href="../css/commons.css">
+    <link rel="search" type="application/opensearchdescription+xml" title="Поиск паттернов" href="../search.xml">
+    <title>Паттерн Observer - Наблюдатель. Описания паттернов проектирования. Паттерны проектирования.
+        Design pattern ru</title>
+    <meta name="keywords"
+          content="Описания паттернов проектирования, Паттерны проектирования, Design pattern ru, Паттерн Active Record">
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<body>
+<a href="https://github.com/design-pattern-ru/design-pattern-ru.github.io">
+    <img
+        style="position: absolute; top: 0; left: 0; border: 0;"
+        src="https://camo.githubusercontent.com/82b228a3648bf44fc1163ef44c62fcc60081495e/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f6c6566745f7265645f6161303030302e706e67"
+        alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_left_red_aa0000.png">
+</a>
+<div id="wrapper">
+    <div id="header">
+        <p>
+            <a href="../index.html">Справочник &laquo;Паттерны проектирования&raquo;</a>
+            <a style="position:absolute" title="design pattern в twitter" href="http://twitter.com/design_pattern"><img
+                title="Твиттер воробей" alt="паттерны проектирования на твиттере" src="../i/twitter.png"></a>
+        </p>
+    </div>
+
+    <div id="content">
+        <h1>Observer<em> (Наблюдатель)</em></h1>
+        <p><img src="../i/observer.png" alt="Паттерн проектирования Observer"></p>
+        <p><span class="quot">Паттерн проектирования Observer</span></p>
+        <h2>Описание Observer</h2>
+        <p>Наблюдатель (англ. Observer) — поведенческий шаблон проектирования. Также известен как «подчинённые» (Dependents).</p>
+            <p>Создает механизм у класса, который позволяет получать экземпляру объекта этого класса оповещения от других объектов об изменении их состояния, тем самым наблюдая за ними.</p>
+        <p>Шаблон «наблюдатель» применяется в тех случаях, когда система обладает следующими свойствами:</p>
+        <ul>
+            <li>существует, как минимум, один объект, рассылающий сообщения</li>
+            <li>имеется не менее одного получателя сообщений, причём их количество и состав могут изменяться во время работы приложения</li>
+            <li>нет надобности очень сильно связывать взаимодействующие объекты, что полезно для повторного использования.</li>
+        </ul>
+        <p>Данный шаблон часто применяют в ситуациях, в которых отправителя сообщений не интересует, что делают получатели с предоставленной им информацией.</p>
+        <p class="note">
+            <noindex><a href="https://ru.wikipedia.org/wiki/%D0%9D%D0%B0%D0%B1%D0%BB%D1%8E%D0%B4%D0%B0%D1%82%D0%B5%D0%BB%D1%8C_(%D1%88%D0%B0%D0%B1%D0%BB%D0%BE%D0%BD_%D0%BF%D1%80%D0%BE%D0%B5%D0%BA%D1%82%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F)">Источник</a></noindex>
+        </p>
+    </div>
+    <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
+</div>
+<ul id="footer-menu">
+    <li><a href="../index.html">Главная</a></li>
+    <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
+    <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+</ul>
+<script type="text/javascript">
+    var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+    document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+    try {
+        var pageTracker = _gat._getTracker("UA-10786597-1");
+        pageTracker._trackPageview();
+    } catch (err) {
+    }
+</script><!-- Yandex.Metrika counter -->
+<div style="display:none;">
+    <script type="text/javascript">
+        (function (w, c) {
+            (w[c] = w[c] || []).push(function () {
+                try {
+                    w.yaCounter6876103 = new Ya.Metrika({
+                        id: 6876103,
+                        clickmap: true,
+                        trackLinks: true,
+                        accurateTrackBounce: true
+                    });
+                }
+                catch (e) {
+                }
+            });
+        })(window, 'yandex_metrika_callbacks');
+    </script>
+</div>
+<script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
+<noscript>
+    <div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt=""/></div>
+</noscript>
+<!-- /Yandex.Metrika counter --></body>
+</html>
