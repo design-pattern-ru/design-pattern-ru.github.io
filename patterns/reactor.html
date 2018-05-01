@@ -1,0 +1,83 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <link rel="icon" type="image/x-icon" href="http://design-pattern.ru/favicon.ico">
+    <link rel="stylesheet" type="text/css" href="../css/commons.css">
+    <link rel="search" type="application/opensearchdescription+xml" title="Поиск паттернов" href="../search.xml">
+    <title>Паттерн Reactor - Реактор. Описания паттернов проектирования. Паттерны проектирования. Design pattern ru</title>    <meta name="keywords" content="Описания паттернов проектирования, Паттерны проектирования, Design pattern ru, Паттерн Active Record" >    <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<body>
+<a href="https://github.com/design-pattern-ru/design-pattern-ru.github.io">
+    <img style="position: absolute; top: 0; left: 0; border: 0;" src="https://camo.githubusercontent.com/82b228a3648bf44fc1163ef44c62fcc60081495e/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f6c6566745f7265645f6161303030302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_left_red_aa0000.png">
+</a>
+    <div id="wrapper">
+        <div id="header">
+            <p><a href="../index.html">Справочник &laquo;Паттерны проектирования&raquo;</a>
+                <a style="position:absolute" title="design pattern в twitter" href="http://twitter.com/design_pattern">
+                    <img title="Твиттер воробей" alt="паттерны проектирования на твиттере" src="../i/twitter.png">
+                </a>
+            </p>
+        </div>
+
+		<div id="content">
+            <h1>Reactor <em>(Реактор)</em></h1>
+			<p><img src="../i/reactor.png" alt="Паттерн проектирования Active Record"></p>
+			<p><span class="quot">Паттерн проектирования Reactor</span></p>
+			<h2>Описание Reactor</h2>
+			<p>Реактор (англ. Reactor) — предназначен для синхронной передачи запросов сервису от одного или нескольких источников.</p>
+            <p>Шаблон проектирования реактора представляет собой шаблон обработки событий для обработки запросов на обслуживание, передаваемых одновременно обработчику услуг одним или несколькими входами. Обработчик сервиса затем демультиплексирует входящие запросы и отправляет их синхронно связанным обработчикам запросов.</p>
+            <p>Структура:</p>
+            <ul>
+               <li>Ресурсы</li>
+
+                Любой ресурс, который может обеспечить ввод или потребление выходных данных из системы.
+
+                <li>Синхронный демультиплексор событий</li>
+                Использует цикл событий для блокировки всех ресурсов. Демультиплексор отправляет ресурс диспетчеру, когда можно запустить синхронную операцию на ресурсе без блокировки (пример: синхронный вызов read () будет блокироваться, если нет данных для чтения. Демультиплексор использует select () на ресурс, который блокируется до тех пор, пока ресурс не будет доступен для чтения. В этом случае синхронный вызов read () не будет блокироваться, а демультиплексор может отправить ресурс диспетчеру.)
+
+                <li>Диспетчер</li>
+                Обрабатывает регистрацию и отмена регистрации обработчиков запросов. Отправляет ресурсы из демультиплексора в соответствующий обработчик запросов.
+
+                <li>Обработчик запросов</li>
+                Обработчик обработанного приложения и связанный с ним ресурс.
+            </ul>
+            <p>Плюсы:</p>
+            <p>Модель реактора полностью отделяет конкретный код приложения от реализации реактора, что означает, что компоненты приложения можно разделить на модульные, повторно используемые детали. Кроме того, из-за синхронного вызова обработчиков запросов шаблон реактора допускает простой параллельный параллельный анализ, не добавляя сложность нескольких потоков в систему.</p>
+            <p>Минусы</p>
+            <p>Модель реактора может быть сложнее отлаживать, чем процедурный шаблон из-за перевернутого потока управления. Кроме того, только синхронно обрабатывая обработчики запросов, шаблон реактора ограничивает максимальный параллелизм, особенно на симметричном многопроцессорном оборудовании. Масштабируемость шаблона реактора ограничена не только вызовом обработчиков запросов синхронно, но и демультиплексором.</p>
+            <br>
+            <!--<p class="expamle"><span class="ex_title">Пример:</span> объект "Работник" содержит данные об одном работнике и методы: добавить, обновить или удалить. Помимо прочего, отдельным методом вынесена <em>смена имени.</em></p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a> со страницы о паттерне <noindex><a href="http://martinfowler.com/eaaCatalog/activeRecord.html">Active Record</a></noindex></p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/activeRecord.html">Источник</a></noindex></p>        </div>-->
+        <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
+    </div>
+    <ul id="footer-menu">
+    	<li><a href="../index.html">Главная</a></li>
+        <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
+        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+    </ul>
+    <script type="text/javascript">
+        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+        document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <script type="text/javascript">
+        try {
+        var pageTracker = _gat._getTracker("UA-10786597-1");
+        pageTracker._trackPageview();
+        } catch(err) {}
+    </script><!-- Yandex.Metrika counter -->
+<div style="display:none;"><script type="text/javascript">
+(function(w, c) {
+    (w[c] = w[c] || []).push(function() {
+        try {
+            w.yaCounter6876103 = new Ya.Metrika({id:6876103,
+                    clickmap:true,
+                    trackLinks:true,
+                    accurateTrackBounce:true});
+        }
+        catch(e) { }
+    });
+})(window, 'yandex_metrika_callbacks');
+</script></div>
+<script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
+<noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter --></body>
+</html>
