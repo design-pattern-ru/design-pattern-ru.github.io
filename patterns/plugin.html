@@ -20,13 +20,262 @@
 			<p>Соединяет классы во время конфигурации, а не компиляции.</p>
             <p>Паттерн <a href="separated-interface.html" title="Паттерн проектирования Separated Interface (Выделенный интерфейс)">Separated Interface</a> <em>(Выделенный интерфейс)</em> часто используется, когда один код выполняется в нескольких средах и требует разной реализации отдельной логики. Большинство разработчиков добиваются этого при помощи использования шаблона фабрики. Представим, что надо генерировать первичный ключ при помощи паттерна <a href="separated-interface.html" title="Паттерн проектирования Separated Interface (Выделенный интерфейс)">Separated Interface</a> <em>(Выделенный интерфейс)</em>. Можно использовать для юнит-тестирования простой объект-счёчик, а на реальной системе - последовательность из БД. Фабричный метод скорее всего будет содержать условный переход (if), проверяющий, установлен ли флаг тестирования, и возвращать необходимый генератор ключа.</p>
             <p>Как только у вас появится ещё несколько фабрик - начнётся путаница. Создание новой конфигурации, например "запуск юнит-тестов на БД без контроля транзакций" или "запуск в продакшн на DB2 с полной поддержкой транзакций", потребует правок в условиях в большом количестве фабрик, пересборку и переразвёртывание.</p>
-            <p>Конфигурация не должна быть разбросана по приложению, также как и требовать пересборки и переразвёртывания. Паттерн <acronym title="Паттерн Plugin (Плагин)">Plugin</acronym> решает обе эти проблемы, предоставляя централизованную динамическую конфигурацию.</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/plugin.html">Источник</a></noindex></p>        </div>
+            <p>Конфигурация не должна быть разбросана по приложению, также как и требовать пересборки и переразвёртывания. Паттерн <acronym title="Паттерн Plugin (Плагин)">Plugin</acronym> решает обе эти проблемы, предоставляя централизованную динамическую конфигурацию.</p>
+
+<h2>Примеры реализации</h2>
+<div class="code-snippet">
+    <div class="code-snippet-header">
+        <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+        <button class="code-snippet-tab" data-language="php">PHP</button>
+        <button class="code-snippet-tab" data-language="go">Go</button>
+    </div>
+    <div class="code-snippet-content">
+        <button class="code-snippet-copy">Copy</button>
+        
+        <div class="code-snippet-panel" data-language="javascript">
+            <pre><code>// Plugin Pattern in JavaScript
+class PluginManager {
+    constructor() {
+        this.plugins = new Map();
+    }
+    
+    register(name, plugin) {
+        this.plugins.set(name, plugin);
+        console.log(`Plugin '${name}' registered`);
+    }
+    
+    get(name) {
+        const plugin = this.plugins.get(name);
+        if (!plugin) {
+            throw new Error(`Plugin '${name}' not found`);
+        }
+        return plugin;
+    }
+    
+    execute(name, ...args) {
+        const plugin = this.get(name);
+        return plugin.execute(...args);
+    }
+}
+
+// Plugin interfaces
+class EmailPlugin {
+    execute(recipient, subject, body) {
+        console.log(`Sending email to ${recipient}: ${subject}`);
+        return { success: true, messageId: `msg_${Date.now()}` };
+    }
+}
+
+class SMSPlugin {
+    execute(phoneNumber, message) {
+        console.log(`Sending SMS to ${phoneNumber}: ${message}`);
+        return { success: true, messageId: `sms_${Date.now()}` };
+    }
+}
+
+class DatabasePlugin {
+    execute(query, params) {
+        console.log(`Executing query: ${query}`);
+        return { success: true, rows: [{ id: 1, name: 'John' }] };
+    }
+}
+
+// Usage
+const pluginManager = new PluginManager();
+
+// Register plugins
+pluginManager.register('email', new EmailPlugin());
+pluginManager.register('sms', new SMSPlugin());
+pluginManager.register('database', new DatabasePlugin());
+
+// Use plugins
+const emailResult = pluginManager.execute('email', 'user@example.com', 'Hello', 'Test message');
+const smsResult = pluginManager.execute('sms', '+1234567890', 'Hello from SMS');
+const dbResult = pluginManager.execute('database', 'SELECT * FROM users', []);
+
+console.log('Email result:', emailResult);
+console.log('SMS result:', smsResult);
+console.log('Database result:', dbResult);</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="php">
+            <pre><code>&lt;?php
+// Plugin Pattern in PHP
+class PluginManager {
+    private $plugins = [];
+    
+    public function register($name, $plugin) {
+        $this->plugins[$name] = $plugin;
+        echo "Plugin '$name' registered\n";
+    }
+    
+    public function get($name) {
+        if (!isset($this->plugins[$name])) {
+            throw new Exception("Plugin '$name' not found");
+        }
+        return $this->plugins[$name];
+    }
+    
+    public function execute($name, ...$args) {
+        $plugin = $this->get($name);
+        return $plugin->execute(...$args);
+    }
+}
+
+// Plugin interfaces
+class EmailPlugin {
+    public function execute($recipient, $subject, $body) {
+        echo "Sending email to $recipient: $subject\n";
+        return ['success' => true, 'messageId' => 'msg_' . time()];
+    }
+}
+
+class SMSPlugin {
+    public function execute($phoneNumber, $message) {
+        echo "Sending SMS to $phoneNumber: $message\n";
+        return ['success' => true, 'messageId' => 'sms_' . time()];
+    }
+}
+
+class DatabasePlugin {
+    public function execute($query, $params = []) {
+        echo "Executing query: $query\n";
+        return ['success' => true, 'rows' => [['id' => 1, 'name' => 'John']]];
+    }
+}
+
+// Usage
+$pluginManager = new PluginManager();
+
+// Register plugins
+$pluginManager->register('email', new EmailPlugin());
+$pluginManager->register('sms', new SMSPlugin());
+$pluginManager->register('database', new DatabasePlugin());
+
+// Use plugins
+$emailResult = $pluginManager->execute('email', 'user@example.com', 'Hello', 'Test message');
+$smsResult = $pluginManager->execute('sms', '+1234567890', 'Hello from SMS');
+$dbResult = $pluginManager->execute('database', 'SELECT * FROM users', []);
+
+echo "Email result: " . json_encode($emailResult) . "\n";
+echo "SMS result: " . json_encode($smsResult) . "\n";
+echo "Database result: " . json_encode($dbResult) . "\n";
+?&gt;</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="go">
+            <pre><code>// Plugin Pattern in Go
+package main
+
+import (
+    "fmt"
+    "time"
+)
+
+type Plugin interface {
+    Execute(args ...interface{}) (interface{}, error)
+}
+
+type PluginManager struct {
+    plugins map[string]Plugin
+}
+
+func NewPluginManager() *PluginManager {
+    return &PluginManager{
+        plugins: make(map[string]Plugin),
+    }
+}
+
+func (pm *PluginManager) Register(name string, plugin Plugin) {
+    pm.plugins[name] = plugin
+    fmt.Printf("Plugin '%s' registered\n", name)
+}
+
+func (pm *PluginManager) Get(name string) (Plugin, error) {
+    plugin, exists := pm.plugins[name]
+    if !exists {
+        return nil, fmt.Errorf("plugin '%s' not found", name)
+    }
+    return plugin, nil
+}
+
+func (pm *PluginManager) Execute(name string, args ...interface{}) (interface{}, error) {
+    plugin, err := pm.Get(name)
+    if err != nil {
+        return nil, err
+    }
+    return plugin.Execute(args...)
+}
+
+// Plugin implementations
+type EmailPlugin struct{}
+
+func (e EmailPlugin) Execute(args ...interface{}) (interface{}, error) {
+    recipient := args[0].(string)
+    subject := args[1].(string)
+    body := args[2].(string)
+    
+    fmt.Printf("Sending email to %s: %s\n", recipient, subject)
+    return map[string]interface{}{
+        "success":   true,
+        "messageId": fmt.Sprintf("msg_%d", time.Now().Unix()),
+    }, nil
+}
+
+type SMSPlugin struct{}
+
+func (s SMSPlugin) Execute(args ...interface{}) (interface{}, error) {
+    phoneNumber := args[0].(string)
+    message := args[1].(string)
+    
+    fmt.Printf("Sending SMS to %s: %s\n", phoneNumber, message)
+    return map[string]interface{}{
+        "success":   true,
+        "messageId": fmt.Sprintf("sms_%d", time.Now().Unix()),
+    }, nil
+}
+
+type DatabasePlugin struct{}
+
+func (d DatabasePlugin) Execute(args ...interface{}) (interface{}, error) {
+    query := args[0].(string)
+    
+    fmt.Printf("Executing query: %s\n", query)
+    return map[string]interface{}{
+        "success": true,
+        "rows":    []map[string]interface{}{{"id": 1, "name": "John"}},
+    }, nil
+}
+
+// Usage
+func main() {
+    pluginManager := NewPluginManager()
+    
+    // Register plugins
+    pluginManager.Register("email", EmailPlugin{})
+    pluginManager.Register("sms", SMSPlugin{})
+    pluginManager.Register("database", DatabasePlugin{})
+    
+    // Use plugins
+    emailResult, _ := pluginManager.Execute("email", "user@example.com", "Hello", "Test message")
+    smsResult, _ := pluginManager.Execute("sms", "+1234567890", "Hello from SMS")
+    dbResult, _ := pluginManager.Execute("database", "SELECT * FROM users")
+    
+    fmt.Printf("Email result: %+v\n", emailResult)
+    fmt.Printf("SMS result: %+v\n", smsResult)
+    fmt.Printf("Database result: %+v\n", dbResult)
+}</code></pre>
+        </div>
+    </div>
+</div>
+
+<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/plugin.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">
     	<li><a href="../index.html">Главная</a></li>
         <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
-        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+        <li>Сайт создан и поддерживается <a href="https://vasiliy.pro">Василием Кулаковым</a>.</li>
     </ul>
 
    <!-- Google tag (gtag.js) -->
@@ -53,5 +302,71 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<!-- Code Snippet JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all code snippet components
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+        
+        // Set default active tab (JavaScript)
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+        
+        // Tab switching functionality
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                
+                // Remove active class from all tabs and panels
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding panel
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+        
+        // Copy functionality
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

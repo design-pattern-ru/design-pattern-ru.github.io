@@ -20,13 +20,397 @@
 			<p>Обеспечивает однократную загрузку объекта, сохраняя данные об объекте в карте соответствия. При обращении к объектам, ищет их в карте соответсвия.</p>
             <p>Одна старая пословица постулирует, что человек с двумя часами никогда не знает, сколько сейчас времени. И если уж двое часов вносят путаницу, то с загрузкой объектов из БД может получиться гораздо большая путаница. Если разработчик не достаточно аккуратен, может получиться, что он загрузит данные из БД в два объекта. Потом, когда он сохранит их, получится путаница и конкуренция различных данных.</p>
             <p>Более того, с этим связаны проблемы производительности. Когда дважды загружается одна и та же информация, увеличиваются затраты на передачу данных. Таким образом, отказ от загрузки одних и тех же данных дважды не только обеспечивает корректность информации, но и ускоряет работу приложения.</p>
-            <p>Паттерн <acronym title="Паттерн Identity Map (Карта присутствия / Карта соответствия)">Identity Map</acronym> (Карта присутствия / Карта соответствия) хранит записи о всех объектах, которые были считаны из БД за время выполнения одного действия. Когда происходит обращение к объекту, проверяется карта соответствия (присутствия), чтобы узнать, загружен ли объект.</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a> из статьи <noindex><a href="http://martinfowler.com/eaaCatalog/identityMap.html">Identity Map</a></noindex></p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/identityMap.html">Источник</a></noindex></p>        </div>
+            <p>Паттерн <acronym title="Паттерн Identity Map (Карта присутствия / Карта соответствия)">Identity Map</acronym> (Карта присутствия / Карта соответствия) хранит записи о всех объектах, которые были считаны из БД за время выполнения одного действия. Когда происходит обращение к объекту, проверяется карта соответствия (присутствия), чтобы узнать, загружен ли объект.</p>
+
+<h2>Примеры реализации</h2>
+<div class="code-snippet">
+    <div class="code-snippet-header">
+        <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+        <button class="code-snippet-tab" data-language="cpp">C++</button>
+        <button class="code-snippet-tab" data-language="go">Go</button>
+        <button class="code-snippet-tab" data-language="python">Python</button>
+        <button class="code-snippet-tab" data-language="php">PHP</button>
+    </div>
+    <div class="code-snippet-content">
+        <button class="code-snippet-copy">Copy</button>
+        
+        <div class="code-snippet-panel" data-language="javascript">
+            <pre><code>// Identity Map Pattern in JavaScript
+class User {
+    constructor(id, name, email) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+    }
+}
+
+class IdentityMap {
+    constructor() {
+        this.map = new Map();
+    }
+    
+    get(id) {
+        return this.map.get(id);
+    }
+    
+    put(id, obj) {
+        this.map.set(id, obj);
+    }
+    
+    has(id) {
+        return this.map.has(id);
+    }
+    
+    remove(id) {
+        return this.map.delete(id);
+    }
+    
+    clear() {
+        this.map.clear();
+    }
+}
+
+class UserRepository {
+    constructor() {
+        this.identityMap = new IdentityMap();
+    }
+    
+    findById(id) {
+        // Check identity map first
+        if (this.identityMap.has(id)) {
+            console.log(`User ${id} found in identity map`);
+            return this.identityMap.get(id);
+        }
+        
+        // Load from database
+        console.log(`Loading user ${id} from database`);
+        const user = this.loadFromDatabase(id);
+        
+        // Store in identity map
+        this.identityMap.put(id, user);
+        return user;
+    }
+    
+    loadFromDatabase(id) {
+        // Simulate database load
+        return new User(id, `User ${id}`, `user${id}@example.com`);
+    }
+}
+
+// Usage
+const repo = new UserRepository();
+const user1 = repo.findById(1); // Loads from DB
+const user2 = repo.findById(1); // Loads from identity map
+console.log(user1 === user2); // true</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="cpp">
+            <pre><code>// Identity Map Pattern in C++
+#include &lt;iostream&gt;
+#include &lt;unordered_map&gt;
+#include &lt;memory&gt;
+
+class User {
+private:
+    int id;
+    std::string name;
+    std::string email;
+    
+public:
+    User(int id, const std::string& name, const std::string& email)
+        : id(id), name(name), email(email) {}
+    
+    int getId() const { return id; }
+    std::string getName() const { return name; }
+    std::string getEmail() const { return email; }
+};
+
+class IdentityMap {
+private:
+    std::unordered_map&lt;int, std::shared_ptr&lt;User&gt;&gt; map;
+    
+public:
+    std::shared_ptr&lt;User&gt; get(int id) {
+        auto it = map.find(id);
+        return (it != map.end()) ? it->second : nullptr;
+    }
+    
+    void put(int id, std::shared_ptr&lt;User&gt; user) {
+        map[id] = user;
+    }
+    
+    bool has(int id) const {
+        return map.find(id) != map.end();
+    }
+    
+    void remove(int id) {
+        map.erase(id);
+    }
+    
+    void clear() {
+        map.clear();
+    }
+};
+
+class UserRepository {
+private:
+    IdentityMap identityMap;
+    
+public:
+    std::shared_ptr&lt;User&gt; findById(int id) {
+        // Check identity map first
+        if (identityMap.has(id)) {
+            std::cout &lt;&lt; "User " &lt;&lt; id &lt;&lt; " found in identity map" &lt;&lt; std::endl;
+            return identityMap.get(id);
+        }
+        
+        // Load from database
+        std::cout &lt;&lt; "Loading user " &lt;&lt; id &lt;&lt; " from database" &lt;&lt; std::endl;
+        auto user = loadFromDatabase(id);
+        
+        // Store in identity map
+        identityMap.put(id, user);
+        return user;
+    }
+    
+private:
+    std::shared_ptr&lt;User&gt; loadFromDatabase(int id) {
+        return std::make_shared&lt;User&gt;(id, "User " + std::to_string(id), 
+                                      "user" + std::to_string(id) + "@example.com");
+    }
+};</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="go">
+            <pre><code>// Identity Map Pattern in Go
+package main
+
+import "fmt"
+
+type User struct {
+    ID    int
+    Name  string
+    Email string
+}
+
+type IdentityMap struct {
+    map map[int]*User
+}
+
+func NewIdentityMap() *IdentityMap {
+    return &IdentityMap{
+        map: make(map[int]*User),
+    }
+}
+
+func (im *IdentityMap) Get(id int) *User {
+    return im.map[id]
+}
+
+func (im *IdentityMap) Put(id int, user *User) {
+    im.map[id] = user
+}
+
+func (im *IdentityMap) Has(id int) bool {
+    _, exists := im.map[id]
+    return exists
+}
+
+func (im *IdentityMap) Remove(id int) {
+    delete(im.map, id)
+}
+
+func (im *IdentityMap) Clear() {
+    im.map = make(map[int]*User)
+}
+
+type UserRepository struct {
+    identityMap *IdentityMap
+}
+
+func NewUserRepository() *UserRepository {
+    return &UserRepository{
+        identityMap: NewIdentityMap(),
+    }
+}
+
+func (r *UserRepository) FindByID(id int) *User {
+    // Check identity map first
+    if r.identityMap.Has(id) {
+        fmt.Printf("User %d found in identity map\n", id)
+        return r.identityMap.Get(id)
+    }
+    
+    // Load from database
+    fmt.Printf("Loading user %d from database\n", id)
+    user := r.loadFromDatabase(id)
+    
+    // Store in identity map
+    r.identityMap.Put(id, user)
+    return user
+}
+
+func (r *UserRepository) loadFromDatabase(id int) *User {
+    return &User{
+        ID:    id,
+        Name:  fmt.Sprintf("User %d", id),
+        Email: fmt.Sprintf("user%d@example.com", id),
+    }
+}
+
+// Usage
+func main() {
+    repo := NewUserRepository()
+    user1 := repo.FindByID(1) // Loads from DB
+    user2 := repo.FindByID(1) // Loads from identity map
+    fmt.Println(user1 == user2) // true
+}</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="python">
+            <pre><code># Identity Map Pattern in Python
+class User:
+    def __init__(self, user_id, name, email):
+        self.id = user_id
+        self.name = name
+        self.email = email
+
+class IdentityMap:
+    def __init__(self):
+        self._map = {}
+    
+    def get(self, id):
+        return self._map.get(id)
+    
+    def put(self, id, obj):
+        self._map[id] = obj
+    
+    def has(self, id):
+        return id in self._map
+    
+    def remove(self, id):
+        return self._map.pop(id, None)
+    
+    def clear(self):
+        self._map.clear()
+
+class UserRepository:
+    def __init__(self):
+        self.identity_map = IdentityMap()
+    
+    def find_by_id(self, id):
+        # Check identity map first
+        if self.identity_map.has(id):
+            print(f"User {id} found in identity map")
+            return self.identity_map.get(id)
+        
+        # Load from database
+        print(f"Loading user {id} from database")
+        user = self._load_from_database(id)
+        
+        # Store in identity map
+        self.identity_map.put(id, user)
+        return user
+    
+    def _load_from_database(self, id):
+        return User(id, f"User {id}", f"user{id}@example.com")
+
+# Usage
+if __name__ == "__main__":
+    repo = UserRepository()
+    user1 = repo.find_by_id(1)  # Loads from DB
+    user2 = repo.find_by_id(1)  # Loads from identity map
+    print(user1 is user2)  # True</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="php">
+            <pre><code>&lt;?php
+// Identity Map Pattern in PHP
+class User {
+    private $id;
+    private $name;
+    private $email;
+    
+    public function __construct($id, $name, $email) {
+        $this->id = $id;
+        $this->name = $name;
+        $this->email = $email;
+    }
+    
+    public function getId() { return $this->id; }
+    public function getName() { return $this->name; }
+    public function getEmail() { return $this->email; }
+}
+
+class IdentityMap {
+    private $map = [];
+    
+    public function get($id) {
+        return $this->map[$id] ?? null;
+    }
+    
+    public function put($id, $obj) {
+        $this->map[$id] = $obj;
+    }
+    
+    public function has($id) {
+        return isset($this->map[$id]);
+    }
+    
+    public function remove($id) {
+        unset($this->map[$id]);
+    }
+    
+    public function clear() {
+        $this->map = [];
+    }
+}
+
+class UserRepository {
+    private $identityMap;
+    
+    public function __construct() {
+        $this->identityMap = new IdentityMap();
+    }
+    
+    public function findById($id) {
+        // Check identity map first
+        if ($this->identityMap->has($id)) {
+            echo "User $id found in identity map\n";
+            return $this->identityMap->get($id);
+        }
+        
+        // Load from database
+        echo "Loading user $id from database\n";
+        $user = $this->loadFromDatabase($id);
+        
+        // Store in identity map
+        $this->identityMap->put($id, $user);
+        return $user;
+    }
+    
+    private function loadFromDatabase($id) {
+        return new User($id, "User $id", "user$id@example.com");
+    }
+}
+
+// Usage
+$repo = new UserRepository();
+$user1 = $repo->findById(1); // Loads from DB
+$user2 = $repo->findById(1); // Loads from identity map
+var_dump($user1 === $user2); // true
+?&gt;</code></pre>
+        </div>
+    </div>
+</div>
+
+<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a> из статьи <noindex><a href="http://martinfowler.com/eaaCatalog/identityMap.html">Identity Map</a></noindex></p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/identityMap.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">
     	<li><a href="../index.html">Главная</a></li>
         <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
-        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+        <li>Сайт создан и поддерживается <a href="https://vasiliy.pro">Василием Кулаковым</a>.</li>
     </ul>
 
    <!-- Google tag (gtag.js) -->
@@ -53,5 +437,71 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<!-- Code Snippet JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all code snippet components
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+        
+        // Set default active tab (JavaScript)
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+        
+        // Tab switching functionality
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                
+                // Remove active class from all tabs and panels
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding panel
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+        
+        // Copy functionality
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

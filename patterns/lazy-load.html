@@ -27,13 +27,343 @@
 	            <li><strong>Virtual Proxy</strong> <em>(Виртуальный Прокси)</em> - объект с таким же интерфейсом, как и настоящий объект. При первом обращении к методу объекта, виртуальный прокси загружает настоящий объект и перенаправляет выполнение.</li>
 	            <li><strong>Value Holder</strong> <em>(Контейнер значения)</em> - объект с методом getValue. Клиент вызывает метод getValue, чтобы получить реальный объект. getValue вызывает загрузку.</li>
             	<li><strong>Ghost</strong> <em>(Призрак)</em> - объект без каких-либо данных. При первом обращении к его методу, призрак загружает все данные сразу.</li>
-            </ul>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/lazyLoad.html">Источник</a></noindex></p>        </div>
+            </ul>
+
+<h2>Примеры реализации</h2>
+<div class="code-snippet">
+    <div class="code-snippet-header">
+        <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+        <button class="code-snippet-tab" data-language="cpp">C++</button>
+        <button class="code-snippet-tab" data-language="go">Go</button>
+        <button class="code-snippet-tab" data-language="python">Python</button>
+        <button class="code-snippet-tab" data-language="php">PHP</button>
+    </div>
+    <div class="code-snippet-content">
+        <button class="code-snippet-copy">Copy</button>
+        
+        <div class="code-snippet-panel" data-language="javascript">
+            <pre><code>// Lazy Load Pattern in JavaScript
+class User {
+    constructor(id, name) {
+        this.id = id;
+        this.name = name;
+        this._orders = null; // Lazy loaded
+    }
+    
+    get orders() {
+        if (this._orders === null) {
+            this._orders = this.loadOrders();
+        }
+        return this._orders;
+    }
+    
+    loadOrders() {
+        console.log(`Loading orders for user ${this.id}`);
+        return [
+            { id: 1, amount: 100 },
+            { id: 2, amount: 200 }
+        ];
+    }
+}
+
+// Virtual Proxy
+class OrderProxy {
+    constructor(orderId) {
+        this.orderId = orderId;
+        this._order = null;
+    }
+    
+    get amount() {
+        if (this._order === null) {
+            this._order = this.loadOrder();
+        }
+        return this._order.amount;
+    }
+    
+    loadOrder() {
+        console.log(`Loading order ${this.orderId}`);
+        return { id: this.orderId, amount: 150 };
+    }
+}
+
+// Usage
+const user = new User(1, 'John');
+console.log(user.name); // No lazy loading
+console.log(user.orders); // Triggers lazy loading
+
+const orderProxy = new OrderProxy(1);
+console.log(orderProxy.amount); // Triggers lazy loading</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="cpp">
+            <pre><code>// Lazy Load Pattern in C++
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
+#include &lt;memory&gt;
+
+class Order {
+public:
+    int id;
+    double amount;
+    Order(int id, double amount) : id(id), amount(amount) {}
+};
+
+class User {
+private:
+    int id;
+    std::string name;
+    mutable std::vector&lt;Order&gt;* orders;
+    
+public:
+    User(int id, const std::string& name) : id(id), name(name), orders(nullptr) {}
+    
+    const std::vector&lt;Order&gt;& getOrders() const {
+        if (orders == nullptr) {
+            orders = new std::vector&lt;Order&gt;();
+            loadOrders();
+        }
+        return *orders;
+    }
+    
+private:
+    void loadOrders() const {
+        std::cout &lt;&lt; "Loading orders for user " &lt;&lt; id &lt;&lt; std::endl;
+        orders->push_back(Order(1, 100.0));
+        orders->push_back(Order(2, 200.0));
+    }
+};
+
+// Virtual Proxy
+class OrderProxy {
+private:
+    int orderId;
+    mutable Order* order;
+    
+public:
+    OrderProxy(int id) : orderId(id), order(nullptr) {}
+    
+    double getAmount() const {
+        if (order == nullptr) {
+            loadOrder();
+        }
+        return order->amount;
+    }
+    
+private:
+    void loadOrder() const {
+        std::cout &lt;&lt; "Loading order " &lt;&lt; orderId &lt;&lt; std::endl;
+        order = new Order(orderId, 150.0);
+    }
+};</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="go">
+            <pre><code>// Lazy Load Pattern in Go
+package main
+
+import "fmt"
+
+type Order struct {
+    ID     int
+    Amount float64
+}
+
+type User struct {
+    ID     int
+    Name   string
+    orders []Order
+    loaded bool
+}
+
+func NewUser(id int, name string) *User {
+    return &User{ID: id, Name: name, loaded: false}
+}
+
+func (u *User) GetOrders() []Order {
+    if !u.loaded {
+        u.loadOrders()
+        u.loaded = true
+    }
+    return u.orders
+}
+
+func (u *User) loadOrders() {
+    fmt.Printf("Loading orders for user %d\n", u.ID)
+    u.orders = []Order{
+        {ID: 1, Amount: 100},
+        {ID: 2, Amount: 200},
+    }
+}
+
+// Virtual Proxy
+type OrderProxy struct {
+    orderID int
+    order   *Order
+}
+
+func NewOrderProxy(orderID int) *OrderProxy {
+    return &OrderProxy{orderID: orderID}
+}
+
+func (op *OrderProxy) GetAmount() float64 {
+    if op.order == nil {
+        op.loadOrder()
+    }
+    return op.order.Amount
+}
+
+func (op *OrderProxy) loadOrder() {
+    fmt.Printf("Loading order %d\n", op.orderID)
+    op.order = &Order{ID: op.orderID, Amount: 150}
+}
+
+// Usage
+func main() {
+    user := NewUser(1, "John")
+    fmt.Println(user.Name) // No lazy loading
+    orders := user.GetOrders() // Triggers lazy loading
+    fmt.Println(orders)
+    
+    orderProxy := NewOrderProxy(1)
+    amount := orderProxy.GetAmount() // Triggers lazy loading
+    fmt.Println(amount)
+}</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="python">
+            <pre><code># Lazy Load Pattern in Python
+class Order:
+    def __init__(self, order_id, amount):
+        self.id = order_id
+        self.amount = amount
+
+class User:
+    def __init__(self, user_id, name):
+        self.id = user_id
+        self.name = name
+        self._orders = None
+    
+    @property
+    def orders(self):
+        if self._orders is None:
+            self._orders = self._load_orders()
+        return self._orders
+    
+    def _load_orders(self):
+        print(f"Loading orders for user {self.id}")
+        return [
+            Order(1, 100),
+            Order(2, 200)
+        ]
+
+# Virtual Proxy
+class OrderProxy:
+    def __init__(self, order_id):
+        self.order_id = order_id
+        self._order = None
+    
+    @property
+    def amount(self):
+        if self._order is None:
+            self._order = self._load_order()
+        return self._order.amount
+    
+    def _load_order(self):
+        print(f"Loading order {self.order_id}")
+        return Order(self.order_id, 150)
+
+# Usage
+if __name__ == "__main__":
+    user = User(1, "John")
+    print(user.name)  # No lazy loading
+    print(user.orders)  # Triggers lazy loading
+    
+    order_proxy = OrderProxy(1)
+    print(order_proxy.amount)  # Triggers lazy loading</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="php">
+            <pre><code>&lt;?php
+// Lazy Load Pattern in PHP
+class Order {
+    public $id;
+    public $amount;
+    
+    public function __construct($id, $amount) {
+        $this->id = $id;
+        $this->amount = $amount;
+    }
+}
+
+class User {
+    private $id;
+    private $name;
+    private $orders;
+    
+    public function __construct($id, $name) {
+        $this->id = $id;
+        $this->name = $name;
+        $this->orders = null;
+    }
+    
+    public function getOrders() {
+        if ($this->orders === null) {
+            $this->orders = $this->loadOrders();
+        }
+        return $this->orders;
+    }
+    
+    private function loadOrders() {
+        echo "Loading orders for user {$this->id}\n";
+        return [
+            new Order(1, 100),
+            new Order(2, 200)
+        ];
+    }
+}
+
+// Virtual Proxy
+class OrderProxy {
+    private $orderId;
+    private $order;
+    
+    public function __construct($orderId) {
+        $this->orderId = $orderId;
+        $this->order = null;
+    }
+    
+    public function getAmount() {
+        if ($this->order === null) {
+            $this->order = $this->loadOrder();
+        }
+        return $this->order->amount;
+    }
+    
+    private function loadOrder() {
+        echo "Loading order {$this->orderId}\n";
+        return new Order($this->orderId, 150);
+    }
+}
+
+// Usage
+$user = new User(1, "John");
+echo $user->name . "\n"; // No lazy loading
+$orders = $user->getOrders(); // Triggers lazy loading
+
+$orderProxy = new OrderProxy(1);
+$amount = $orderProxy->getAmount(); // Triggers lazy loading
+?&gt;</code></pre>
+        </div>
+    </div>
+</div>
+
+<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/lazyLoad.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">
     	<li><a href="../index.html">Главная</a></li>
         <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
-        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+        <li>Сайт создан и поддерживается <a href="https://vasiliy.pro">Василием Кулаковым</a>.</li>
     </ul>
 
    <!-- Google tag (gtag.js) -->
@@ -60,5 +390,71 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<!-- Code Snippet JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all code snippet components
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+        
+        // Set default active tab (JavaScript)
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+        
+        // Tab switching functionality
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                
+                // Remove active class from all tabs and panels
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding panel
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+        
+        // Copy functionality
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

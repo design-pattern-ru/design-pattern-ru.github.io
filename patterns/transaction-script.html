@@ -19,13 +19,354 @@
 			<h2>Описание Transaction Script</h2>
 			<p>Организует бизнес-логику в процедуры, которые управляют каждая своим запросом.</p>
 <p>Большинство бизнес-приложений можно представить в виде набора транзакций. Какие-то из них выбират данные, какие-то &dash; меняют. Каждое взаимодействие пользователя и системы содержит определённый набор действий. В некоторых случаях это может быть просто вывод данных из БД. В других случаях эти дествия могут содержать в себе множество вычислений и проверок.</p>
-<p>Паттерн <acronym title="Паттерн Transaction Script (Сценнарий транзакции)">Transaction Script</acronym> организует всю эту логику в одну процедуру, работая в БД напрямую или через тонкую обёртку. Каждая транзакция имеет свой <acronym title="Паттерн Transaction Script (Сценнарий транзакции)">Transaction Script</acronym>, хотя общие подзадачи могут быть разбиты на процедуры.</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/transactionScript.html">Источник</a></noindex></p>        </div>
+            <p>Паттерн <acronym title="Паттерн Transaction Script (Сценнарий транзакции)">Transaction Script</acronym> организует всю эту логику в одну процедуру, работая в БД напрямую или через тонкую обёртку. Каждая транзакция имеет свой <acronym title="Паттерн Transaction Script (Сценнарий транзакции)">Transaction Script</acronym>, хотя общие подзадачи могут быть разбиты на процедуры.</p>
+
+<h2>Примеры реализации</h2>
+<div class="code-snippet">
+    <div class="code-snippet-header">
+        <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+        <button class="code-snippet-tab" data-language="php">PHP</button>
+        <button class="code-snippet-tab" data-language="go">Go</button>
+    </div>
+    <div class="code-snippet-content">
+        <button class="code-snippet-copy">Copy</button>
+        
+        <div class="code-snippet-panel" data-language="javascript">
+            <pre><code>// Transaction Script Pattern in JavaScript
+class OrderTransactionScript {
+    constructor(database) {
+        this.db = database;
+    }
+    
+    async createOrder(customerId, items) {
+        console.log('Starting createOrder transaction');
+        
+        try {
+            await this.db.beginTransaction();
+            
+            const customer = await this.validateCustomer(customerId);
+            if (!customer) {
+                throw new Error('Invalid customer');
+            }
+            
+            const total = this.calculateOrderTotal(items);
+            const orderId = await this.createOrderRecord(customerId, total);
+            
+            for (const item of items) {
+                await this.addOrderItem(orderId, item);
+            }
+            
+            await this.updateInventory(items);
+            await this.sendOrderConfirmation(customer.email, orderId);
+            await this.db.commit();
+            
+            console.log(`Order ${orderId} created successfully`);
+            return { orderId, total, status: 'success' };
+            
+        } catch (error) {
+            await this.db.rollback();
+            console.error('Order creation failed:', error.message);
+            throw error;
+        }
+    }
+    
+    async validateCustomer(customerId) {
+        return await this.db.query('SELECT * FROM customers WHERE id = ?', [customerId]);
+    }
+    
+    calculateOrderTotal(items) {
+        return items.reduce((total, item) => total + (item.price * item.quantity), 0);
+    }
+    
+    async createOrderRecord(customerId, total) {
+        const result = await this.db.query(
+            'INSERT INTO orders (customer_id, total, status) VALUES (?, ?, ?)',
+            [customerId, total, 'pending']
+        );
+        return result.insertId;
+    }
+    
+    async addOrderItem(orderId, item) {
+        await this.db.query(
+            'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)',
+            [orderId, item.productId, item.quantity, item.price]
+        );
+    }
+    
+    async updateInventory(items) {
+        for (const item of items) {
+            await this.db.query(
+                'UPDATE products SET stock = stock - ? WHERE id = ?',
+                [item.quantity, item.productId]
+            );
+        }
+    }
+    
+    async sendOrderConfirmation(email, orderId) {
+        return { success: true, messageId: `msg_${Date.now()}` };
+    }
+}
+
+// Usage
+const orderScript = new OrderTransactionScript(database);
+orderScript.createOrder(1, [
+    { productId: 101, quantity: 2, price: 25.99 },
+    { productId: 102, quantity: 1, price: 15.50 }
+]).then(result => {
+    console.log('Transaction completed:', result);
+}).catch(error => {
+    console.error('Transaction failed:', error);
+});</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="php">
+            <pre><code>&lt;?php
+// Transaction Script Pattern in PHP
+class OrderTransactionScript {
+    private $db;
+    
+    public function __construct($database) {
+        $this->db = $database;
+    }
+    
+    public function createOrder($customerId, $items) {
+        echo "Starting createOrder transaction\n";
+        
+        try {
+            $this->db->beginTransaction();
+            
+            $customer = $this->validateCustomer($customerId);
+            if (!$customer) {
+                throw new Exception('Invalid customer');
+            }
+            
+            $total = $this->calculateOrderTotal($items);
+            $orderId = $this->createOrderRecord($customerId, $total);
+            
+            foreach ($items as $item) {
+                $this->addOrderItem($orderId, $item);
+            }
+            
+            $this->updateInventory($items);
+            $this->sendOrderConfirmation($customer['email'], $orderId);
+            $this->db->commit();
+            
+            echo "Order $orderId created successfully\n";
+            return ['orderId' => $orderId, 'total' => $total, 'status' => 'success'];
+            
+        } catch (Exception $e) {
+            $this->db->rollback();
+            echo "Order creation failed: " . $e->getMessage() . "\n";
+            throw $e;
+        }
+    }
+    
+    private function validateCustomer($customerId) {
+        $stmt = $this->db->prepare('SELECT * FROM customers WHERE id = ?');
+        $stmt->execute([$customerId]);
+        return $stmt->fetch();
+    }
+    
+    private function calculateOrderTotal($items) {
+        $total = 0;
+        foreach ($items as $item) {
+            $total += $item['price'] * $item['quantity'];
+        }
+        return $total;
+    }
+    
+    private function createOrderRecord($customerId, $total) {
+        $stmt = $this->db->prepare('INSERT INTO orders (customer_id, total, status) VALUES (?, ?, ?)');
+        $stmt->execute([$customerId, $total, 'pending']);
+        return $this->db->lastInsertId();
+    }
+    
+    private function addOrderItem($orderId, $item) {
+        $stmt = $this->db->prepare('INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)');
+        $stmt->execute([$orderId, $item['productId'], $item['quantity'], $item['price']]);
+    }
+    
+    private function updateInventory($items) {
+        foreach ($items as $item) {
+            $stmt = $this->db->prepare('UPDATE products SET stock = stock - ? WHERE id = ?');
+            $stmt->execute([$item['quantity'], $item['productId']]);
+        }
+    }
+    
+    private function sendOrderConfirmation($email, $orderId) {
+        return ['success' => true, 'messageId' => 'msg_' . time()];
+    }
+}
+
+// Usage
+$orderScript = new OrderTransactionScript($database);
+try {
+    $result = $orderScript->createOrder(1, [
+        ['productId' => 101, 'quantity' => 2, 'price' => 25.99],
+        ['productId' => 102, 'quantity' => 1, 'price' => 15.50]
+    ]);
+    echo "Transaction completed: " . json_encode($result) . "\n";
+} catch (Exception $e) {
+    echo "Transaction failed: " . $e->getMessage() . "\n";
+}
+?&gt;</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="go">
+            <pre><code>// Transaction Script Pattern in Go
+package main
+
+import (
+    "database/sql"
+    "fmt"
+)
+
+type OrderItem struct {
+    ProductID int     `json:"productId"`
+    Quantity  int     `json:"quantity"`
+    Price     float64 `json:"price"`
+}
+
+type OrderTransactionScript struct {
+    db *sql.DB
+}
+
+func NewOrderTransactionScript(db *sql.DB) *OrderTransactionScript {
+    return &OrderTransactionScript{db: db}
+}
+
+func (ots *OrderTransactionScript) CreateOrder(customerID int, items []OrderItem) (map[string]interface{}, error) {
+    fmt.Println("Starting createOrder transaction")
+    
+    tx, err := ots.db.Begin()
+    if err != nil {
+        return nil, err
+    }
+    defer func() {
+        if err != nil {
+            tx.Rollback()
+        }
+    }()
+    
+    customer, err := ots.validateCustomer(tx, customerID)
+    if err != nil {
+        return nil, err
+    }
+    if customer == nil {
+        return nil, fmt.Errorf("invalid customer")
+    }
+    
+    total := ots.calculateOrderTotal(items)
+    orderID, err := ots.createOrderRecord(tx, customerID, total)
+    if err != nil {
+        return nil, err
+    }
+    
+    for _, item := range items {
+        if err := ots.addOrderItem(tx, orderID, item); err != nil {
+            return nil, err
+        }
+    }
+    
+    if err := ots.updateInventory(tx, items); err != nil {
+        return nil, err
+    }
+    
+    if err := ots.sendOrderConfirmation(customer["email"], orderID); err != nil {
+        return nil, err
+    }
+    
+    if err := tx.Commit(); err != nil {
+        return nil, err
+    }
+    
+    fmt.Printf("Order %d created successfully\n", orderID)
+    return map[string]interface{}{
+        "orderId": orderID,
+        "total":   total,
+        "status":  "success",
+    }, nil
+}
+
+func (ots *OrderTransactionScript) validateCustomer(tx *sql.Tx, customerID int) (map[string]string, error) {
+    var customer map[string]string
+    err := tx.QueryRow("SELECT * FROM customers WHERE id = ?", customerID).Scan(&customer)
+    if err == sql.ErrNoRows {
+        return nil, nil
+    }
+    return customer, err
+}
+
+func (ots *OrderTransactionScript) calculateOrderTotal(items []OrderItem) float64 {
+    total := 0.0
+    for _, item := range items {
+        total += item.Price * float64(item.Quantity)
+    }
+    return total
+}
+
+func (ots *OrderTransactionScript) createOrderRecord(tx *sql.Tx, customerID int, total float64) (int64, error) {
+    result, err := tx.Exec("INSERT INTO orders (customer_id, total, status) VALUES (?, ?, ?)", 
+        customerID, total, "pending")
+    if err != nil {
+        return 0, err
+    }
+    return result.LastInsertId()
+}
+
+func (ots *OrderTransactionScript) addOrderItem(tx *sql.Tx, orderID int64, item OrderItem) error {
+    _, err := tx.Exec("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)",
+        orderID, item.ProductID, item.Quantity, item.Price)
+    return err
+}
+
+func (ots *OrderTransactionScript) updateInventory(tx *sql.Tx, items []OrderItem) error {
+    for _, item := range items {
+        _, err := tx.Exec("UPDATE products SET stock = stock - ? WHERE id = ?",
+            item.Quantity, item.ProductID)
+        if err != nil {
+            return err
+        }
+    }
+    return nil
+}
+
+func (ots *OrderTransactionScript) sendOrderConfirmation(email string, orderID int64) error {
+    return nil
+}
+
+// Usage
+func main() {
+    db, err := sql.Open("mysql", "user:password@/dbname")
+    if err != nil {
+        panic(err)
+    }
+    defer db.Close()
+    
+    orderScript := NewOrderTransactionScript(db)
+    
+    result, err := orderScript.CreateOrder(1, []OrderItem{
+        {ProductID: 101, Quantity: 2, Price: 25.99},
+        {ProductID: 102, Quantity: 1, Price: 15.50},
+    })
+    
+    if err != nil {
+        fmt.Printf("Transaction failed: %v\n", err)
+    } else {
+        fmt.Printf("Transaction completed: %+v\n", result)
+    }
+}</code></pre>
+        </div>
+    </div>
+</div>
+
+			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/transactionScript.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">
     	<li><a href="../index.html">Главная</a></li>
         <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
-        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+        <li>Сайт создан и поддерживается <a href="https://vasiliy.pro">Василием Кулаковым</a>.</li>
     </ul>
 
    <!-- Google tag (gtag.js) -->
@@ -52,5 +393,71 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<!-- Code Snippet JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all code snippet components
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+        
+        // Set default active tab (JavaScript)
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+        
+        // Tab switching functionality
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                
+                // Remove active class from all tabs and panels
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding panel
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+        
+        // Copy functionality
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

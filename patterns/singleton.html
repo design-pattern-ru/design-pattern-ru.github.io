@@ -20,10 +20,180 @@
 			<p>В приложении экземпляр определённого класса должен присутствовать гарантировано в одном экземпляре. </p>
 			<p>По сути создаётся статический экземпляр класса: защищённый от клонирования, обычного инстанцирования через конструктор, и других способов получения ссылки на единственный экземпляр — кроме статического метода-конструктора. </p>
 
-            <h3>Пример кода</h3>
+            <h3>Примеры реализации</h3>
+            <div class="code-snippet">
+                <div class="code-snippet-header">
+                    <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+                    <button class="code-snippet-tab" data-language="cpp">C++</button>
+                    <button class="code-snippet-tab" data-language="go">Go</button>
+                    <button class="code-snippet-tab" data-language="python">Python</button>
+                    <button class="code-snippet-tab" data-language="php">PHP</button>
+                </div>
+                <div class="code-snippet-content">
+                    <button class="code-snippet-copy">Copy</button>
+                    
+                    <div class="code-snippet-panel" data-language="javascript">
+                        <pre><code>// Singleton Pattern in JavaScript
+class Singleton {
+    constructor() {
+        if (Singleton.instance) {
+            return Singleton.instance;
+        }
+        
+        this.value = Math.random();
+        Singleton.instance = this;
+    }
+    
+    getValue() {
+        return this.value;
+    }
+}
 
-            <h4>Пример реализации на PHP7</h4>
-            <script src="https://gist.github.com/samizdam/75ab420011ba2f2607adbc7bef71f245.js"></script>
+// Usage
+const instance1 = new Singleton();
+const instance2 = new Singleton();
+
+console.log(instance1 === instance2); // true
+console.log(instance1.getValue() === instance2.getValue()); // true</code></pre>
+                    </div>
+                    
+                    <div class="code-snippet-panel" data-language="cpp">
+                        <pre><code>// Singleton Pattern in C++
+#include &lt;iostream&gt;
+#include &lt;mutex&gt;
+
+class Singleton {
+private:
+    static Singleton* instance;
+    static std::mutex mutex_;
+    int value;
+    
+    Singleton() : value(rand()) {}
+    
+public:
+    Singleton(Singleton &other) = delete;
+    void operator=(const Singleton &) = delete;
+    
+    static Singleton* getInstance() {
+        std::lock_guard&lt;std::mutex&gt; lock(mutex_);
+        if (instance == nullptr) {
+            instance = new Singleton();
+        }
+        return instance;
+    }
+    
+    int getValue() const {
+        return value;
+    }
+};
+
+Singleton* Singleton::instance = nullptr;
+std::mutex Singleton::mutex_;</code></pre>
+                    </div>
+                    
+                    <div class="code-snippet-panel" data-language="go">
+                        <pre><code>// Singleton Pattern in Go
+package main
+
+import (
+    "fmt"
+    "sync"
+)
+
+type Singleton struct {
+    value int
+}
+
+var (
+    instance *Singleton
+    once     sync.Once
+)
+
+func GetInstance() *Singleton {
+    once.Do(func() {
+        instance = &Singleton{value: 42}
+    })
+    return instance
+}
+
+func (s *Singleton) GetValue() int {
+    return s.value
+}
+
+// Usage
+func main() {
+    instance1 := GetInstance()
+    instance2 := GetInstance()
+    
+    fmt.Println(instance1 == instance2) // true
+    fmt.Println(instance1.GetValue() == instance2.GetValue()) // true
+}</code></pre>
+                    </div>
+                    
+                    <div class="code-snippet-panel" data-language="python">
+                        <pre><code># Singleton Pattern in Python
+import threading
+
+class Singleton:
+    _instance = None
+    _lock = threading.Lock()
+    
+    def __new__(cls):
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super(Singleton, cls).__new__(cls)
+                    cls._instance.value = 42
+        return cls._instance
+    
+    def get_value(self):
+        return self.value
+
+# Usage
+if __name__ == "__main__":
+    instance1 = Singleton()
+    instance2 = Singleton()
+    
+    print(instance1 is instance2)  # True
+    print(instance1.get_value() == instance2.get_value())  # True</code></pre>
+                    </div>
+                    
+                    <div class="code-snippet-panel" data-language="php">
+                        <pre><code>&lt;?php
+// Singleton Pattern in PHP
+class Singleton {
+    private static $instance = null;
+    private $value;
+    
+    private function __construct() {
+        $this->value = rand();
+    }
+    
+    public static function getInstance() {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+    
+    public function getValue() {
+        return $this->value;
+    }
+    
+    private function __clone() {}
+    private function __wakeup() {}
+}
+
+// Usage
+$instance1 = Singleton::getInstance();
+$instance2 = Singleton::getInstance();
+
+var_dump($instance1 === $instance2); // bool(true)
+var_dump($instance1->getValue() === $instance2->getValue()); // bool(true)
+?&gt;</code></pre>
+                    </div>
+                </div>
+            </div>
 
             <h3>За и против</h3>
 
@@ -48,7 +218,7 @@
     <ul id="footer-menu">
     	<li><a href="../index.html">Главная</a></li>
         <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
-        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+        <li>Сайт создан и поддерживается <a href="https://vasiliy.pro">Василием Кулаковым</a>.</li>
     </ul>
 
    <!-- Google tag (gtag.js) -->
@@ -75,5 +245,71 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<!-- Code Snippet JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all code snippet components
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+        
+        // Set default active tab (JavaScript)
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+        
+        // Tab switching functionality
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                
+                // Remove active class from all tabs and panels
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding panel
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+        
+        // Copy functionality
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

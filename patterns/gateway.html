@@ -20,13 +20,282 @@
 			<p>Объект, который инкапсулирует доступ к внешней системе и ресурсу.</p>
             <p>Достойное ПО редко функционирует в изоляции от внешнего мира. Даже самая строго объектно-ориентированная система часто вынуждена взаимодействовать с "не объектами", например реляционная БД, CICS транзакции или структурами XML.</p>
             <p>При доступе к такого рода внешним ресурсам, обычно используется API. Однако, API изначально являются чем-то сложным, потому что принимают во внимание структуру ресурса. Каждый, кто хочет понять какой-нибудь ресурс, должен понять его API - будь то JDBC и SQL для реляционных БД или W3C или JDOM для XML. Это делает ПО не только менее понятным, но ещё это делает изменения гораздо более сложными, например, если вы собираетесь перейти со временем с SQL на XML.</p>
-            <p>Решением здесь является обёртывание всего специального API в класс, интерфейс которого выглядит как интерфейс обычного объекта. Остальные объекты обращаются к ресурсу через этот Шлюз, который транслирует эти простые вызовы в соответствующий специальный API-код</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/gateway.html">Источник</a></noindex></p>        </div>
+            <p>Решением здесь является обёртывание всего специального API в класс, интерфейс которого выглядит как интерфейс обычного объекта. Остальные объекты обращаются к ресурсу через этот Шлюз, который транслирует эти простые вызовы в соответствующий специальный API-код</p>
+
+<h2>Примеры реализации</h2>
+<div class="code-snippet">
+    <div class="code-snippet-header">
+        <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+        <button class="code-snippet-tab" data-language="cpp">C++</button>
+        <button class="code-snippet-tab" data-language="go">Go</button>
+        <button class="code-snippet-tab" data-language="python">Python</button>
+        <button class="code-snippet-tab" data-language="php">PHP</button>
+    </div>
+    <div class="code-snippet-content">
+        <button class="code-snippet-copy">Copy</button>
+        
+        <div class="code-snippet-panel" data-language="javascript">
+            <pre><code>// Gateway Pattern in JavaScript
+class DatabaseGateway {
+    constructor(connection) {
+        this.connection = connection;
+    }
+    
+    async findUserById(id) {
+        const query = `SELECT * FROM users WHERE id = ${id}`;
+        console.log(`Executing: ${query}`);
+        return { id, name: `User ${id}`, email: `user${id}@example.com` };
+    }
+    
+    async createUser(userData) {
+        const { name, email } = userData;
+        console.log(`Creating user: ${name} (${email})`);
+        return { id: Math.floor(Math.random() * 1000), name, email };
+    }
+}
+
+class EmailGateway {
+    constructor(smtpConfig) {
+        this.smtpConfig = smtpConfig;
+    }
+    
+    async sendEmail(to, subject, body) {
+        console.log(`Sending email to ${to}: ${subject}`);
+        return { success: true, messageId: `msg_${Date.now()}` };
+    }
+}
+
+// Usage
+const dbGateway = new DatabaseGateway('connection_string');
+const emailGateway = new EmailGateway({ host: 'smtp.example.com', port: 587 });
+
+async function example() {
+    const user = await dbGateway.findUserById(1);
+    await emailGateway.sendEmail(user.email, 'Welcome', 'Welcome!');
+}
+
+example();</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="cpp">
+            <pre><code>// Gateway Pattern in C++
+#include &lt;iostream&gt;
+#include &lt;string&gt;
+
+class DatabaseGateway {
+private:
+    std::string connectionString;
+    
+public:
+    DatabaseGateway(const std::string& conn) : connectionString(conn) {}
+    
+    struct User {
+        int id;
+        std::string name;
+        std::string email;
+    };
+    
+    User findUserById(int id) {
+        std::cout &lt;&lt; "Executing: SELECT * FROM users WHERE id = " &lt;&lt; id &lt;&lt; std::endl;
+        return {id, "User " + std::to_string(id), "user" + std::to_string(id) + "@example.com"};
+    }
+    
+    User createUser(const std::string& name, const std::string& email) {
+        std::cout &lt;&lt; "Creating user: " &lt;&lt; name &lt;&lt; " (" &lt;&lt; email &lt;&lt; ")" &lt;&lt; std::endl;
+        return {rand() % 1000, name, email};
+    }
+};
+
+class EmailGateway {
+private:
+    std::string smtpHost;
+    int smtpPort;
+    
+public:
+    EmailGateway(const std::string& host, int port) : smtpHost(host), smtpPort(port) {}
+    
+    bool sendEmail(const std::string& to, const std::string& subject, const std::string& body) {
+        std::cout &lt;&lt; "Sending email to " &lt;&lt; to &lt;&lt; ": " &lt;&lt; subject &lt;&lt; std::endl;
+        return true;
+    }
+};
+
+// Usage
+int main() {
+    DatabaseGateway dbGateway("connection_string");
+    EmailGateway emailGateway("smtp.example.com", 587);
+    
+    auto user = dbGateway.findUserById(1);
+    emailGateway.sendEmail(user.email, "Welcome", "Welcome!");
+    
+    return 0;
+}</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="go">
+            <pre><code>// Gateway Pattern in Go
+package main
+
+import "fmt"
+
+type DatabaseGateway struct {
+    connectionString string
+}
+
+type User struct {
+    ID    int
+    Name  string
+    Email string
+}
+
+func NewDatabaseGateway(conn string) *DatabaseGateway {
+    return &DatabaseGateway{connectionString: conn}
+}
+
+func (dg *DatabaseGateway) FindUserByID(id int) User {
+    fmt.Printf("Executing: SELECT * FROM users WHERE id = %d\n", id)
+    return User{
+        ID:    id,
+        Name:  fmt.Sprintf("User %d", id),
+        Email: fmt.Sprintf("user%d@example.com", id),
+    }
+}
+
+func (dg *DatabaseGateway) CreateUser(name, email string) User {
+    fmt.Printf("Creating user: %s (%s)\n", name, email)
+    return User{
+        ID:    1,
+        Name:  name,
+        Email: email,
+    }
+}
+
+type EmailGateway struct {
+    smtpHost string
+    smtpPort int
+}
+
+func NewEmailGateway(host string, port int) *EmailGateway {
+    return &EmailGateway{smtpHost: host, smtpPort: port}
+}
+
+func (eg *EmailGateway) SendEmail(to, subject, body string) bool {
+    fmt.Printf("Sending email to %s: %s\n", to, subject)
+    return true
+}
+
+// Usage
+func main() {
+    dbGateway := NewDatabaseGateway("connection_string")
+    emailGateway := NewEmailGateway("smtp.example.com", 587)
+    
+    user := dbGateway.FindUserByID(1)
+    emailGateway.SendEmail(user.Email, "Welcome", "Welcome!")
+}</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="python">
+            <pre><code># Gateway Pattern in Python
+import random
+
+class DatabaseGateway:
+    def __init__(self, connection_string: str):
+        self.connection_string = connection_string
+    
+    def find_user_by_id(self, user_id: int):
+        print(f"Executing: SELECT * FROM users WHERE id = {user_id}")
+        return {
+            "id": user_id,
+            "name": f"User {user_id}",
+            "email": f"user{user_id}@example.com"
+        }
+    
+    def create_user(self, name: str, email: str):
+        print(f"Creating user: {name} ({email})")
+        return {
+            "id": random.randint(1, 1000),
+            "name": name,
+            "email": email
+        }
+
+class EmailGateway:
+    def __init__(self, smtp_host: str, smtp_port: int):
+        self.smtp_host = smtp_host
+        self.smtp_port = smtp_port
+    
+    def send_email(self, to: str, subject: str, body: str):
+        print(f"Sending email to {to}: {subject}")
+        return True
+
+# Usage
+if __name__ == "__main__":
+    db_gateway = DatabaseGateway("connection_string")
+    email_gateway = EmailGateway("smtp.example.com", 587)
+    
+    user = db_gateway.find_user_by_id(1)
+    email_gateway.send_email(user["email"], "Welcome", "Welcome!")</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="php">
+            <pre><code>&lt;?php
+// Gateway Pattern in PHP
+class DatabaseGateway {
+    private $connectionString;
+    
+    public function __construct($connectionString) {
+        $this->connectionString = $connectionString;
+    }
+    
+    public function findUserById($id) {
+        echo "Executing: SELECT * FROM users WHERE id = $id\n";
+        return [
+            'id' => $id,
+            'name' => "User $id",
+            'email' => "user$id@example.com"
+        ];
+    }
+    
+    public function createUser($name, $email) {
+        echo "Creating user: $name ($email)\n";
+        return [
+            'id' => rand(1, 1000),
+            'name' => $name,
+            'email' => $email
+        ];
+    }
+}
+
+class EmailGateway {
+    private $smtpHost;
+    private $smtpPort;
+    
+    public function __construct($smtpHost, $smtpPort) {
+        $this->smtpHost = $smtpHost;
+        $this->smtpPort = $smtpPort;
+    }
+    
+    public function sendEmail($to, $subject, $body) {
+        echo "Sending email to $to: $subject\n";
+        return true;
+    }
+}
+
+// Usage
+$dbGateway = new DatabaseGateway("connection_string");
+$emailGateway = new EmailGateway("smtp.example.com", 587);
+
+$user = $dbGateway->findUserById(1);
+$emailGateway->sendEmail($user['email'], "Welcome", "Welcome!");
+?&gt;</code></pre>
+        </div>
+    </div>
+</div>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/gateway.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">
     	<li><a href="../index.html">Главная</a></li>
         <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
-        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+        <li>Сайт создан и поддерживается <a href="https://vasiliy.pro">Василием Кулаковым</a>.</li>
     </ul>
 
    <!-- Google tag (gtag.js) -->
@@ -53,5 +322,71 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<!-- Code Snippet JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all code snippet components
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+        
+        // Set default active tab (JavaScript)
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+        
+        // Tab switching functionality
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                
+                // Remove active class from all tabs and panels
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding panel
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+        
+        // Copy functionality
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

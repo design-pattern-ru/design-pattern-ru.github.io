@@ -19,13 +19,306 @@
 			<h2>Описание Registry</h2>
 			<p>Хорошо известный объект, который используется другими объектами для получения общих объектов и сервисов.</p>
             <p>Когда нужно найти какой-нибудь объект, обычно начинают с другого объекта, связанного с целевым. Например, если нужно найти все счета для покупателя, начинают, как раз с покупателя и используют его метод получения счетов. Тем не менее, в некоторых случаях нет подходящего объекта, с которого начать. Например, известен ID покупателя, но нет ссылки на него. Тогда нужен своего рода объект-поисковик, но тогда возникает вопрос - как вы найдёте сам поисковик?</p>
-            <p>Реестр (<acronym title="Паттерн Registry (Реестр)">Registry</acronym>) - это глобальный объект по сути своей или, по крайней мере, так выглядит - он может функционировать только будучи глобальным.</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/registry.html">Источник</a></noindex></p>        </div>
+            <p>Реестр (<acronym title="Паттерн Registry (Реестр)">Registry</acronym>) - это глобальный объект по сути своей или, по крайней мере, так выглядит - он может функционировать только будучи глобальным.</p>
+
+<h2>Примеры реализации</h2>
+<div class="code-snippet">
+    <div class="code-snippet-header">
+        <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+        <button class="code-snippet-tab" data-language="cpp">C++</button>
+        <button class="code-snippet-tab" data-language="go">Go</button>
+        <button class="code-snippet-tab" data-language="python">Python</button>
+        <button class="code-snippet-tab" data-language="php">PHP</button>
+    </div>
+    <div class="code-snippet-content">
+        <button class="code-snippet-copy">Copy</button>
+        
+        <div class="code-snippet-panel" data-language="javascript">
+            <pre><code>// Registry Pattern in JavaScript
+class Registry {
+    constructor() {
+        this.services = new Map();
+    }
+    
+    static getInstance() {
+        if (!Registry.instance) {
+            Registry.instance = new Registry();
+        }
+        return Registry.instance;
+    }
+    
+    register(name, service) {
+        this.services.set(name, service);
+        console.log(`Registered service: ${name}`);
+    }
+    
+    get(name) {
+        const service = this.services.get(name);
+        if (!service) {
+            throw new Error(`Service '${name}' not found in registry`);
+        }
+        return service;
+    }
+    
+    has(name) {
+        return this.services.has(name);
+    }
+}
+
+// Service classes
+class DatabaseService {
+    connect() {
+        console.log('Database connected');
+        return true;
+    }
+    
+    query(sql) {
+        console.log(`Executing: ${sql}`);
+        return [{ id: 1, name: 'John' }];
+    }
+}
+
+class EmailService {
+    send(to, subject, body) {
+        console.log(`Sending email to ${to}: ${subject}`);
+        return true;
+    }
+}
+
+// Usage
+const registry = Registry.getInstance();
+registry.register('database', new DatabaseService());
+registry.register('email', new EmailService());
+
+const db = registry.get('database');
+db.connect();
+const users = db.query('SELECT * FROM users');
+
+const email = registry.get('email');
+email.send('user@example.com', 'Welcome', 'Hello!');</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="cpp">
+            <pre><code>// Registry Pattern in C++
+#include &lt;iostream&gt;
+#include &lt;unordered_map&gt;
+#include &lt;memory&gt;
+
+class Registry {
+private:
+    static std::unique_ptr&lt;Registry&gt; instance;
+    std::unordered_map&lt;std::string, std::shared_ptr&lt;void&gt;&gt; services;
+    
+public:
+    static Registry& getInstance() {
+        if (!instance) {
+            instance = std::make_unique&lt;Registry&gt;();
+        }
+        return *instance;
+    }
+    
+    template&lt;typename T&gt;
+    void registerService(const std::string& name, std::shared_ptr&lt;T&gt; service) {
+        services[name] = std::static_pointer_cast&lt;void&gt;(service);
+        std::cout &lt;&lt; "Registered service: " &lt;&lt; name &lt;&lt; std::endl;
+    }
+    
+    template&lt;typename T&gt;
+    std::shared_ptr&lt;T&gt; getService(const std::string& name) {
+        auto it = services.find(name);
+        if (it == services.end()) {
+            throw std::runtime_error("Service not found");
+        }
+        return std::static_pointer_cast&lt;T&gt;(it->second);
+    }
+};
+
+std::unique_ptr&lt;Registry&gt; Registry::instance = nullptr;
+
+class DatabaseService {
+public:
+    bool connect() {
+        std::cout &lt;&lt; "Database connected" &lt;&lt; std::endl;
+        return true;
+    }
+};
+
+// Usage
+int main() {
+    auto& registry = Registry::getInstance();
+    registry.registerService("database", std::make_shared&lt;DatabaseService&gt;());
+    
+    auto db = registry.getService&lt;DatabaseService&gt;("database");
+    db->connect();
+    
+    return 0;
+}</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="go">
+            <pre><code>// Registry Pattern in Go
+package main
+
+import (
+    "fmt"
+    "sync"
+)
+
+type Registry struct {
+    services map[string]interface{}
+    mutex    sync.RWMutex
+}
+
+var (
+    instance *Registry
+    once     sync.Once
+)
+
+func GetInstance() *Registry {
+    once.Do(func() {
+        instance = &Registry{
+            services: make(map[string]interface{}),
+        }
+    })
+    return instance
+}
+
+func (r *Registry) Register(name string, service interface{}) {
+    r.mutex.Lock()
+    defer r.mutex.Unlock()
+    
+    r.services[name] = service
+    fmt.Printf("Registered service: %s\n", name)
+}
+
+func (r *Registry) Get(name string) (interface{}, error) {
+    r.mutex.RLock()
+    defer r.mutex.RUnlock()
+    
+    service, exists := r.services[name]
+    if !exists {
+        return nil, fmt.Errorf("service '%s' not found", name)
+    }
+    return service, nil
+}
+
+type DatabaseService struct{}
+
+func (d *DatabaseService) Connect() bool {
+    fmt.Println("Database connected")
+    return true
+}
+
+// Usage
+func main() {
+    registry := GetInstance()
+    registry.Register("database", &DatabaseService{})
+    
+    if dbService, err := registry.Get("database"); err == nil {
+        if db, ok := dbService.(*DatabaseService); ok {
+            db.Connect()
+        }
+    }
+}</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="python">
+            <pre><code># Registry Pattern in Python
+import threading
+from typing import Dict, Any
+
+class Registry:
+    _instance = None
+    _lock = threading.Lock()
+    
+    def __new__(cls):
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+                    cls._instance._initialized = False
+        return cls._instance
+    
+    def __init__(self):
+        if not self._initialized:
+            self.services: Dict[str, Any] = {}
+            self._initialized = True
+    
+    def register(self, name: str, service: Any) -> None:
+        self.services[name] = service
+        print(f"Registered service: {name}")
+    
+    def get(self, name: str) -> Any:
+        if name not in self.services:
+            raise ValueError(f"Service '{name}' not found")
+        return self.services[name]
+
+class DatabaseService:
+    def connect(self) -> bool:
+        print("Database connected")
+        return True
+
+# Usage
+if __name__ == "__main__":
+    registry = Registry()
+    registry.register("database", DatabaseService())
+    
+    db = registry.get("database")
+    db.connect()</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="php">
+            <pre><code>&lt;?php
+// Registry Pattern in PHP
+class Registry {
+    private static $instance = null;
+    private $services = [];
+    
+    private function __construct() {}
+    
+    public static function getInstance() {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+    
+    public function register($name, $service) {
+        $this->services[$name] = $service;
+        echo "Registered service: $name\n";
+    }
+    
+    public function get($name) {
+        if (!isset($this->services[$name])) {
+            throw new Exception("Service '$name' not found");
+        }
+        return $this->services[$name];
+    }
+}
+
+class DatabaseService {
+    public function connect() {
+        echo "Database connected\n";
+        return true;
+    }
+}
+
+// Usage
+$registry = Registry::getInstance();
+$registry->register("database", new DatabaseService());
+
+$db = $registry->get("database");
+$db->connect();
+?&gt;</code></pre>
+        </div>
+    </div>
+</div>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/registry.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">
     	<li><a href="../index.html">Главная</a></li>
         <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
-        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+        <li>Сайт создан и поддерживается <a href="https://vasiliy.pro">Василием Кулаковым</a>.</li>
     </ul>
 
    <!-- Google tag (gtag.js) -->
@@ -52,5 +345,71 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<!-- Code Snippet JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all code snippet components
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+        
+        // Set default active tab (JavaScript)
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+        
+        // Tab switching functionality
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                
+                // Remove active class from all tabs and panels
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding panel
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+        
+        // Copy functionality
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

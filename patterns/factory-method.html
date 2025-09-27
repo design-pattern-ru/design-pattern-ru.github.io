@@ -49,6 +49,274 @@
                     </ul>
                 </li>
             </ul>
+            
+            <h2>Примеры реализации</h2>
+            <div class="code-snippet">
+                <div class="code-snippet-header">
+                    <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+                    <button class="code-snippet-tab" data-language="cpp">C++</button>
+                    <button class="code-snippet-tab" data-language="go">Go</button>
+                    <button class="code-snippet-tab" data-language="python">Python</button>
+                    <button class="code-snippet-tab" data-language="php">PHP</button>
+                </div>
+                <div class="code-snippet-content">
+                    <button class="code-snippet-copy">Copy</button>
+                    
+                    <div class="code-snippet-panel" data-language="javascript">
+                        <pre><code>// Factory Method Pattern in JavaScript
+class Product {
+    operation() {
+        throw new Error('Method must be implemented');
+    }
+}
+
+class ConcreteProductA extends Product {
+    operation() {
+        return 'ConcreteProductA operation';
+    }
+}
+
+class ConcreteProductB extends Product {
+    operation() {
+        return 'ConcreteProductB operation';
+    }
+}
+
+class Creator {
+    factoryMethod() {
+        throw new Error('Method must be implemented');
+    }
+    
+    someOperation() {
+        const product = this.factoryMethod();
+        return product.operation();
+    }
+}
+
+class ConcreteCreatorA extends Creator {
+    factoryMethod() {
+        return new ConcreteProductA();
+    }
+}
+
+class ConcreteCreatorB extends Creator {
+    factoryMethod() {
+        return new ConcreteProductB();
+    }
+}
+
+// Usage
+const creatorA = new ConcreteCreatorA();
+const creatorB = new ConcreteCreatorB();
+
+console.log(creatorA.someOperation());
+console.log(creatorB.someOperation());</code></pre>
+                    </div>
+                    
+                    <div class="code-snippet-panel" data-language="cpp">
+                        <pre><code>// Factory Method Pattern in C++
+#include &lt;iostream&gt;
+#include &lt;memory&gt;
+
+class Product {
+public:
+    virtual ~Product() = default;
+    virtual std::string operation() = 0;
+};
+
+class ConcreteProductA : public Product {
+public:
+    std::string operation() override {
+        return "ConcreteProductA operation";
+    }
+};
+
+class ConcreteProductB : public Product {
+public:
+    std::string operation() override {
+        return "ConcreteProductB operation";
+    }
+};
+
+class Creator {
+public:
+    virtual ~Creator() = default;
+    virtual std::unique_ptr&lt;Product&gt; factoryMethod() = 0;
+    
+    std::string someOperation() {
+        auto product = factoryMethod();
+        return product->operation();
+    }
+};
+
+class ConcreteCreatorA : public Creator {
+public:
+    std::unique_ptr&lt;Product&gt; factoryMethod() override {
+        return std::make_unique&lt;ConcreteProductA&gt;();
+    }
+};
+
+class ConcreteCreatorB : public Creator {
+public:
+    std::unique_ptr&lt;Product&gt; factoryMethod() override {
+        return std::make_unique&lt;ConcreteProductB&gt;();
+    }
+};</code></pre>
+                    </div>
+                    
+                    <div class="code-snippet-panel" data-language="go">
+                        <pre><code>// Factory Method Pattern in Go
+package main
+
+import "fmt"
+
+type Product interface {
+    Operation() string
+}
+
+type ConcreteProductA struct{}
+
+func (p *ConcreteProductA) Operation() string {
+    return "ConcreteProductA operation"
+}
+
+type ConcreteProductB struct{}
+
+func (p *ConcreteProductB) Operation() string {
+    return "ConcreteProductB operation"
+}
+
+type Creator interface {
+    FactoryMethod() Product
+    SomeOperation() string
+}
+
+type ConcreteCreatorA struct{}
+
+func (c *ConcreteCreatorA) FactoryMethod() Product {
+    return &ConcreteProductA{}
+}
+
+func (c *ConcreteCreatorA) SomeOperation() string {
+    product := c.FactoryMethod()
+    return product.Operation()
+}
+
+type ConcreteCreatorB struct{}
+
+func (c *ConcreteCreatorB) FactoryMethod() Product {
+    return &ConcreteProductB{}
+}
+
+func (c *ConcreteCreatorB) SomeOperation() string {
+    product := c.FactoryMethod()
+    return product.Operation()
+}
+
+// Usage
+func main() {
+    creatorA := &ConcreteCreatorA{}
+    creatorB := &ConcreteCreatorB{}
+    
+    fmt.Println(creatorA.SomeOperation())
+    fmt.Println(creatorB.SomeOperation())
+}</code></pre>
+                    </div>
+                    
+                    <div class="code-snippet-panel" data-language="python">
+                        <pre><code># Factory Method Pattern in Python
+from abc import ABC, abstractmethod
+
+class Product(ABC):
+    @abstractmethod
+    def operation(self):
+        pass
+
+class ConcreteProductA(Product):
+    def operation(self):
+        return "ConcreteProductA operation"
+
+class ConcreteProductB(Product):
+    def operation(self):
+        return "ConcreteProductB operation"
+
+class Creator(ABC):
+    @abstractmethod
+    def factory_method(self):
+        pass
+    
+    def some_operation(self):
+        product = self.factory_method()
+        return product.operation()
+
+class ConcreteCreatorA(Creator):
+    def factory_method(self):
+        return ConcreteProductA()
+
+class ConcreteCreatorB(Creator):
+    def factory_method(self):
+        return ConcreteProductB()
+
+# Usage
+if __name__ == "__main__":
+    creator_a = ConcreteCreatorA()
+    creator_b = ConcreteCreatorB()
+    
+    print(creator_a.some_operation())
+    print(creator_b.some_operation())</code></pre>
+                    </div>
+                    
+                    <div class="code-snippet-panel" data-language="php">
+                        <pre><code>&lt;?php
+// Factory Method Pattern in PHP
+abstract class Product {
+    abstract public function operation(): string;
+}
+
+class ConcreteProductA extends Product {
+    public function operation(): string {
+        return "ConcreteProductA operation";
+    }
+}
+
+class ConcreteProductB extends Product {
+    public function operation(): string {
+        return "ConcreteProductB operation";
+    }
+}
+
+abstract class Creator {
+    abstract public function factoryMethod(): Product;
+    
+    public function someOperation(): string {
+        $product = $this->factoryMethod();
+        return $product->operation();
+    }
+}
+
+class ConcreteCreatorA extends Creator {
+    public function factoryMethod(): Product {
+        return new ConcreteProductA();
+    }
+}
+
+class ConcreteCreatorB extends Creator {
+    public function factoryMethod(): Product {
+        return new ConcreteProductB();
+    }
+}
+
+// Usage
+$creatorA = new ConcreteCreatorA();
+$creatorB = new ConcreteCreatorB();
+
+echo $creatorA->someOperation() . "\n";
+echo $creatorB->someOperation() . "\n";
+?&gt;</code></pre>
+                    </div>
+                </div>
+            </div>
+            
             <br>
 			<!--<p class="expamle"><span class="ex_title">Пример:</span> объект "Работник" содержит данные об одном работнике и методы: добавить, обновить или удалить. Помимо прочего, отдельным методом вынесена <em>смена имени.</em></p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a> со страницы о паттерне <noindex><a href="http://martinfowler.com/eaaCatalog/activeRecord.html">Active Record</a></noindex></p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/activeRecord.html">Источник</a></noindex></p>        </div>-->
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
@@ -56,7 +324,7 @@
     <ul id="footer-menu">
     	<li><a href="../index.html">Главная</a></li>
         <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
-        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+        <li>Сайт создан и поддерживается <a href="https://vasiliy.pro">Василием Кулаковым</a>.</li>
     </ul>
 
    <!-- Google tag (gtag.js) -->
@@ -83,5 +351,71 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<!-- Code Snippet JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all code snippet components
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+        
+        // Set default active tab (JavaScript)
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+        
+        // Tab switching functionality
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                
+                // Remove active class from all tabs and panels
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding panel
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+        
+        // Copy functionality
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

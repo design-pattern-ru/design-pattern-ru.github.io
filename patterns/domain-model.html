@@ -18,13 +18,388 @@
 			<p><span class="quot">Паттерн проектирования Domain Model</span></p>
 			<h2>Описание Domain Model</h2>
 			<p>Объектная модель домена, объединяющая данные и поведение.</p>
-<p>К сожалению, бизнес-логика приложения может быть очень сложной. Правила и логика описывают множество случаев и модификаций поведения. Для обработки всей этой сложной логики и проектируются объекты. Паттерн <acronym title="Паттерн Domain Model (Модель области определения)">Domain Model</acronym> (модель области определения) образует сеть взаимосвязанных объектов, в которой каждый объект представляет собой отдельную значащую сущность: может быть настолько большую, как корпорация или настолько малую, как строка из формы заказа.</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/domainModel.html">Источник</a></noindex></p>        </div>
+            <p>К сожалению, бизнес-логика приложения может быть очень сложной. Правила и логика описывают множество случаев и модификаций поведения. Для обработки всей этой сложной логики и проектируются объекты. Паттерн <acronym title="Паттерн Domain Model (Модель области определения)">Domain Model</acronym> (модель области определения) образует сеть взаимосвязанных объектов, в которой каждый объект представляет собой отдельную значащую сущность: может быть настолько большую, как корпорация или настолько малую, как строка из формы заказа.</p>
+
+<h2>Примеры реализации</h2>
+<div class="code-snippet">
+    <div class="code-snippet-header">
+        <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+        <button class="code-snippet-tab" data-language="php">PHP</button>
+        <button class="code-snippet-tab" data-language="go">Go</button>
+    </div>
+    <div class="code-snippet-content">
+        <button class="code-snippet-copy">Copy</button>
+        
+        <div class="code-snippet-panel" data-language="javascript">
+            <pre><code>// Domain Model Pattern in JavaScript
+class Customer {
+    constructor(id, name, email, creditLimit) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.creditLimit = creditLimit;
+        this.orders = [];
+    }
+    
+    addOrder(order) {
+        if (this.canPlaceOrder(order)) {
+            this.orders.push(order);
+            order.setCustomer(this);
+            return true;
+        }
+        return false;
+    }
+    
+    canPlaceOrder(order) {
+        const totalOutstanding = this.getTotalOutstanding();
+        return (totalOutstanding + order.getTotal()) <= this.creditLimit;
+    }
+    
+    getTotalOutstanding() {
+        return this.orders
+            .filter(order => order.status === 'pending' || order.status === 'shipped')
+            .reduce((total, order) => total + order.getTotal(), 0);
+    }
+}
+
+class Order {
+    constructor(id, orderDate) {
+        this.id = id;
+        this.orderDate = orderDate;
+        this.status = 'pending';
+        this.customer = null;
+        this.items = [];
+    }
+    
+    addItem(product, quantity, price) {
+        const item = new OrderItem(product, quantity, price);
+        this.items.push(item);
+        return item;
+    }
+    
+    getTotal() {
+        return this.items.reduce((total, item) => total + item.getSubtotal(), 0);
+    }
+    
+    setCustomer(customer) {
+        this.customer = customer;
+    }
+}
+
+class OrderItem {
+    constructor(product, quantity, price) {
+        this.product = product;
+        this.quantity = quantity;
+        this.price = price;
+    }
+    
+    getSubtotal() {
+        return this.quantity * this.price;
+    }
+}
+
+class Product {
+    constructor(id, name, description, basePrice) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.basePrice = basePrice;
+    }
+    
+    calculatePrice(quantity) {
+        if (quantity >= 10) {
+            return this.basePrice * 0.9; // 10% discount
+        }
+        return this.basePrice;
+    }
+}
+
+// Usage
+const customer = new Customer(1, 'John Doe', 'john@example.com', 1000);
+const product = new Product(101, 'Laptop', 'Gaming Laptop', 999.99);
+const order = new Order(1001, new Date());
+
+order.addItem(product, 1, product.calculatePrice(1));
+
+if (customer.addOrder(order)) {
+    console.log('Order added successfully');
+    console.log(`Order total: $${order.getTotal()}`);
+} else {
+    console.log('Order rejected - exceeds credit limit');
+}</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="php">
+            <pre><code>&lt;?php
+// Domain Model Pattern in PHP
+class Customer {
+    private $id, $name, $email, $creditLimit;
+    private $orders = [];
+    
+    public function __construct($id, $name, $email, $creditLimit) {
+        $this->id = $id;
+        $this->name = $name;
+        $this->email = $email;
+        $this->creditLimit = $creditLimit;
+    }
+    
+    public function addOrder($order) {
+        if ($this->canPlaceOrder($order)) {
+            $this->orders[] = $order;
+            $order->setCustomer($this);
+            return true;
+        }
+        return false;
+    }
+    
+    public function canPlaceOrder($order) {
+        $totalOutstanding = $this->getTotalOutstanding();
+        return ($totalOutstanding + $order->getTotal()) <= $this->creditLimit;
+    }
+    
+    public function getTotalOutstanding() {
+        $total = 0;
+        foreach ($this->orders as $order) {
+            if ($order->getStatus() === 'pending' || $order->getStatus() === 'shipped') {
+                $total += $order->getTotal();
+            }
+        }
+        return $total;
+        }
+    }
+}
+
+class Order {
+    private $id, $orderDate, $status, $customer, $items = [];
+    
+    public function __construct($id, $orderDate) {
+        $this->id = $id;
+        $this->orderDate = $orderDate;
+        $this->status = 'pending';
+    }
+    
+    public function addItem($product, $quantity, $price) {
+        $item = new OrderItem($product, $quantity, $price);
+        $this->items[] = $item;
+        return $item;
+    }
+    
+    public function getTotal() {
+        $total = 0;
+        foreach ($this->items as $item) {
+            $total += $item->getSubtotal();
+        }
+        return $total;
+    }
+    
+    public function setCustomer($customer) {
+        $this->customer = $customer;
+    }
+    
+    public function getStatus() {
+        return $this->status;
+    }
+}
+
+class OrderItem {
+    private $product, $quantity, $price;
+    
+    public function __construct($product, $quantity, $price) {
+        $this->product = $product;
+        $this->quantity = $quantity;
+        $this->price = $price;
+    }
+    
+    public function getSubtotal() {
+        return $this->quantity * $this->price;
+    }
+}
+
+class Product {
+    private $id, $name, $description, $basePrice;
+    
+    public function __construct($id, $name, $description, $basePrice) {
+        $this->id = $id;
+        $this->name = $name;
+        $this->description = $description;
+        $this->basePrice = $basePrice;
+    }
+    
+    public function calculatePrice($quantity) {
+        if ($quantity >= 10) {
+            return $this->basePrice * 0.9; // 10% discount
+        }
+        return $this->basePrice;
+    }
+}
+
+// Usage
+$customer = new Customer(1, 'John Doe', 'john@example.com', 1000);
+$product = new Product(101, 'Laptop', 'Gaming Laptop', 999.99);
+$order = new Order(1001, new DateTime());
+
+$order->addItem($product, 1, $product->calculatePrice(1));
+
+if ($customer->addOrder($order)) {
+    echo "Order added successfully\n";
+    echo "Order total: $" . $order->getTotal() . "\n";
+} else {
+    echo "Order rejected - exceeds credit limit\n";
+}
+?&gt;</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="go">
+            <pre><code>// Domain Model Pattern in Go
+package main
+
+import (
+    "fmt"
+    "time"
+)
+
+type Customer struct {
+    ID          int     `json:"id"`
+    Name        string  `json:"name"`
+    Email       string  `json:"email"`
+    CreditLimit float64 `json:"creditLimit"`
+    Orders      []*Order `json:"orders"`
+}
+
+func NewCustomer(id int, name, email string, creditLimit float64) *Customer {
+    return &Customer{
+        ID:          id,
+        Name:        name,
+        Email:       email,
+        CreditLimit: creditLimit,
+        Orders:      make([]*Order, 0),
+    }
+}
+
+func (c *Customer) AddOrder(order *Order) bool {
+    if c.CanPlaceOrder(order) {
+        c.Orders = append(c.Orders, order)
+        order.SetCustomer(c)
+        return true
+    }
+    return false
+}
+
+func (c *Customer) CanPlaceOrder(order *Order) bool {
+    totalOutstanding := c.GetTotalOutstanding()
+    return (totalOutstanding + order.GetTotal()) <= c.CreditLimit
+}
+
+func (c *Customer) GetTotalOutstanding() float64 {
+    total := 0.0
+    for _, order := range c.Orders {
+        if order.Status == "pending" || order.Status == "shipped" {
+            total += order.GetTotal()
+        }
+    }
+    return total
+}
+
+type Order struct {
+    ID        int         `json:"id"`
+    OrderDate time.Time   `json:"orderDate"`
+    Status    string      `json:"status"`
+    Customer  *Customer   `json:"customer"`
+    Items     []*OrderItem `json:"items"`
+}
+
+func NewOrder(id int, orderDate time.Time) *Order {
+    return &Order{
+        ID:        id,
+        OrderDate: orderDate,
+        Status:    "pending",
+        Items:     make([]*OrderItem, 0),
+    }
+}
+
+func (o *Order) AddItem(product *Product, quantity int, price float64) *OrderItem {
+    item := NewOrderItem(product, quantity, price)
+    o.Items = append(o.Items, item)
+    return item
+}
+
+func (o *Order) GetTotal() float64 {
+    total := 0.0
+    for _, item := range o.Items {
+        total += item.GetSubtotal()
+    }
+    return total
+}
+
+func (o *Order) SetCustomer(customer *Customer) {
+    o.Customer = customer
+}
+
+type OrderItem struct {
+    Product  *Product `json:"product"`
+    Quantity int      `json:"quantity"`
+    Price    float64  `json:"price"`
+}
+
+func NewOrderItem(product *Product, quantity int, price float64) *OrderItem {
+    return &OrderItem{
+        Product:  product,
+        Quantity: quantity,
+        Price:    price,
+    }
+}
+
+func (oi *OrderItem) GetSubtotal() float64 {
+    return float64(oi.Quantity) * oi.Price
+}
+
+type Product struct {
+    ID          int     `json:"id"`
+    Name        string  `json:"name"`
+    Description string  `json:"description"`
+    BasePrice   float64 `json:"basePrice"`
+}
+
+func NewProduct(id int, name, description string, basePrice float64) *Product {
+    return &Product{
+        ID:          id,
+        Name:        name,
+        Description: description,
+        BasePrice:   basePrice,
+    }
+}
+
+func (p *Product) CalculatePrice(quantity int) float64 {
+    if quantity >= 10 {
+        return p.BasePrice * 0.9 // 10% discount
+    }
+    return p.BasePrice
+}
+
+// Usage
+func main() {
+    customer := NewCustomer(1, "John Doe", "john@example.com", 1000)
+    product := NewProduct(101, "Laptop", "Gaming Laptop", 999.99)
+    order := NewOrder(1001, time.Now())
+    
+    order.AddItem(product, 1, product.CalculatePrice(1))
+    
+    if customer.AddOrder(order) {
+        fmt.Println("Order added successfully")
+        fmt.Printf("Order total: $%.2f\n", order.GetTotal())
+    } else {
+        fmt.Println("Order rejected - exceeds credit limit")
+    }
+}</code></pre>
+        </div>
+    </div>
+</div>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/domainModel.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">
     	<li><a href="../index.html">Главная</a></li>
         <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
-        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+        <li>Сайт создан и поддерживается <a href="https://vasiliy.pro">Василием Кулаковым</a>.</li>
     </ul>
 
    <!-- Google tag (gtag.js) -->
@@ -51,5 +426,71 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<!-- Code Snippet JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all code snippet components
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+        
+        // Set default active tab (JavaScript)
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+        
+        // Tab switching functionality
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                
+                // Remove active class from all tabs and panels
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding panel
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+        
+        // Copy functionality
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

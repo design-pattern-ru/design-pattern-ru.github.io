@@ -34,6 +34,251 @@
             <li>нет надобности очень сильно связывать взаимодействующие объекты, что полезно для повторного использования.</li>
         </ul>
         <p>Данный шаблон часто применяют в ситуациях, в которых отправителя сообщений не интересует, что делают получатели с предоставленной им информацией.</p>
+        
+        <h2>Примеры реализации</h2>
+        <div class="code-snippet">
+            <div class="code-snippet-header">
+                <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+                <button class="code-snippet-tab" data-language="cpp">C++</button>
+                <button class="code-snippet-tab" data-language="go">Go</button>
+                <button class="code-snippet-tab" data-language="python">Python</button>
+                <button class="code-snippet-tab" data-language="php">PHP</button>
+            </div>
+            <div class="code-snippet-content">
+                <button class="code-snippet-copy">Copy</button>
+                
+                <div class="code-snippet-panel" data-language="javascript">
+                    <pre><code>// Observer Pattern in JavaScript
+class Subject {
+    constructor() {
+        this.observers = [];
+    }
+    
+    attach(observer) {
+        this.observers.push(observer);
+    }
+    
+    detach(observer) {
+        this.observers = this.observers.filter(obs => obs !== observer);
+    }
+    
+    notify(data) {
+        this.observers.forEach(observer => observer.update(data));
+    }
+}
+
+class Observer {
+    constructor(name) {
+        this.name = name;
+    }
+    
+    update(data) {
+        console.log(`${this.name} received: ${data}`);
+    }
+}
+
+// Usage
+const subject = new Subject();
+const observer1 = new Observer('Observer 1');
+const observer2 = new Observer('Observer 2');
+
+subject.attach(observer1);
+subject.attach(observer2);
+subject.notify('Hello World!');</code></pre>
+                </div>
+                
+                <div class="code-snippet-panel" data-language="cpp">
+                    <pre><code>// Observer Pattern in C++
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
+#include &lt;memory&gt;
+
+class Observer {
+public:
+    virtual ~Observer() = default;
+    virtual void update(const std::string& data) = 0;
+};
+
+class Subject {
+private:
+    std::vector&lt;std::shared_ptr&lt;Observer&gt;&gt; observers;
+    
+public:
+    void attach(std::shared_ptr&lt;Observer&gt; observer) {
+        observers.push_back(observer);
+    }
+    
+    void detach(std::shared_ptr&lt;Observer&gt; observer) {
+        observers.erase(std::remove(observers.begin(), observers.end(), observer), observers.end());
+    }
+    
+    void notify(const std::string& data) {
+        for (auto& observer : observers) {
+            observer->update(data);
+        }
+    }
+};
+
+class ConcreteObserver : public Observer {
+private:
+    std::string name;
+    
+public:
+    ConcreteObserver(const std::string& name) : name(name) {}
+    
+    void update(const std::string& data) override {
+        std::cout &lt;&lt; name &lt;&lt; " received: " &lt;&lt; data &lt;&lt; std::endl;
+    }
+};</code></pre>
+                </div>
+                
+                <div class="code-snippet-panel" data-language="go">
+                    <pre><code>// Observer Pattern in Go
+package main
+
+import "fmt"
+
+type Observer interface {
+    Update(data string)
+}
+
+type Subject struct {
+    observers []Observer
+}
+
+func (s *Subject) Attach(observer Observer) {
+    s.observers = append(s.observers, observer)
+}
+
+func (s *Subject) Detach(observer Observer) {
+    for i, obs := range s.observers {
+        if obs == observer {
+            s.observers = append(s.observers[:i], s.observers[i+1:]...)
+            break
+        }
+    }
+}
+
+func (s *Subject) Notify(data string) {
+    for _, observer := range s.observers {
+        observer.Update(data)
+    }
+}
+
+type ConcreteObserver struct {
+    name string
+}
+
+func (o *ConcreteObserver) Update(data string) {
+    fmt.Printf("%s received: %s\n", o.name, data)
+}
+
+// Usage
+func main() {
+    subject := &Subject{}
+    observer1 := &ConcreteObserver{"Observer 1"}
+    observer2 := &ConcreteObserver{"Observer 2"}
+    
+    subject.Attach(observer1)
+    subject.Attach(observer2)
+    subject.Notify("Hello World!")
+}</code></pre>
+                </div>
+                
+                <div class="code-snippet-panel" data-language="python">
+                        <pre><code># Observer Pattern in Python
+from abc import ABC, abstractmethod
+
+class Observer(ABC):
+    @abstractmethod
+    def update(self, data):
+        pass
+
+class Subject:
+    def __init__(self):
+        self.observers = []
+    
+    def attach(self, observer):
+        self.observers.append(observer)
+    
+    def detach(self, observer):
+        self.observers.remove(observer)
+    
+    def notify(self, data):
+        for observer in self.observers:
+            observer.update(data)
+
+class ConcreteObserver(Observer):
+    def __init__(self, name):
+        self.name = name
+    
+    def update(self, data):
+        print(f"{self.name} received: {data}")
+
+# Usage
+if __name__ == "__main__":
+    subject = Subject()
+    observer1 = ConcreteObserver("Observer 1")
+    observer2 = ConcreteObserver("Observer 2")
+    
+    subject.attach(observer1)
+    subject.attach(observer2)
+    subject.notify("Hello World!")</code></pre>
+                </div>
+                
+                <div class="code-snippet-panel" data-language="php">
+                        <pre><code>&lt;?php
+// Observer Pattern in PHP
+interface Observer {
+    public function update($data);
+}
+
+class Subject {
+    private $observers = [];
+    
+    public function attach(Observer $observer) {
+        $this->observers[] = $observer;
+    }
+    
+    public function detach(Observer $observer) {
+        $key = array_search($observer, $this->observers);
+        if ($key !== false) {
+            unset($this->observers[$key]);
+        }
+    }
+    
+    public function notify($data) {
+        foreach ($this->observers as $observer) {
+            $observer->update($data);
+        }
+    }
+}
+
+class ConcreteObserver implements Observer {
+    private $name;
+    
+    public function __construct($name) {
+        $this->name = $name;
+    }
+    
+    public function update($data) {
+        echo $this->name . " received: " . $data . "\n";
+    }
+}
+
+// Usage
+$subject = new Subject();
+$observer1 = new ConcreteObserver("Observer 1");
+$observer2 = new ConcreteObserver("Observer 2");
+
+$subject->attach($observer1);
+$subject->attach($observer2);
+$subject->notify("Hello World!");
+?&gt;</code></pre>
+                </div>
+            </div>
+        </div>
+        
         <p class="note">
             <noindex><a href="https://ru.wikipedia.org/wiki/%D0%9D%D0%B0%D0%B1%D0%BB%D1%8E%D0%B4%D0%B0%D1%82%D0%B5%D0%BB%D1%8C_(%D1%88%D0%B0%D0%B1%D0%BB%D0%BE%D0%BD_%D0%BF%D1%80%D0%BE%D0%B5%D0%BA%D1%82%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F)">Источник</a></noindex>
         </p>
@@ -45,7 +290,7 @@
 <ul id="footer-menu">
     <li><a href="../index.html">Главная</a></li>
     <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
-    <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+    <li>Сайт создан и поддерживается <a href="https://vasiliy.pro">Василием Кулаковым</a>.</li>
 </ul>
 
 <!-- Google tag (gtag.js) -->
@@ -79,5 +324,71 @@
 <noscript>
     <div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt=""/></div>
 </noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<!-- Code Snippet JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all code snippet components
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+        
+        // Set default active tab (JavaScript)
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+        
+        // Tab switching functionality
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                
+                // Remove active class from all tabs and panels
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding panel
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+        
+        // Copy functionality
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

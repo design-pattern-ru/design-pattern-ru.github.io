@@ -17,13 +17,355 @@
 			
 			<h2>Описание Layer Supertype</h2>
 						<p>Тип, выступающий родительским для всех типов в своём уровне</p>
-            <p>Нередко все классы одного уровня имеют одинаковые методы, которые не хочется дублировать повсеместно. Для того, чтобы избежать дублирования, можно все общие методы перенести в один класс (<acronym title="Паттерн Layer Supertype (Супертип Уровня)">Layer Supertype</acronym>), который будет являться Супертипом (читай - родителем) всех классов в своём уровне.</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/layerSupertype.html">Источник</a></noindex></p>        </div>
+            <p>Нередко все классы одного уровня имеют одинаковые методы, которые не хочется дублировать повсеместно. Для того, чтобы избежать дублирования, можно все общие методы перенести в один класс (<acronym title="Паттерн Layer Supertype (Супертип Уровня)">Layer Supertype</acronym>), который будет являться Супертипом (читай - родителем) всех классов в своём уровне.</p>
+
+<h2>Примеры реализации</h2>
+<div class="code-snippet">
+    <div class="code-snippet-header">
+        <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+        <button class="code-snippet-tab" data-language="php">PHP</button>
+        <button class="code-snippet-tab" data-language="go">Go</button>
+    </div>
+    <div class="code-snippet-content">
+        <button class="code-snippet-copy">Copy</button>
+        
+        <div class="code-snippet-panel" data-language="javascript">
+            <pre><code>// Layer Supertype Pattern in JavaScript
+class DomainObject {
+    constructor(id) {
+        this.id = id;
+        this.createdAt = new Date();
+        this.updatedAt = new Date();
+    }
+    
+    getId() {
+        return this.id;
+    }
+    
+    getCreatedAt() {
+        return this.createdAt;
+    }
+    
+    getUpdatedAt() {
+        return this.updatedAt;
+    }
+    
+    updateTimestamp() {
+        this.updatedAt = new Date();
+    }
+    
+    validate() {
+        // Base validation - can be overridden
+        return this.id != null && this.id > 0;
+    }
+    
+    save() {
+        if (this.validate()) {
+            console.log(`Saving ${this.constructor.name} with ID: ${this.id}`);
+            this.updateTimestamp();
+            return true;
+        }
+        return false;
+    }
+    
+    delete() {
+        console.log(`Deleting ${this.constructor.name} with ID: ${this.id}`);
+        return true;
+    }
+}
+
+// Domain entities that extend the supertype
+class User extends DomainObject {
+    constructor(id, name, email) {
+        super(id);
+        this.name = name;
+        this.email = email;
+    }
+    
+    validate() {
+        return super.validate() && 
+               this.name && 
+               this.email && 
+               this.email.includes('@');
+    }
+    
+    getDisplayName() {
+        return `${this.name} (${this.email})`;
+    }
+}
+
+class Product extends DomainObject {
+    constructor(id, name, price) {
+        super(id);
+        this.name = name;
+        this.price = price;
+    }
+    
+    validate() {
+        return super.validate() && 
+               this.name && 
+               this.price > 0;
+    }
+    
+    getFormattedPrice() {
+        return `$${this.price.toFixed(2)}`;
+    }
+}
+
+// Usage
+const user = new User(1, 'John Doe', 'john@example.com');
+const product = new Product(1, 'Laptop', 999.99);
+
+console.log('User validation:', user.validate());
+console.log('User display:', user.getDisplayName());
+user.save();
+
+console.log('Product validation:', product.validate());
+console.log('Product price:', product.getFormattedPrice());
+product.save();</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="php">
+            <pre><code>&lt;?php
+// Layer Supertype Pattern in PHP
+abstract class DomainObject {
+    protected $id;
+    protected $createdAt;
+    protected $updatedAt;
+    
+    public function __construct($id) {
+        $this->id = $id;
+        $this->createdAt = new DateTime();
+        $this->updatedAt = new DateTime();
+    }
+    
+    public function getId() {
+        return $this->id;
+    }
+    
+    public function getCreatedAt() {
+        return $this->createdAt;
+    }
+    
+    public function getUpdatedAt() {
+        return $this->updatedAt;
+    }
+    
+    protected function updateTimestamp() {
+        $this->updatedAt = new DateTime();
+    }
+    
+    public function validate() {
+        // Base validation - can be overridden
+        return $this->id !== null && $this->id > 0;
+    }
+    
+    public function save() {
+        if ($this->validate()) {
+            echo "Saving " . get_class($this) . " with ID: {$this->id}\n";
+            $this->updateTimestamp();
+            return true;
+        }
+        return false;
+    }
+    
+    public function delete() {
+        echo "Deleting " . get_class($this) . " with ID: {$this->id}\n";
+        return true;
+    }
+}
+
+// Domain entities that extend the supertype
+class User extends DomainObject {
+    private $name;
+    private $email;
+    
+    public function __construct($id, $name, $email) {
+        parent::__construct($id);
+        $this->name = $name;
+        $this->email = $email;
+    }
+    
+    public function validate() {
+        return parent::validate() && 
+               !empty($this->name) && 
+               !empty($this->email) && 
+               strpos($this->email, '@') !== false;
+    }
+    
+    public function getDisplayName() {
+        return "{$this->name} ({$this->email})";
+    }
+}
+
+class Product extends DomainObject {
+    private $name;
+    private $price;
+    
+    public function __construct($id, $name, $price) {
+        parent::__construct($id);
+        $this->name = $name;
+        $this->price = $price;
+    }
+    
+    public function validate() {
+        return parent::validate() && 
+               !empty($this->name) && 
+               $this->price > 0;
+    }
+    
+    public function getFormattedPrice() {
+        return '$' . number_format($this->price, 2);
+    }
+}
+
+// Usage
+$user = new User(1, 'John Doe', 'john@example.com');
+$product = new Product(1, 'Laptop', 999.99);
+
+echo "User validation: " . ($user->validate() ? 'true' : 'false') . "\n";
+echo "User display: " . $user->getDisplayName() . "\n";
+$user->save();
+
+echo "Product validation: " . ($product->validate() ? 'true' : 'false') . "\n";
+echo "Product price: " . $product->getFormattedPrice() . "\n";
+$product->save();
+?&gt;</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="go">
+            <pre><code>// Layer Supertype Pattern in Go
+package main
+
+import (
+    "fmt"
+    "time"
+)
+
+type DomainObject struct {
+    ID        int
+    CreatedAt time.Time
+    UpdatedAt time.Time
+}
+
+func NewDomainObject(id int) *DomainObject {
+    now := time.Now()
+    return &DomainObject{
+        ID:        id,
+        CreatedAt: now,
+        UpdatedAt: now,
+    }
+}
+
+func (do *DomainObject) GetID() int {
+    return do.ID
+}
+
+func (do *DomainObject) GetCreatedAt() time.Time {
+    return do.CreatedAt
+}
+
+func (do *DomainObject) GetUpdatedAt() time.Time {
+    return do.UpdatedAt
+}
+
+func (do *DomainObject) UpdateTimestamp() {
+    do.UpdatedAt = time.Now()
+}
+
+func (do *DomainObject) Validate() bool {
+    // Base validation - can be overridden
+    return do.ID > 0
+}
+
+func (do *DomainObject) Save() bool {
+    if do.Validate() {
+        fmt.Printf("Saving DomainObject with ID: %d\n", do.ID)
+        do.UpdateTimestamp()
+        return true
+    }
+    return false
+}
+
+func (do *DomainObject) Delete() bool {
+    fmt.Printf("Deleting DomainObject with ID: %d\n", do.ID)
+    return true
+}
+
+// Domain entities that embed the supertype
+type User struct {
+    *DomainObject
+    Name  string
+    Email string
+}
+
+func NewUser(id int, name, email string) *User {
+    return &User{
+        DomainObject: NewDomainObject(id),
+        Name:         name,
+        Email:        email,
+    }
+}
+
+func (u *User) Validate() bool {
+    return u.DomainObject.Validate() &&
+           u.Name != "" &&
+           u.Email != "" &&
+           len(u.Email) > 0
+}
+
+func (u *User) GetDisplayName() string {
+    return fmt.Sprintf("%s (%s)", u.Name, u.Email)
+}
+
+type Product struct {
+    *DomainObject
+    Name  string
+    Price float64
+}
+
+func NewProduct(id int, name string, price float64) *Product {
+    return &Product{
+        DomainObject: NewDomainObject(id),
+        Name:         name,
+        Price:        price,
+    }
+}
+
+func (p *Product) Validate() bool {
+    return p.DomainObject.Validate() &&
+           p.Name != "" &&
+           p.Price > 0
+}
+
+func (p *Product) GetFormattedPrice() string {
+    return fmt.Sprintf("$%.2f", p.Price)
+}
+
+// Usage
+func main() {
+    user := NewUser(1, "John Doe", "john@example.com")
+    product := NewProduct(1, "Laptop", 999.99)
+
+    fmt.Printf("User validation: %t\n", user.Validate())
+    fmt.Printf("User display: %s\n", user.GetDisplayName())
+    user.Save()
+
+    fmt.Printf("Product validation: %t\n", product.Validate())
+    fmt.Printf("Product price: %s\n", product.GetFormattedPrice())
+    product.Save()
+}</code></pre>
+        </div>
+    </div>
+</div>
+
+<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/layerSupertype.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">
     	<li><a href="../index.html">Главная</a></li>
         <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
-        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+        <li>Сайт создан и поддерживается <a href="https://vasiliy.pro">Василием Кулаковым</a>.</li>
     </ul>
 
    <!-- Google tag (gtag.js) -->
@@ -50,5 +392,71 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<!-- Code Snippet JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all code snippet components
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+        
+        // Set default active tab (JavaScript)
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+        
+        // Tab switching functionality
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                
+                // Remove active class from all tabs and panels
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding panel
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+        
+        // Copy functionality
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

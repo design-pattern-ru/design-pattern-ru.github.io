@@ -44,12 +44,332 @@
             <br>
 
             <p>Паттерн описан <a href="https://andreybolonin.com/phpconsulting/">Андреем Болониным</a>.</p>
+
+<h2>Примеры реализации</h2>
+<div class="code-snippet">
+    <div class="code-snippet-header">
+        <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+        <button class="code-snippet-tab" data-language="php">PHP</button>
+        <button class="code-snippet-tab" data-language="go">Go</button>
+    </div>
+    <div class="code-snippet-content">
+        <button class="code-snippet-copy">Copy</button>
+        
+        <div class="code-snippet-panel" data-language="javascript">
+            <pre><code>// Reactor Pattern in JavaScript
+class EventHandler {
+    constructor(name) {
+        this.name = name;
+    }
+    
+    handle(event) {
+        console.log(`${this.name} handling event:`, event);
+        return `Processed by ${this.name}`;
+    }
+}
+
+class Reactor {
+    constructor() {
+        this.handlers = new Map();
+        this.isRunning = false;
+    }
+    
+    registerHandler(eventType, handler) {
+        if (!this.handlers.has(eventType)) {
+            this.handlers.set(eventType, []);
+        }
+        this.handlers.get(eventType).push(handler);
+        console.log(`Registered handler for event type: ${eventType}`);
+    }
+    
+    unregisterHandler(eventType, handler) {
+        if (this.handlers.has(eventType)) {
+            const handlers = this.handlers.get(eventType);
+            const index = handlers.indexOf(handler);
+            if (index > -1) {
+                handlers.splice(index, 1);
+                console.log(`Unregistered handler for event type: ${eventType}`);
+            }
+        }
+    }
+    
+    dispatch(event) {
+        const eventType = event.type;
+        if (this.handlers.has(eventType)) {
+            const handlers = this.handlers.get(eventType);
+            console.log(`Dispatching event ${eventType} to ${handlers.length} handlers`);
+            handlers.forEach(handler => {
+                try {
+                    handler.handle(event);
+                } catch (error) {
+                    console.error(`Error in handler for ${eventType}:`, error);
+                }
+            });
+        } else {
+            console.log(`No handlers for event type: ${eventType}`);
+        }
+    }
+    
+    start() {
+        this.isRunning = true;
+        console.log('Reactor started');
+    }
+    
+    stop() {
+        this.isRunning = false;
+        console.log('Reactor stopped');
+    }
+}
+
+// Usage
+const reactor = new Reactor();
+
+// Create handlers
+const userHandler = new EventHandler('UserHandler');
+const emailHandler = new EventHandler('EmailHandler');
+const logHandler = new EventHandler('LogHandler');
+
+// Register handlers
+reactor.registerHandler('user.created', userHandler);
+reactor.registerHandler('user.created', emailHandler);
+reactor.registerHandler('user.created', logHandler);
+
+reactor.registerHandler('user.updated', userHandler);
+reactor.registerHandler('user.updated', logHandler);
+
+// Start reactor
+reactor.start();
+
+// Dispatch events
+reactor.dispatch({ type: 'user.created', data: { id: 1, name: 'John Doe' } });
+reactor.dispatch({ type: 'user.updated', data: { id: 1, name: 'John Smith' } });
+reactor.dispatch({ type: 'user.deleted', data: { id: 1 } });</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="php">
+            <pre><code>&lt;?php
+// Reactor Pattern in PHP
+class EventHandler {
+    private $name;
+    
+    public function __construct($name) {
+        $this->name = $name;
+    }
+    
+    public function handle($event) {
+        echo "{$this->name} handling event: " . json_encode($event) . "\n";
+        return "Processed by {$this->name}";
+    }
+}
+
+class Reactor {
+    private $handlers = [];
+    private $isRunning = false;
+    
+    public function registerHandler($eventType, $handler) {
+        if (!isset($this->handlers[$eventType])) {
+            $this->handlers[$eventType] = [];
+        }
+        $this->handlers[$eventType][] = $handler;
+        echo "Registered handler for event type: $eventType\n";
+    }
+    
+    public function unregisterHandler($eventType, $handler) {
+        if (isset($this->handlers[$eventType])) {
+            $index = array_search($handler, $this->handlers[$eventType], true);
+            if ($index !== false) {
+                unset($this->handlers[$eventType][$index]);
+                $this->handlers[$eventType] = array_values($this->handlers[$eventType]);
+                echo "Unregistered handler for event type: $eventType\n";
+            }
+        }
+    }
+    
+    public function dispatch($event) {
+        $eventType = $event['type'];
+        if (isset($this->handlers[$eventType])) {
+            $handlers = $this->handlers[$eventType];
+            echo "Dispatching event $eventType to " . count($handlers) . " handlers\n";
+            foreach ($handlers as $handler) {
+                try {
+                    $handler->handle($event);
+                } catch (Exception $e) {
+                    echo "Error in handler for $eventType: " . $e->getMessage() . "\n";
+                }
+            }
+        } else {
+            echo "No handlers for event type: $eventType\n";
+        }
+    }
+    
+    public function start() {
+        $this->isRunning = true;
+        echo "Reactor started\n";
+    }
+    
+    public function stop() {
+        $this->isRunning = false;
+        echo "Reactor stopped\n";
+    }
+}
+
+// Usage
+$reactor = new Reactor();
+
+// Create handlers
+$userHandler = new EventHandler('UserHandler');
+$emailHandler = new EventHandler('EmailHandler');
+$logHandler = new EventHandler('LogHandler');
+
+// Register handlers
+$reactor->registerHandler('user.created', $userHandler);
+$reactor->registerHandler('user.created', $emailHandler);
+$reactor->registerHandler('user.created', $logHandler);
+
+$reactor->registerHandler('user.updated', $userHandler);
+$reactor->registerHandler('user.updated', $logHandler);
+
+// Start reactor
+$reactor->start();
+
+// Dispatch events
+$reactor->dispatch(['type' => 'user.created', 'data' => ['id' => 1, 'name' => 'John Doe']]);
+$reactor->dispatch(['type' => 'user.updated', 'data' => ['id' => 1, 'name' => 'John Smith']]);
+$reactor->dispatch(['type' => 'user.deleted', 'data' => ['id' => 1]]);
+?&gt;</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="go">
+            <pre><code>// Reactor Pattern in Go
+package main
+
+import (
+    "fmt"
+    "sync"
+)
+
+type Event struct {
+    Type string
+    Data interface{}
+}
+
+type EventHandler interface {
+    Handle(event Event) string
+}
+
+type BaseEventHandler struct {
+    Name string
+}
+
+func (h BaseEventHandler) Handle(event Event) string {
+    fmt.Printf("%s handling event: %+v\n", h.Name, event)
+    return fmt.Sprintf("Processed by %s", h.Name)
+}
+
+type Reactor struct {
+    handlers  map[string][]EventHandler
+    mutex     sync.RWMutex
+    isRunning bool
+}
+
+func NewReactor() *Reactor {
+    return &Reactor{
+        handlers: make(map[string][]EventHandler),
+    }
+}
+
+func (r *Reactor) RegisterHandler(eventType string, handler EventHandler) {
+    r.mutex.Lock()
+    defer r.mutex.Unlock()
+    
+    r.handlers[eventType] = append(r.handlers[eventType], handler)
+    fmt.Printf("Registered handler for event type: %s\n", eventType)
+}
+
+func (r *Reactor) UnregisterHandler(eventType string, handler EventHandler) {
+    r.mutex.Lock()
+    defer r.mutex.Unlock()
+    
+    if handlers, exists := r.handlers[eventType]; exists {
+        for i, h := range handlers {
+            if h == handler {
+                r.handlers[eventType] = append(handlers[:i], handlers[i+1:]...)
+                fmt.Printf("Unregistered handler for event type: %s\n", eventType)
+                break
+            }
+        }
+    }
+}
+
+func (r *Reactor) Dispatch(event Event) {
+    r.mutex.RLock()
+    defer r.mutex.RUnlock()
+    
+    if handlers, exists := r.handlers[event.Type]; exists {
+        fmt.Printf("Dispatching event %s to %d handlers\n", event.Type, len(handlers))
+        for _, handler := range handlers {
+            go func(h EventHandler) {
+                defer func() {
+                    if r := recover(); r != nil {
+                        fmt.Printf("Error in handler for %s: %v\n", event.Type, r)
+                    }
+                }()
+                h.Handle(event)
+            }(handler)
+        }
+    } else {
+        fmt.Printf("No handlers for event type: %s\n", event.Type)
+    }
+}
+
+func (r *Reactor) Start() {
+    r.mutex.Lock()
+    defer r.mutex.Unlock()
+    r.isRunning = true
+    fmt.Println("Reactor started")
+}
+
+func (r *Reactor) Stop() {
+    r.mutex.Lock()
+    defer r.mutex.Unlock()
+    r.isRunning = false
+    fmt.Println("Reactor stopped")
+}
+
+// Usage
+func main() {
+    reactor := NewReactor()
+    
+    // Create handlers
+    userHandler := BaseEventHandler{Name: "UserHandler"}
+    emailHandler := BaseEventHandler{Name: "EmailHandler"}
+    logHandler := BaseEventHandler{Name: "LogHandler"}
+    
+    // Register handlers
+    reactor.RegisterHandler("user.created", userHandler)
+    reactor.RegisterHandler("user.created", emailHandler)
+    reactor.RegisterHandler("user.created", logHandler)
+    
+    reactor.RegisterHandler("user.updated", userHandler)
+    reactor.RegisterHandler("user.updated", logHandler)
+    
+    // Start reactor
+    reactor.Start()
+    
+    // Dispatch events
+    reactor.Dispatch(Event{Type: "user.created", Data: map[string]interface{}{"id": 1, "name": "John Doe"}})
+    reactor.Dispatch(Event{Type: "user.updated", Data: map[string]interface{}{"id": 1, "name": "John Smith"}})
+    reactor.Dispatch(Event{Type: "user.deleted", Data: map[string]interface{}{"id": 1}})
+}</code></pre>
+        </div>
+    </div>
+</div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">
     	<li><a href="../index.html">Главная</a></li>
         <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
-        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+        <li>Сайт создан и поддерживается <a href="https://vasiliy.pro">Василием Кулаковым</a>.</li>
     </ul>
 
    <!-- Google tag (gtag.js) -->
@@ -76,5 +396,71 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<!-- Code Snippet JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all code snippet components
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+        
+        // Set default active tab (JavaScript)
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+        
+        // Tab switching functionality
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                
+                // Remove active class from all tabs and panels
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding panel
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+        
+        // Copy functionality
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

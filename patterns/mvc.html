@@ -20,13 +20,269 @@
 						<p>Этот шаблон разделяет работу веб-приложения на три отдельные функциональные роли: модель данных (model), пользовательский интерфейс (view) и управляющую логику (controller). Таким образом, изменения, вносимые в один из компонентов, оказывают минимально возможное воздействие на другие компоненты.</p>
 			<p>В данном паттерне модель не зависит от представления или управляющей логики, что делает возможным проектирование модели как независимого компонента и, например, создавать несколько представлений для одной модели.</p>
 			<p>Впервые этот шаблон был применён в фреймворке, разрабатываемом для языка Smalltalk в конце 1970-х годов. С этого момента он играет основополагающую роль в большинстве фреймфорков с пользовательским интерфейсом. Он в корне изменил взгляд на проектирование приложений.</p>
-			<p>Большинство фреймворков для веб-программирования сейчас в основе своей содержат именно MVC. К наиболее удачным примерам применения этого паттерна для языка PHP можно отнести <a href="http://framework.zend.com">Zend Framework</a> и <a href="http://cakephp.org/">cakePHP</a></p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/modelViewController.html">Источник</a></noindex></p>        </div>
+			<p>Большинство фреймворков для веб-программирования сейчас в основе своей содержат именно MVC. К наиболее удачным примерам применения этого паттерна для языка PHP можно отнести <a href="http://framework.zend.com">Zend Framework</a> и <a href="http://cakephp.org/">cakePHP</a></p>
+			
+			<h2>Примеры реализации</h2>
+            <div class="code-snippet">
+                <div class="code-snippet-header">
+                    <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+                    <button class="code-snippet-tab" data-language="cpp">C++</button>
+                    <button class="code-snippet-tab" data-language="go">Go</button>
+                    <button class="code-snippet-tab" data-language="python">Python</button>
+                    <button class="code-snippet-tab" data-language="php">PHP</button>
+                </div>
+                <div class="code-snippet-content">
+                    <button class="code-snippet-copy">Copy</button>
+                    
+                    <div class="code-snippet-panel" data-language="javascript">
+                        <pre><code>// MVC Pattern in JavaScript
+// Model
+class UserModel {
+    constructor() {
+        this.users = [];
+    }
+    
+    addUser(user) {
+        this.users.push(user);
+    }
+    
+    getUsers() {
+        return this.users;
+    }
+}
+
+// View
+class UserView {
+    constructor() {
+        this.container = document.getElementById('user-list');
+    }
+    
+    render(users) {
+        this.container.innerHTML = users.map(user => 
+            `&lt;div&gt;${user.name} - ${user.email}&lt;/div&gt;`
+        ).join('');
+    }
+}
+
+// Controller
+class UserController {
+    constructor(model, view) {
+        this.model = model;
+        this.view = view;
+    }
+    
+    addUser(name, email) {
+        const user = { name, email };
+        this.model.addUser(user);
+        this.view.render(this.model.getUsers());
+    }
+}
+
+// Usage
+const model = new UserModel();
+const view = new UserView();
+const controller = new UserController(model, view);
+
+controller.addUser('John Doe', 'john@example.com');</code></pre>
+                    </div>
+                    
+                    <div class="code-snippet-panel" data-language="cpp">
+                        <pre><code>// MVC Pattern in C++
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+
+// Model
+class UserModel {
+private:
+    std::vector&lt;std::pair&lt;std::string, std::string&gt;&gt; users;
+    
+public:
+    void addUser(const std::string& name, const std::string& email) {
+        users.emplace_back(name, email);
+    }
+    
+    const std::vector&lt;std::pair&lt;std::string, std::string&gt;&gt;& getUsers() const {
+        return users;
+    }
+};
+
+// View
+class UserView {
+public:
+    void render(const std::vector&lt;std::pair&lt;std::string, std::string&gt;&gt;& users) {
+        std::cout &lt;&lt; "Users:" &lt;&lt; std::endl;
+        for (const auto& user : users) {
+            std::cout &lt;&lt; user.first &lt;&lt; " - " &lt;&lt; user.second &lt;&lt; std::endl;
+        }
+    }
+};
+
+// Controller
+class UserController {
+private:
+    UserModel* model;
+    UserView* view;
+    
+public:
+    UserController(UserModel* m, UserView* v) : model(m), view(v) {}
+    
+    void addUser(const std::string& name, const std::string& email) {
+        model->addUser(name, email);
+        view->render(model->getUsers());
+    }
+};</code></pre>
+                    </div>
+                    
+                    <div class="code-snippet-panel" data-language="go">
+                        <pre><code>// MVC Pattern in Go
+package main
+
+import "fmt"
+
+// Model
+type User struct {
+    Name  string
+    Email string
+}
+
+type UserModel struct {
+    users []User
+}
+
+func (m *UserModel) AddUser(user User) {
+    m.users = append(m.users, user)
+}
+
+func (m *UserModel) GetUsers() []User {
+    return m.users
+}
+
+// View
+type UserView struct{}
+
+func (v *UserView) Render(users []User) {
+    fmt.Println("Users:")
+    for _, user := range users {
+        fmt.Printf("%s - %s\n", user.Name, user.Email)
+    }
+}
+
+// Controller
+type UserController struct {
+    model *UserModel
+    view  *UserView
+}
+
+func (c *UserController) AddUser(name, email string) {
+    user := User{Name: name, Email: email}
+    c.model.AddUser(user)
+    c.view.Render(c.model.GetUsers())
+}
+
+// Usage
+func main() {
+    model := &UserModel{}
+    view := &UserView{}
+    controller := &UserController{model: model, view: view}
+    
+    controller.AddUser("John Doe", "john@example.com")
+}</code></pre>
+                    </div>
+                    
+                    <div class="code-snippet-panel" data-language="python">
+                        <pre><code># MVC Pattern in Python
+class UserModel:
+    def __init__(self):
+        self.users = []
+    
+    def add_user(self, name, email):
+        self.users.append({'name': name, 'email': email})
+    
+    def get_users(self):
+        return self.users
+
+class UserView:
+    def render(self, users):
+        print("Users:")
+        for user in users:
+            print(f"{user['name']} - {user['email']}")
+
+class UserController:
+    def __init__(self, model, view):
+        self.model = model
+        self.view = view
+    
+    def add_user(self, name, email):
+        self.model.add_user(name, email)
+        self.view.render(self.model.get_users())
+
+# Usage
+if __name__ == "__main__":
+    model = UserModel()
+    view = UserView()
+    controller = UserController(model, view)
+    
+    controller.add_user("John Doe", "john@example.com")</code></pre>
+                    </div>
+                    
+                    <div class="code-snippet-panel" data-language="php">
+                        <pre><code>&lt;?php
+// MVC Pattern in PHP
+class UserModel {
+    private $users = [];
+    
+    public function addUser($name, $email) {
+        $this->users[] = ['name' => $name, 'email' => $email];
+    }
+    
+    public function getUsers() {
+        return $this->users;
+    }
+}
+
+class UserView {
+    public function render($users) {
+        echo "Users:\n";
+        foreach ($users as $user) {
+            echo $user['name'] . " - " . $user['email'] . "\n";
+        }
+    }
+}
+
+class UserController {
+    private $model;
+    private $view;
+    
+    public function __construct($model, $view) {
+        $this->model = $model;
+        $this->view = $view;
+    }
+    
+    public function addUser($name, $email) {
+        $this->model->addUser($name, $email);
+        $this->view->render($this->model->getUsers());
+    }
+}
+
+// Usage
+$model = new UserModel();
+$view = new UserView();
+$controller = new UserController($model, $view);
+
+$controller->addUser("John Doe", "john@example.com");
+?&gt;</code></pre>
+                    </div>
+                </div>
+            </div>
+			
+			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/modelViewController.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">
     	<li><a href="../index.html">Главная</a></li>
         <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
-        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+        <li>Сайт создан и поддерживается <a href="https://vasiliy.pro">Василием Кулаковым</a>.</li>
     </ul>
 
    <!-- Google tag (gtag.js) -->
@@ -53,5 +309,71 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<!-- Code Snippet JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all code snippet components
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+        
+        // Set default active tab (JavaScript)
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+        
+        // Tab switching functionality
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                
+                // Remove active class from all tabs and panels
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding panel
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+        
+        // Copy functionality
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

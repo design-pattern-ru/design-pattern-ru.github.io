@@ -21,13 +21,235 @@
             <p>Null-значения в ООП - неуклюжая вещь, так как она зарубает на корню полиморфизм. Обычно есть возможность вызова какого-либо метода на переменной заданного типа без необходимости беспокоиться о том, принадлежит ли эта переменная конкретному классу или подклассу. В строго типизированных языках эту проверку делает компилятор. Тем не менее, из-за того, что переменная может содержать null, существует опасность возникновения ошибки во время выполнения, при вызове метода на null-значении.</p>
             <p>Если переменная может принимать значение null, вам нужно постоянно заботиться о проверках на null и правильной обработке null-значений. Часто, эта "правильная обработка" одинакова в большинстве случаев, и всё это заканчивается совершением греха дублированием кода (дословный перевод <a href="../martin-fowler.html">Мартина Фаулера</a>).</p>
             <p>Null-значения - яркий пример таких проблем, которые возникают постоянно и внезапно. А их много. Например, во многих системах приходится работать с бесконечностью, которая имеет особые правила для, например, сложения и нарушает обычные аксиомы, справедливые для натуральных чисел. Такие случаи предполагают изменение обычного поведения типа.</p>
-            <p>Вместо того, чтобы возвращать null или какое-то дополнительное значение, верните <acronym title="Паттерн Special Case (Особый Случай)">Special Case</acronym> (Особый Случай) - объект с тем же интерфейсом, но ведущий себя иначе, чем основной.</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/specialCase.html">Источник</a></noindex></p>        </div>
+            <p>Вместо того, чтобы возвращать null или какое-то дополнительное значение, верните <acronym title="Паттерн Special Case (Особый Случай)">Special Case</acronym> (Особый Случай) - объект с тем же интерфейсом, но ведущий себя иначе, чем основной.</p>
+
+<h2>Примеры реализации</h2>
+<div class="code-snippet">
+    <div class="code-snippet-header">
+        <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+        <button class="code-snippet-tab" data-language="php">PHP</button>
+        <button class="code-snippet-tab" data-language="go">Go</button>
+    </div>
+    <div class="code-snippet-content">
+        <button class="code-snippet-copy">Copy</button>
+        
+        <div class="code-snippet-panel" data-language="javascript">
+            <pre><code>// Special Case Pattern in JavaScript
+class User {
+    constructor(id, name, email) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+    }
+    
+    getName() {
+        return this.name;
+    }
+    
+    getEmail() {
+        return this.email;
+    }
+    
+    isNull() {
+        return false;
+    }
+}
+
+class NullUser {
+    getName() {
+        return 'Guest';
+    }
+    
+    getEmail() {
+        return 'guest@example.com';
+    }
+    
+    isNull() {
+        return true;
+    }
+}
+
+class UserService {
+    constructor() {
+        this.users = new Map();
+        this.users.set(1, new User(1, 'John Doe', 'john@example.com'));
+        this.users.set(2, new User(2, 'Jane Smith', 'jane@example.com'));
+    }
+    
+    findById(id) {
+        const user = this.users.get(id);
+        return user || new NullUser();
+    }
+}
+
+// Usage
+const userService = new UserService();
+const user1 = userService.findById(1);
+const user2 = userService.findById(999); // Non-existent user
+
+console.log(user1.getName()); // John Doe
+console.log(user1.isNull()); // false
+
+console.log(user2.getName()); // Guest
+console.log(user2.isNull()); // true</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="php">
+            <pre><code>&lt;?php
+// Special Case Pattern in PHP
+class User {
+    private $id;
+    private $name;
+    private $email;
+    
+    public function __construct($id, $name, $email) {
+        $this->id = $id;
+        $this->name = $name;
+        $this->email = $email;
+    }
+    
+    public function getName() {
+        return $this->name;
+    }
+    
+    public function getEmail() {
+        return $this->email;
+    }
+    
+    public function isNull() {
+        return false;
+    }
+}
+
+class NullUser {
+    public function getName() {
+        return 'Guest';
+    }
+    
+    public function getEmail() {
+        return 'guest@example.com';
+    }
+    
+    public function isNull() {
+        return true;
+    }
+}
+
+class UserService {
+    private $users;
+    
+    public function __construct() {
+        $this->users = [
+            1 => new User(1, 'John Doe', 'john@example.com'),
+            2 => new User(2, 'Jane Smith', 'jane@example.com')
+        ];
+    }
+    
+    public function findById($id) {
+        return $this->users[$id] ?? new NullUser();
+    }
+}
+
+// Usage
+$userService = new UserService();
+$user1 = $userService->findById(1);
+$user2 = $userService->findById(999); // Non-existent user
+
+echo $user1->getName() . "\n"; // John Doe
+echo $user1->isNull() ? 'true' : 'false' . "\n"; // false
+
+echo $user2->getName() . "\n"; // Guest
+echo $user2->isNull() ? 'true' : 'false' . "\n"; // true
+?&gt;</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="go">
+            <pre><code>// Special Case Pattern in Go
+package main
+
+import "fmt"
+
+type User interface {
+    GetName() string
+    GetEmail() string
+    IsNull() bool
+}
+
+type RealUser struct {
+    ID    int
+    Name  string
+    Email string
+}
+
+func (u RealUser) GetName() string {
+    return u.Name
+}
+
+func (u RealUser) GetEmail() string {
+    return u.Email
+}
+
+func (u RealUser) IsNull() bool {
+    return false
+}
+
+type NullUser struct{}
+
+func (u NullUser) GetName() string {
+    return "Guest"
+}
+
+func (u NullUser) GetEmail() string {
+    return "guest@example.com"
+}
+
+func (u NullUser) IsNull() bool {
+    return true
+}
+
+type UserService struct {
+    users map[int]User
+}
+
+func NewUserService() *UserService {
+    return &UserService{
+        users: map[int]User{
+            1: RealUser{ID: 1, Name: "John Doe", Email: "john@example.com"},
+            2: RealUser{ID: 2, Name: "Jane Smith", Email: "jane@example.com"},
+        },
+    }
+}
+
+func (s *UserService) FindByID(id int) User {
+    if user, exists := s.users[id]; exists {
+        return user
+    }
+    return NullUser{}
+}
+
+// Usage
+func main() {
+    userService := NewUserService()
+    user1 := userService.FindByID(1)
+    user2 := userService.FindByID(999) // Non-existent user
+    
+    fmt.Println(user1.GetName()) // John Doe
+    fmt.Println(user1.IsNull())  // false
+    
+    fmt.Println(user2.GetName()) // Guest
+    fmt.Println(user2.IsNull())  // true
+}</code></pre>
+        </div>
+    </div>
+</div>
+
+<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/specialCase.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">
     	<li><a href="../index.html">Главная</a></li>
         <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
-        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+        <li>Сайт создан и поддерживается <a href="https://vasiliy.pro">Василием Кулаковым</a>.</li>
     </ul>
 
    <!-- Google tag (gtag.js) -->
@@ -54,5 +276,71 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<!-- Code Snippet JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all code snippet components
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+        
+        // Set default active tab (JavaScript)
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+        
+        // Tab switching functionality
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                
+                // Remove active class from all tabs and panels
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding panel
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+        
+        // Copy functionality
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

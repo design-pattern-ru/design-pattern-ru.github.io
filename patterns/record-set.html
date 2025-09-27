@@ -21,13 +21,330 @@
             <p>За последние двадцать лет основным способом представления данных в БД стали реляционные таблицы. Почти каждый новый разработчик использует реляционные данные.</p>
             <p>На этой почве появилось множество инструментов для быстрого построения UI (пользовательского интерфейса). Эти UI-фреймворки основываются на реляционности данных и предоставляют различные UI-элементы, которые легко настраиваются и управляются практически безо всякого программирования.</p>
             <p>Обратная сторона медали в том, что, несмотря на невероятную лёгкость вывода и работы с данными, эти элементы не предусматривают возможности добавления кода бизнес-логики. Проверки типа "правильный ли формат у эта даты" и любые правила исполнения попросту некуда поставить. И в итоге, эта логика либо забивается в БД, либо смешивается в кодом вывода информации.</p>
-            <p>Суть <acronym title="Паттерн Record Set ()">Record Set</acronym> в предоставлении структуры данных, которая выглядит в точности как результат SQL-запроса, но может управляться и обрабатываться любыми частями системы.</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/recordSet.html">Источник</a></noindex></p>        </div>
+            <p>Суть <acronym title="Паттерн Record Set ()">Record Set</acronym> в предоставлении структуры данных, которая выглядит в точности как результат SQL-запроса, но может управляться и обрабатываться любыми частями системы.</p>
+
+<h2>Примеры реализации</h2>
+<div class="code-snippet">
+    <div class="code-snippet-header">
+        <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+        <button class="code-snippet-tab" data-language="php">PHP</button>
+        <button class="code-snippet-tab" data-language="go">Go</button>
+    </div>
+    <div class="code-snippet-content">
+        <button class="code-snippet-copy">Copy</button>
+        
+        <div class="code-snippet-panel" data-language="javascript">
+            <pre><code>// Record Set Pattern in JavaScript
+class RecordSet {
+    constructor(data = []) {
+        this.records = data;
+        this.currentIndex = 0;
+    }
+    
+    addRecord(record) {
+        this.records.push(record);
+    }
+    
+    getRecord(index) {
+        return this.records[index];
+    }
+    
+    getCurrentRecord() {
+        return this.records[this.currentIndex];
+    }
+    
+    moveNext() {
+        if (this.currentIndex < this.records.length - 1) {
+            this.currentIndex++;
+            return true;
+        }
+        return false;
+    }
+    
+    movePrevious() {
+        if (this.currentIndex > 0) {
+            this.currentIndex--;
+            return true;
+        }
+        return false;
+    }
+    
+    moveFirst() {
+        this.currentIndex = 0;
+    }
+    
+    moveLast() {
+        this.currentIndex = this.records.length - 1;
+    }
+    
+    getCount() {
+        return this.records.length;
+    }
+    
+    isEmpty() {
+        return this.records.length === 0;
+    }
+    
+    filter(predicate) {
+        const filteredRecords = this.records.filter(predicate);
+        return new RecordSet(filteredRecords);
+    }
+    
+    sort(compareFunction) {
+        const sortedRecords = [...this.records].sort(compareFunction);
+        return new RecordSet(sortedRecords);
+    }
+}
+
+// Usage
+const recordSet = new RecordSet([
+    { id: 1, name: 'John Doe', email: 'john@example.com', age: 30 },
+    { id: 2, name: 'Jane Smith', email: 'jane@example.com', age: 25 },
+    { id: 3, name: 'Bob Johnson', email: 'bob@example.com', age: 35 }
+]);
+
+console.log('Total records:', recordSet.getCount());
+console.log('First record:', recordSet.getCurrentRecord());
+
+recordSet.moveNext();
+console.log('Second record:', recordSet.getCurrentRecord());
+
+// Filter records
+const youngUsers = recordSet.filter(record => record.age < 30);
+console.log('Young users:', youngUsers.getCount());
+
+// Sort records
+const sortedByAge = recordSet.sort((a, b) => a.age - b.age);
+console.log('Sorted by age:', sortedByAge.getCurrentRecord());</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="php">
+            <pre><code>&lt;?php
+// Record Set Pattern in PHP
+class RecordSet {
+    private $records;
+    private $currentIndex;
+    
+    public function __construct($data = []) {
+        $this->records = $data;
+        $this->currentIndex = 0;
+    }
+    
+    public function addRecord($record) {
+        $this->records[] = $record;
+    }
+    
+    public function getRecord($index) {
+        return $this->records[$index] ?? null;
+    }
+    
+    public function getCurrentRecord() {
+        return $this->records[$this->currentIndex] ?? null;
+    }
+    
+    public function moveNext() {
+        if ($this->currentIndex < count($this->records) - 1) {
+            $this->currentIndex++;
+            return true;
+        }
+        return false;
+    }
+    
+    public function movePrevious() {
+        if ($this->currentIndex > 0) {
+            $this->currentIndex--;
+            return true;
+        }
+        return false;
+    }
+    
+    public function moveFirst() {
+        $this->currentIndex = 0;
+    }
+    
+    public function moveLast() {
+        $this->currentIndex = count($this->records) - 1;
+    }
+    
+    public function getCount() {
+        return count($this->records);
+    }
+    
+    public function isEmpty() {
+        return empty($this->records);
+    }
+    
+    public function filter($predicate) {
+        $filteredRecords = array_filter($this->records, $predicate);
+        return new RecordSet(array_values($filteredRecords));
+    }
+    
+    public function sort($compareFunction) {
+        $sortedRecords = $this->records;
+        usort($sortedRecords, $compareFunction);
+        return new RecordSet($sortedRecords);
+    }
+}
+
+// Usage
+$recordSet = new RecordSet([
+    ['id' => 1, 'name' => 'John Doe', 'email' => 'john@example.com', 'age' => 30],
+    ['id' => 2, 'name' => 'Jane Smith', 'email' => 'jane@example.com', 'age' => 25],
+    ['id' => 3, 'name' => 'Bob Johnson', 'email' => 'bob@example.com', 'age' => 35]
+]);
+
+echo "Total records: " . $recordSet->getCount() . "\n";
+echo "First record: " . json_encode($recordSet->getCurrentRecord()) . "\n";
+
+$recordSet->moveNext();
+echo "Second record: " . json_encode($recordSet->getCurrentRecord()) . "\n";
+
+// Filter records
+$youngUsers = $recordSet->filter(function($record) {
+    return $record['age'] < 30;
+});
+echo "Young users: " . $youngUsers->getCount() . "\n";
+
+// Sort records
+$sortedByAge = $recordSet->sort(function($a, $b) {
+    return $a['age'] - $b['age'];
+});
+echo "Sorted by age: " . json_encode($sortedByAge->getCurrentRecord()) . "\n";
+?&gt;</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="go">
+            <pre><code>// Record Set Pattern in Go
+package main
+
+import (
+    "fmt"
+    "sort"
+)
+
+type Record map[string]interface{}
+
+type RecordSet struct {
+    records      []Record
+    currentIndex int
+}
+
+func NewRecordSet(data []Record) *RecordSet {
+    return &RecordSet{
+        records:      data,
+        currentIndex: 0,
+    }
+}
+
+func (rs *RecordSet) AddRecord(record Record) {
+    rs.records = append(rs.records, record)
+}
+
+func (rs *RecordSet) GetRecord(index int) Record {
+    if index >= 0 && index < len(rs.records) {
+        return rs.records[index]
+    }
+    return nil
+}
+
+func (rs *RecordSet) GetCurrentRecord() Record {
+    if rs.currentIndex >= 0 && rs.currentIndex < len(rs.records) {
+        return rs.records[rs.currentIndex]
+    }
+    return nil
+}
+
+func (rs *RecordSet) MoveNext() bool {
+    if rs.currentIndex < len(rs.records)-1 {
+        rs.currentIndex++
+        return true
+    }
+    return false
+}
+
+func (rs *RecordSet) MovePrevious() bool {
+    if rs.currentIndex > 0 {
+        rs.currentIndex--
+        return true
+    }
+    return false
+}
+
+func (rs *RecordSet) MoveFirst() {
+    rs.currentIndex = 0
+}
+
+func (rs *RecordSet) MoveLast() {
+    rs.currentIndex = len(rs.records) - 1
+}
+
+func (rs *RecordSet) GetCount() int {
+    return len(rs.records)
+}
+
+func (rs *RecordSet) IsEmpty() bool {
+    return len(rs.records) == 0
+}
+
+func (rs *RecordSet) Filter(predicate func(Record) bool) *RecordSet {
+    var filteredRecords []Record
+    for _, record := range rs.records {
+        if predicate(record) {
+            filteredRecords = append(filteredRecords, record)
+        }
+    }
+    return NewRecordSet(filteredRecords)
+}
+
+func (rs *RecordSet) Sort(compareFunc func(Record, Record) bool) *RecordSet {
+    sortedRecords := make([]Record, len(rs.records))
+    copy(sortedRecords, rs.records)
+    sort.Slice(sortedRecords, func(i, j int) bool {
+        return compareFunc(sortedRecords[i], sortedRecords[j])
+    })
+    return NewRecordSet(sortedRecords)
+}
+
+// Usage
+func main() {
+    recordSet := NewRecordSet([]Record{
+        {"id": 1, "name": "John Doe", "email": "john@example.com", "age": 30},
+        {"id": 2, "name": "Jane Smith", "email": "jane@example.com", "age": 25},
+        {"id": 3, "name": "Bob Johnson", "email": "bob@example.com", "age": 35},
+    })
+
+    fmt.Printf("Total records: %d\n", recordSet.GetCount())
+    fmt.Printf("First record: %+v\n", recordSet.GetCurrentRecord())
+
+    recordSet.MoveNext()
+    fmt.Printf("Second record: %+v\n", recordSet.GetCurrentRecord())
+
+    // Filter records
+    youngUsers := recordSet.Filter(func(record Record) bool {
+        age, ok := record["age"].(int)
+        return ok && age < 30
+    })
+    fmt.Printf("Young users: %d\n", youngUsers.GetCount())
+
+    // Sort records
+    sortedByAge := recordSet.Sort(func(a, b Record) bool {
+        ageA, _ := a["age"].(int)
+        ageB, _ := b["age"].(int)
+        return ageA < ageB
+    })
+    fmt.Printf("Sorted by age: %+v\n", sortedByAge.GetCurrentRecord())
+}</code></pre>
+        </div>
+    </div>
+</div>
+
+<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/recordSet.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">
     	<li><a href="../index.html">Главная</a></li>
         <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
-        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+        <li>Сайт создан и поддерживается <a href="https://vasiliy.pro">Василием Кулаковым</a>.</li>
     </ul>
 
    <!-- Google tag (gtag.js) -->
@@ -54,5 +371,71 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<!-- Code Snippet JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all code snippet components
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+        
+        // Set default active tab (JavaScript)
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+        
+        // Tab switching functionality
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                
+                // Remove active class from all tabs and panels
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding panel
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+        
+        // Copy functionality
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

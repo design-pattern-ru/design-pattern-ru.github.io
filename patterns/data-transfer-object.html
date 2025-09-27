@@ -20,13 +20,413 @@
 			<p>Объект, который пересылает данные между процессами для уменьшения количества вызовов методов.</p>
 <p>При работе с удалённым интерфейсом, таким как, например, <a href="remote-facade.html" title="Паттерн проектирования Remote Facade (Парадный вход)">Remote Facade</a>, каждый запрос к нему достаточно затратен. В результате, приходится уменьшать количество вызовов, что означает необходимость передачи большего количества данных за один вызов. Чтобы реализовать это, как вариант, можно использовать множество параметров. Однако, при этом зачастую код получается неуклюжим и неудобным. Также это часто невозможно в таких языках, как Java, которые возвращают лишь одно значение.</p>
 <p>Решением здесь является паттерн <acronym title="Паттерн Data Transfer Object (Объект передачи данных)">Data Transfer Object</acronym>, который может хранить всю необходимую для вызова информацию. Он должен быть сериализуемым для удобной передачи по сети. Обычно используется объект-сборщик для передачи данных между DTO и объектами в приложении.</p>
-<p>В сообществе Sun многие используют термин "Value Object" для обозначения этого паттерна. Мартин Фаулер подразумевает под этим термином ( <a href="value-object.html" title="Паттерн проектирования Value Object (Объект-значение)">Value Object</a> ) несколько иной паттерн. Обсуждение этого можно прочесть в его книге <a href="http://martinfowler.com/books.html#eaa">P of EEA</a> на странице 487.</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/dataTransferObject.html">Источник</a></noindex></p>        </div>
+<p>В сообществе Sun многие используют термин "Value Object" для обозначения этого паттерна. Мартин Фаулер подразумевает под этим термином ( <a href="value-object.html" title="Паттерн проектирования Value Object (Объект-значение)">Value Object</a> ) несколько иной паттерн. Обсуждение этого можно прочесть в его книге <a href="http://martinfowler.com/books.html#eaa">P of EEA</a> на странице 487.</p>
+
+<h2>Примеры реализации</h2>
+<div class="code-snippet">
+    <div class="code-snippet-header">
+        <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+        <button class="code-snippet-tab" data-language="cpp">C++</button>
+        <button class="code-snippet-tab" data-language="go">Go</button>
+        <button class="code-snippet-tab" data-language="python">Python</button>
+        <button class="code-snippet-tab" data-language="php">PHP</button>
+    </div>
+    <div class="code-snippet-content">
+        <button class="code-snippet-copy">Copy</button>
+        
+        <div class="code-snippet-panel" data-language="javascript">
+            <pre><code>// Data Transfer Object Pattern in JavaScript
+class UserDTO {
+    constructor(data = {}) {
+        this.id = data.id || null;
+        this.name = data.name || '';
+        this.email = data.email || '';
+        this.age = data.age || 0;
+        this.address = data.address || '';
+    }
+    
+    toJSON() {
+        return {
+            id: this.id,
+            name: this.name,
+            email: this.email,
+            age: this.age,
+            address: this.address
+        };
+    }
+    
+    static fromJSON(json) {
+        return new UserDTO(json);
+    }
+    
+    static fromUser(user) {
+        return new UserDTO({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            age: user.age,
+            address: user.address
+        });
+    }
+}
+
+class User {
+    constructor(id, name, email, age, address) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.age = age;
+        this.address = address;
+    }
+}
+
+// Usage
+const user = new User(1, 'John Doe', 'john@example.com', 30, '123 Main St');
+const userDTO = UserDTO.fromUser(user);
+
+// Serialize for network transfer
+const jsonData = JSON.stringify(userDTO.toJSON());
+console.log('Serialized DTO:', jsonData);
+
+// Deserialize from network
+const receivedData = JSON.parse(jsonData);
+const receivedDTO = UserDTO.fromJSON(receivedData);
+console.log('Received DTO:', receivedDTO);</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="cpp">
+            <pre><code>// Data Transfer Object Pattern in C++
+#include &lt;iostream&gt;
+#include &lt;string&gt;
+#include &lt;map&gt;
+
+class UserDTO {
+private:
+    int id;
+    std::string name;
+    std::string email;
+    int age;
+    std::string address;
+    
+public:
+    UserDTO() : id(0), age(0) {}
+    
+    UserDTO(int id, const std::string& name, const std::string& email, 
+            int age, const std::string& address)
+        : id(id), name(name), email(email), age(age), address(address) {}
+    
+    // Getters
+    int getId() const { return id; }
+    std::string getName() const { return name; }
+    std::string getEmail() const { return email; }
+    int getAge() const { return age; }
+    std::string getAddress() const { return address; }
+    
+    // Setters
+    void setId(int id) { this->id = id; }
+    void setName(const std::string& name) { this->name = name; }
+    void setEmail(const std::string& email) { this->email = email; }
+    void setAge(int age) { this->age = age; }
+    void setAddress(const std::string& address) { this->address = address; }
+    
+    // Serialization
+    std::map&lt;std::string, std::string&gt; toMap() const {
+        std::map&lt;std::string, std::string&gt; data;
+        data["id"] = std::to_string(id);
+        data["name"] = name;
+        data["email"] = email;
+        data["age"] = std::to_string(age);
+        data["address"] = address;
+        return data;
+    }
+    
+    static UserDTO fromMap(const std::map&lt;std::string, std::string&gt;& data) {
+        UserDTO dto;
+        dto.id = std::stoi(data.at("id"));
+        dto.name = data.at("name");
+        dto.email = data.at("email");
+        dto.age = std::stoi(data.at("age"));
+        dto.address = data.at("address");
+        return dto;
+    }
+};
+
+class User {
+private:
+    int id;
+    std::string name;
+    std::string email;
+    int age;
+    std::string address;
+    
+public:
+    User(int id, const std::string& name, const std::string& email, 
+         int age, const std::string& address)
+        : id(id), name(name), email(email), age(age), address(address) {}
+    
+    UserDTO toDTO() const {
+        return UserDTO(id, name, email, age, address);
+    }
+};</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="go">
+            <pre><code>// Data Transfer Object Pattern in Go
+package main
+
+import (
+    "encoding/json"
+    "fmt"
+)
+
+type UserDTO struct {
+    ID      int    `json:"id"`
+    Name    string `json:"name"`
+    Email   string `json:"email"`
+    Age     int    `json:"age"`
+    Address string `json:"address"`
+}
+
+func (dto *UserDTO) ToJSON() ([]byte, error) {
+    return json.Marshal(dto)
+}
+
+func (dto *UserDTO) FromJSON(data []byte) error {
+    return json.Unmarshal(data, dto)
+}
+
+type User struct {
+    ID      int
+    Name    string
+    Email   string
+    Age     int
+    Address string
+}
+
+func (u *User) ToDTO() *UserDTO {
+    return &UserDTO{
+        ID:      u.ID,
+        Name:    u.Name,
+        Email:   u.Email,
+        Age:     u.Age,
+        Address: u.Address,
+    }
+}
+
+func NewUserFromDTO(dto *UserDTO) *User {
+    return &User{
+        ID:      dto.ID,
+        Name:    dto.Name,
+        Email:   dto.Email,
+        Age:     dto.Age,
+        Address: dto.Address,
+    }
+}
+
+// Usage
+func main() {
+    user := &User{
+        ID:      1,
+        Name:    "John Doe",
+        Email:   "john@example.com",
+        Age:     30,
+        Address: "123 Main St",
+    }
+    
+    dto := user.ToDTO()
+    
+    // Serialize for network transfer
+    jsonData, err := dto.ToJSON()
+    if err != nil {
+        fmt.Println("Error:", err)
+        return
+    }
+    fmt.Println("Serialized DTO:", string(jsonData))
+    
+    // Deserialize from network
+    var receivedDTO UserDTO
+    err = receivedDTO.FromJSON(jsonData)
+    if err != nil {
+        fmt.Println("Error:", err)
+        return
+    }
+    fmt.Printf("Received DTO: %+v\n", receivedDTO)
+}</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="python">
+            <pre><code># Data Transfer Object Pattern in Python
+import json
+from dataclasses import dataclass, asdict
+from typing import Optional
+
+@dataclass
+class UserDTO:
+    id: Optional[int] = None
+    name: str = ''
+    email: str = ''
+    age: int = 0
+    address: str = ''
+    
+    def to_dict(self):
+        return asdict(self)
+    
+    def to_json(self):
+        return json.dumps(self.to_dict())
+    
+    @classmethod
+    def from_dict(cls, data):
+        return cls(**data)
+    
+    @classmethod
+    def from_json(cls, json_str):
+        data = json.loads(json_str)
+        return cls.from_dict(data)
+    
+    @classmethod
+    def from_user(cls, user):
+        return cls(
+            id=user.id,
+            name=user.name,
+            email=user.email,
+            age=user.age,
+            address=user.address
+        )
+
+class User:
+    def __init__(self, user_id, name, email, age, address):
+        self.id = user_id
+        self.name = name
+        self.email = email
+        self.age = age
+        self.address = address
+    
+    def to_dto(self):
+        return UserDTO.from_user(self)
+
+# Usage
+if __name__ == "__main__":
+    user = User(1, "John Doe", "john@example.com", 30, "123 Main St")
+    dto = user.to_dto()
+    
+    # Serialize for network transfer
+    json_data = dto.to_json()
+    print("Serialized DTO:", json_data)
+    
+    # Deserialize from network
+    received_dto = UserDTO.from_json(json_data)
+    print("Received DTO:", received_dto)</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="php">
+            <pre><code>&lt;?php
+// Data Transfer Object Pattern in PHP
+class UserDTO {
+    private $id;
+    private $name;
+    private $email;
+    private $age;
+    private $address;
+    
+    public function __construct($data = []) {
+        $this->id = $data['id'] ?? null;
+        $this->name = $data['name'] ?? '';
+        $this->email = $data['email'] ?? '';
+        $this->age = $data['age'] ?? 0;
+        $this->address = $data['address'] ?? '';
+    }
+    
+    public function toArray() {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'email' => $this->email,
+            'age' => $this->age,
+            'address' => $this->address
+        ];
+    }
+    
+    public function toJSON() {
+        return json_encode($this->toArray());
+    }
+    
+    public static function fromArray($data) {
+        return new self($data);
+    }
+    
+    public static function fromJSON($json) {
+        $data = json_decode($json, true);
+        return new self($data);
+    }
+    
+    public static function fromUser($user) {
+        return new self([
+            'id' => $user->getId(),
+            'name' => $user->getName(),
+            'email' => $user->getEmail(),
+            'age' => $user->getAge(),
+            'address' => $user->getAddress()
+        ]);
+    }
+    
+    // Getters
+    public function getId() { return $this->id; }
+    public function getName() { return $this->name; }
+    public function getEmail() { return $this->email; }
+    public function getAge() { return $this->age; }
+    public function getAddress() { return $this->address; }
+}
+
+class User {
+    private $id;
+    private $name;
+    private $email;
+    private $age;
+    private $address;
+    
+    public function __construct($id, $name, $email, $age, $address) {
+        $this->id = $id;
+        $this->name = $name;
+        $this->email = $email;
+        $this->age = $age;
+        $this->address = $address;
+    }
+    
+    public function toDTO() {
+        return UserDTO::fromUser($this);
+    }
+    
+    // Getters
+    public function getId() { return $this->id; }
+    public function getName() { return $this->name; }
+    public function getEmail() { return $this->email; }
+    public function getAge() { return $this->age; }
+    public function getAddress() { return $this->address; }
+}
+
+// Usage
+$user = new User(1, "John Doe", "john@example.com", 30, "123 Main St");
+$dto = $user->toDTO();
+
+// Serialize for network transfer
+$jsonData = $dto->toJSON();
+echo "Serialized DTO: " . $jsonData . "\n";
+
+// Deserialize from network
+$receivedDTO = UserDTO::fromJSON($jsonData);
+echo "Received DTO: " . $receivedDTO->toJSON() . "\n";
+?&gt;</code></pre>
+        </div>
+    </div>
+</div>
+
+<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/dataTransferObject.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">
     	<li><a href="../index.html">Главная</a></li>
         <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
-        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+        <li>Сайт создан и поддерживается <a href="https://vasiliy.pro">Василием Кулаковым</a>.</li>
     </ul>
 
    <!-- Google tag (gtag.js) -->
@@ -53,5 +453,71 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<!-- Code Snippet JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all code snippet components
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+        
+        // Set default active tab (JavaScript)
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+        
+        // Tab switching functionality
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                
+                // Remove active class from all tabs and panels
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding panel
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+        
+        // Copy functionality
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

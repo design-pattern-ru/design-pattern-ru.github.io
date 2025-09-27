@@ -31,12 +31,297 @@
                 <p>Некоторые системы представляют собой гибрид между этими двумя системами: издатель отправляет сообщения в тему, в то время как подписчики регистрируют подписку, основанную на содержимом для одной или более тем.</p>
 
             <p>Паттерн описан <a href="https://andreybolonin.com/phpconsulting/">Андреем Болониным</a>.</p>
+
+<h2>Примеры реализации</h2>
+<div class="code-snippet">
+    <div class="code-snippet-header">
+        <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+        <button class="code-snippet-tab" data-language="php">PHP</button>
+        <button class="code-snippet-tab" data-language="go">Go</button>
+    </div>
+    <div class="code-snippet-content">
+        <button class="code-snippet-copy">Copy</button>
+        
+        <div class="code-snippet-panel" data-language="javascript">
+            <pre><code>// PubSub Pattern in JavaScript
+class PubSub {
+    constructor() {
+        this.subscribers = new Map();
+    }
+    
+    subscribe(topic, callback) {
+        if (!this.subscribers.has(topic)) {
+            this.subscribers.set(topic, []);
+        }
+        this.subscribers.get(topic).push(callback);
+        console.log(`Subscribed to topic: ${topic}`);
+    }
+    
+    unsubscribe(topic, callback) {
+        if (this.subscribers.has(topic)) {
+            const callbacks = this.subscribers.get(topic);
+            const index = callbacks.indexOf(callback);
+            if (index > -1) {
+                callbacks.splice(index, 1);
+                console.log(`Unsubscribed from topic: ${topic}`);
+            }
+        }
+    }
+    
+    publish(topic, data) {
+        if (this.subscribers.has(topic)) {
+            const callbacks = this.subscribers.get(topic);
+            console.log(`Publishing to topic: ${topic}`, data);
+            callbacks.forEach(callback => {
+                try {
+                    callback(data);
+                } catch (error) {
+                    console.error(`Error in subscriber for topic ${topic}:`, error);
+                }
+            });
+        } else {
+            console.log(`No subscribers for topic: ${topic}`);
+        }
+    }
+    
+    getSubscriberCount(topic) {
+        return this.subscribers.has(topic) ? this.subscribers.get(topic).length : 0;
+    }
+}
+
+// Usage
+const pubsub = new PubSub();
+
+// Subscribers
+const userHandler = (data) => {
+    console.log('User handler received:', data);
+};
+
+const emailHandler = (data) => {
+    console.log('Email handler received:', data);
+};
+
+const logHandler = (data) => {
+    console.log('Log handler received:', data);
+};
+
+// Subscribe to topics
+pubsub.subscribe('user.created', userHandler);
+pubsub.subscribe('user.created', emailHandler);
+pubsub.subscribe('user.created', logHandler);
+
+pubsub.subscribe('user.updated', userHandler);
+pubsub.subscribe('user.updated', logHandler);
+
+// Publish events
+pubsub.publish('user.created', { id: 1, name: 'John Doe', email: 'john@example.com' });
+pubsub.publish('user.updated', { id: 1, name: 'John Smith', email: 'johnsmith@example.com' });
+
+console.log('Subscribers for user.created:', pubsub.getSubscriberCount('user.created'));</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="php">
+            <pre><code>&lt;?php
+// PubSub Pattern in PHP
+class PubSub {
+    private $subscribers = [];
+    
+    public function subscribe($topic, $callback) {
+        if (!isset($this->subscribers[$topic])) {
+            $this->subscribers[$topic] = [];
+        }
+        $this->subscribers[$topic][] = $callback;
+        echo "Subscribed to topic: $topic\n";
+    }
+    
+    public function unsubscribe($topic, $callback) {
+        if (isset($this->subscribers[$topic])) {
+            $index = array_search($callback, $this->subscribers[$topic], true);
+            if ($index !== false) {
+                unset($this->subscribers[$topic][$index]);
+                $this->subscribers[$topic] = array_values($this->subscribers[$topic]);
+                echo "Unsubscribed from topic: $topic\n";
+            }
+        }
+    }
+    
+    public function publish($topic, $data) {
+        if (isset($this->subscribers[$topic])) {
+            echo "Publishing to topic: $topic\n";
+            foreach ($this->subscribers[$topic] as $callback) {
+                try {
+                    $callback($data);
+                } catch (Exception $e) {
+                    echo "Error in subscriber for topic $topic: " . $e->getMessage() . "\n";
+                }
+            }
+        } else {
+            echo "No subscribers for topic: $topic\n";
+        }
+    }
+    
+    public function getSubscriberCount($topic) {
+        return isset($this->subscribers[$topic]) ? count($this->subscribers[$topic]) : 0;
+    }
+}
+
+// Usage
+$pubsub = new PubSub();
+
+// Subscribers
+$userHandler = function($data) {
+    echo "User handler received: " . json_encode($data) . "\n";
+};
+
+$emailHandler = function($data) {
+    echo "Email handler received: " . json_encode($data) . "\n";
+};
+
+$logHandler = function($data) {
+    echo "Log handler received: " . json_encode($data) . "\n";
+};
+
+// Subscribe to topics
+$pubsub->subscribe('user.created', $userHandler);
+$pubsub->subscribe('user.created', $emailHandler);
+$pubsub->subscribe('user.created', $logHandler);
+
+$pubsub->subscribe('user.updated', $userHandler);
+$pubsub->subscribe('user.updated', $logHandler);
+
+// Publish events
+$pubsub->publish('user.created', ['id' => 1, 'name' => 'John Doe', 'email' => 'john@example.com']);
+$pubsub->publish('user.updated', ['id' => 1, 'name' => 'John Smith', 'email' => 'johnsmith@example.com']);
+
+echo "Subscribers for user.created: " . $pubsub->getSubscriberCount('user.created') . "\n";
+?&gt;</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="go">
+            <pre><code>// PubSub Pattern in Go
+package main
+
+import (
+    "fmt"
+    "sync"
+)
+
+type Message struct {
+    Topic string
+    Data  interface{}
+}
+
+type Subscriber func(interface{})
+
+type PubSub struct {
+    subscribers map[string][]Subscriber
+    mutex       sync.RWMutex
+}
+
+func NewPubSub() *PubSub {
+    return &PubSub{
+        subscribers: make(map[string][]Subscriber),
+    }
+}
+
+func (ps *PubSub) Subscribe(topic string, callback Subscriber) {
+    ps.mutex.Lock()
+    defer ps.mutex.Unlock()
+    
+    ps.subscribers[topic] = append(ps.subscribers[topic], callback)
+    fmt.Printf("Subscribed to topic: %s\n", topic)
+}
+
+func (ps *PubSub) Unsubscribe(topic string, callback Subscriber) {
+    ps.mutex.Lock()
+    defer ps.mutex.Unlock()
+    
+    if subscribers, exists := ps.subscribers[topic]; exists {
+        for i, sub := range subscribers {
+            if &sub == &callback {
+                ps.subscribers[topic] = append(subscribers[:i], subscribers[i+1:]...)
+                fmt.Printf("Unsubscribed from topic: %s\n", topic)
+                break
+            }
+        }
+    }
+}
+
+func (ps *PubSub) Publish(topic string, data interface{}) {
+    ps.mutex.RLock()
+    defer ps.mutex.RUnlock()
+    
+    if subscribers, exists := ps.subscribers[topic]; exists {
+        fmt.Printf("Publishing to topic: %s\n", topic)
+        for _, callback := range subscribers {
+            go func(cb Subscriber) {
+                defer func() {
+                    if r := recover(); r != nil {
+                        fmt.Printf("Error in subscriber for topic %s: %v\n", topic, r)
+                    }
+                }()
+                cb(data)
+            }(callback)
+        }
+    } else {
+        fmt.Printf("No subscribers for topic: %s\n", topic)
+    }
+}
+
+func (ps *PubSub) GetSubscriberCount(topic string) int {
+    ps.mutex.RLock()
+    defer ps.mutex.RUnlock()
+    
+    if subscribers, exists := ps.subscribers[topic]; exists {
+        return len(subscribers)
+    }
+    return 0
+}
+
+// Usage
+func main() {
+    pubsub := NewPubSub()
+    
+    // Subscribers
+    userHandler := func(data interface{}) {
+        fmt.Printf("User handler received: %+v\n", data)
+    }
+    
+    emailHandler := func(data interface{}) {
+        fmt.Printf("Email handler received: %+v\n", data)
+    }
+    
+    logHandler := func(data interface{}) {
+        fmt.Printf("Log handler received: %+v\n", data)
+    }
+    
+    // Subscribe to topics
+    pubsub.Subscribe("user.created", userHandler)
+    pubsub.Subscribe("user.created", emailHandler)
+    pubsub.Subscribe("user.created", logHandler)
+    
+    pubsub.Subscribe("user.updated", userHandler)
+    pubsub.Subscribe("user.updated", logHandler)
+    
+    // Publish events
+    pubsub.Publish("user.created", map[string]interface{}{
+        "id": 1, "name": "John Doe", "email": "john@example.com",
+    })
+    pubsub.Publish("user.updated", map[string]interface{}{
+        "id": 1, "name": "John Smith", "email": "johnsmith@example.com",
+    })
+    
+    fmt.Printf("Subscribers for user.created: %d\n", pubsub.GetSubscriberCount("user.created"))
+}</code></pre>
+        </div>
+    </div>
+</div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">
     	<li><a href="../index.html">Главная</a></li>
         <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
-        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+        <li>Сайт создан и поддерживается <a href="https://vasiliy.pro">Василием Кулаковым</a>.</li>
     </ul>
 
    <!-- Google tag (gtag.js) -->
@@ -63,5 +348,71 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<!-- Code Snippet JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all code snippet components
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+        
+        // Set default active tab (JavaScript)
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+        
+        // Tab switching functionality
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                
+                // Remove active class from all tabs and panels
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding panel
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+        
+        // Copy functionality
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

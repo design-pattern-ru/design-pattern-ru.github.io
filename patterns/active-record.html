@@ -19,13 +19,340 @@
 			<h2>Описание Active Record</h2>
 			<p>Один объект управляет и данными, и поведением. Большинство этих данных постоянны и их надо хранить в БД. Этот паттерн использует наиболее очевидный подход - хранение логики доступа к данным в объекте сущности.</p>
 			<p>Объект является "обёрткой" одной строки из БД или представления, включает в себя доступ к БД и логику обращения с данными.</p>
-			<p class="expamle"><span class="ex_title">Пример:</span> объект "Работник" содержит данные об одном работнике и методы: добавить, обновить или удалить. Помимо прочего, отдельным методом вынесена <em>смена имени.</em></p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a> со страницы о паттерне <noindex><a href="http://martinfowler.com/eaaCatalog/activeRecord.html">Active Record</a></noindex></p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/activeRecord.html">Источник</a></noindex></p>        </div>
+			<p class="expamle"><span class="ex_title">Пример:</span> объект "Работник" содержит данные об одном работнике и методы: добавить, обновить или удалить. Помимо прочего, отдельным методом вынесена <em>смена имени.</em></p>
+
+<h2>Примеры реализации</h2>
+<div class="code-snippet">
+    <div class="code-snippet-header">
+        <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+        <button class="code-snippet-tab" data-language="cpp">C++</button>
+        <button class="code-snippet-tab" data-language="go">Go</button>
+        <button class="code-snippet-tab" data-language="python">Python</button>
+        <button class="code-snippet-tab" data-language="php">PHP</button>
+    </div>
+    <div class="code-snippet-content">
+        <button class="code-snippet-copy">Copy</button>
+        
+        <div class="code-snippet-panel" data-language="javascript">
+            <pre><code>// Active Record Pattern in JavaScript
+class User {
+    constructor(id, name, email) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+    }
+    
+    static find(id) {
+        console.log(`Finding user with id: ${id}`);
+        // Simulate database query
+        return new User(id, 'John Doe', 'john@example.com');
+    }
+    
+    static findAll() {
+        console.log('Finding all users');
+        // Simulate database query
+        return [
+            new User(1, 'John Doe', 'john@example.com'),
+            new User(2, 'Jane Smith', 'jane@example.com')
+        ];
+    }
+    
+    save() {
+        if (this.id) {
+            console.log(`Updating user: ${this.name}`);
+            return this.update();
+        } else {
+            console.log(`Creating user: ${this.name}`);
+            return this.create();
+        }
+    }
+    
+    create() {
+        this.id = Math.floor(Math.random() * 1000);
+        console.log(`User created with id: ${this.id}`);
+        return this;
+    }
+    
+    update() {
+        console.log(`User updated: ${this.name}`);
+        return this;
+    }
+    
+    delete() {
+        console.log(`Deleting user: ${this.name}`);
+        return true;
+    }
+    
+    changeName(newName) {
+        this.name = newName;
+        console.log(`Name changed to: ${newName}`);
+    }
+}
+
+// Usage
+const user = User.find(1);
+user.changeName('John Updated');
+user.save();
+
+const newUser = new User(null, 'New User', 'new@example.com');
+newUser.save();</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="cpp">
+            <pre><code>// Active Record Pattern in C++
+#include &lt;iostream&gt;
+#include &lt;string&gt;
+#include &lt;vector&gt;
+
+class User {
+private:
+    int id;
+    std::string name;
+    std::string email;
+    
+public:
+    User(int id, const std::string& name, const std::string& email)
+        : id(id), name(name), email(email) {}
+    
+    static User find(int id) {
+        std::cout &lt;&lt; "Finding user with id: " &lt;&lt; id &lt;&lt; std::endl;
+        return User(id, "John Doe", "john@example.com");
+    }
+    
+    static std::vector&lt;User&gt; findAll() {
+        std::cout &lt;&lt; "Finding all users" &lt;&lt; std::endl;
+        return {
+            User(1, "John Doe", "john@example.com"),
+            User(2, "Jane Smith", "jane@example.com")
+        };
+    }
+    
+    void save() {
+        if (id &gt; 0) {
+            std::cout &lt;&lt; "Updating user: " &lt;&lt; name &lt;&lt; std::endl;
+            update();
+        } else {
+            std::cout &lt;&lt; "Creating user: " &lt;&lt; name &lt;&lt; std::endl;
+            create();
+        }
+    }
+    
+    void create() {
+        id = rand() % 1000;
+        std::cout &lt;&lt; "User created with id: " &lt;&lt; id &lt;&lt; std::endl;
+    }
+    
+    void update() {
+        std::cout &lt;&lt; "User updated: " &lt;&lt; name &lt;&lt; std::endl;
+    }
+    
+    void deleteUser() {
+        std::cout &lt;&lt; "Deleting user: " &lt;&lt; name &lt;&lt; std::endl;
+    }
+    
+    void changeName(const std::string& newName) {
+        name = newName;
+        std::cout &lt;&lt; "Name changed to: " &lt;&lt; newName &lt;&lt; std::endl;
+    }
+    
+    int getId() const { return id; }
+    std::string getName() const { return name; }
+    std::string getEmail() const { return email; }
+};</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="go">
+            <pre><code>// Active Record Pattern in Go
+package main
+
+import "fmt"
+
+type User struct {
+    ID    int
+    Name  string
+    Email string
+}
+
+func FindUser(id int) *User {
+    fmt.Printf("Finding user with id: %d\n", id)
+    return &User{ID: id, Name: "John Doe", Email: "john@example.com"}
+}
+
+func FindAllUsers() []*User {
+    fmt.Println("Finding all users")
+    return []*User{
+        {ID: 1, Name: "John Doe", Email: "john@example.com"},
+        {ID: 2, Name: "Jane Smith", Email: "jane@example.com"},
+    }
+}
+
+func (u *User) Save() {
+    if u.ID &gt; 0 {
+        fmt.Printf("Updating user: %s\n", u.Name)
+        u.Update()
+    } else {
+        fmt.Printf("Creating user: %s\n", u.Name)
+        u.Create()
+    }
+}
+
+func (u *User) Create() {
+    u.ID = 100 + len(u.Name) // Simple ID generation
+    fmt.Printf("User created with id: %d\n", u.ID)
+}
+
+func (u *User) Update() {
+    fmt.Printf("User updated: %s\n", u.Name)
+}
+
+func (u *User) Delete() {
+    fmt.Printf("Deleting user: %s\n", u.Name)
+}
+
+func (u *User) ChangeName(newName string) {
+    u.Name = newName
+    fmt.Printf("Name changed to: %s\n", newName)
+}
+
+// Usage
+func main() {
+    user := FindUser(1)
+    user.ChangeName("John Updated")
+    user.Save()
+    
+    newUser := &User{Name: "New User", Email: "new@example.com"}
+    newUser.Save()
+}</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="python">
+            <pre><code># Active Record Pattern in Python
+class User:
+    def __init__(self, user_id=None, name=None, email=None):
+        self.id = user_id
+        self.name = name
+        self.email = email
+    
+    @classmethod
+    def find(cls, user_id):
+        print(f"Finding user with id: {user_id}")
+        return cls(user_id, "John Doe", "john@example.com")
+    
+    @classmethod
+    def find_all(cls):
+        print("Finding all users")
+        return [
+            cls(1, "John Doe", "john@example.com"),
+            cls(2, "Jane Smith", "jane@example.com")
+        ]
+    
+    def save(self):
+        if self.id:
+            print(f"Updating user: {self.name}")
+            self.update()
+        else:
+            print(f"Creating user: {self.name}")
+            self.create()
+    
+    def create(self):
+        self.id = hash(self.name) % 1000
+        print(f"User created with id: {self.id}")
+    
+    def update(self):
+        print(f"User updated: {self.name}")
+    
+    def delete(self):
+        print(f"Deleting user: {self.name}")
+    
+    def change_name(self, new_name):
+        self.name = new_name
+        print(f"Name changed to: {new_name}")
+
+# Usage
+if __name__ == "__main__":
+    user = User.find(1)
+    user.change_name("John Updated")
+    user.save()
+    
+    new_user = User(name="New User", email="new@example.com")
+    new_user.save()</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="php">
+            <pre><code>&lt;?php
+// Active Record Pattern in PHP
+class User {
+    private $id;
+    private $name;
+    private $email;
+    
+    public function __construct($id = null, $name = null, $email = null) {
+        $this->id = $id;
+        $this->name = $name;
+        $this->email = $email;
+    }
+    
+    public static function find($id) {
+        echo "Finding user with id: $id\n";
+        return new self($id, "John Doe", "john@example.com");
+    }
+    
+    public static function findAll() {
+        echo "Finding all users\n";
+        return [
+            new self(1, "John Doe", "john@example.com"),
+            new self(2, "Jane Smith", "jane@example.com")
+        ];
+    }
+    
+    public function save() {
+        if ($this->id) {
+            echo "Updating user: {$this->name}\n";
+            $this->update();
+        } else {
+            echo "Creating user: {$this->name}\n";
+            $this->create();
+        }
+    }
+    
+    private function create() {
+        $this->id = rand(1, 1000);
+        echo "User created with id: {$this->id}\n";
+    }
+    
+    private function update() {
+        echo "User updated: {$this->name}\n";
+    }
+    
+    public function delete() {
+        echo "Deleting user: {$this->name}\n";
+    }
+    
+    public function changeName($newName) {
+        $this->name = $newName;
+        echo "Name changed to: $newName\n";
+    }
+}
+
+// Usage
+$user = User::find(1);
+$user->changeName("John Updated");
+$user->save();
+
+$newUser = new User(null, "New User", "new@example.com");
+$newUser->save();
+?&gt;</code></pre>
+        </div>
+    </div>
+</div>
+
+<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a> со страницы о паттерне <noindex><a href="http://martinfowler.com/eaaCatalog/activeRecord.html">Active Record</a></noindex></p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/activeRecord.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">
     	<li><a href="../index.html">Главная</a></li>
         <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
-        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+        <li>Сайт создан и поддерживается <a href="https://vasiliy.pro">Василием Кулаковым</a>.</li>
     </ul>
 
    <!-- Google tag (gtag.js) -->
@@ -52,5 +379,71 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<!-- Code Snippet JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all code snippet components
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+        
+        // Set default active tab (JavaScript)
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+        
+        // Tab switching functionality
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                
+                // Remove active class from all tabs and panels
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding panel
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+        
+        // Copy functionality
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

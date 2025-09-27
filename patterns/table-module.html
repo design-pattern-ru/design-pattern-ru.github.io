@@ -20,13 +20,362 @@
 			<p>Одна сущность обрабатывает всю бизнес-логику для всех строк таблице БД или виде.</p>
 <p>Один из основополагающих принципов в ООП - сочетание данных и методов обработки этих данных. Традиционный объектно-ориентированный подход основан на объектах с соответствием, как, например, в паттерне <a href="domain-model.html" title="Паттерн проектирования Domain Model (Модель области определения)">Domain Model</a>. Таким образом, если есть класс Employee, люой экземпляр этого класса соответствует конкретному работнику. Эта структура работает хорошо, потому что, имея связь, можно выполнять операции, использователь отношения, и собирать данные о работнике</p>
 <p>Одна из проблем в паттерне <a href="domain-model.html" title="Паттерн проектирования Domain Model (Модель области определения)">Domain Model</a> заключается в интерфейсе к БД. Этот подход относится к БД, как к сумашедшей тётушке, запертой на чердаке, с которой никто не хочет говорить. Частенько, приходится сильно постараться, чтобы записать или считать данные из БД, преобразуя их между двумя представлениями.</p>
-<p>Паттерн <acronym title="Паттерн Table Module (Обработчик таблицы)">Table Module</acronym> разделяет логику области определения (домена) на отдельные классы для каждой таблицы в БД и один экземпляр класса содержит различные процедуры, работающие с данными. Основное отличие от <a href="domain-model.html" title="Паттерн проектирования Domain Model (Модель области определения)">Domain Model</a> заключается в том, что если есть несколько заказов, то <a href="domain-model.html" title="Паттерн проектирования Domain Model (Модель области определения)">Domain Model</a> будет создавать для каждого из заказов свой объект, а <acronym title="Паттерн Table Module (Обработчик таблицы)">Table Module</acronym> будет управлять всем заказами при помощи одного объекта.</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/tableModule.html">Источник</a></noindex></p>        </div>
+            <p>Паттерн <acronym title="Паттерн Table Module (Обработчик таблицы)">Table Module</acronym> разделяет логику области определения (домена) на отдельные классы для каждой таблицы в БД и один экземпляр класса содержит различные процедуры, работающие с данными. Основное отличие от <a href="domain-model.html" title="Паттерн проектирования Domain Model (Модель области определения)">Domain Model</a> заключается в том, что если есть несколько заказов, то <a href="domain-model.html" title="Паттерн проектирования Domain Model (Модель области определения)">Domain Model</a> будет создавать для каждого из заказов свой объект, а <acronym title="Паттерн Table Module (Обработчик таблицы)">Table Module</acronym> будет управлять всем заказами при помощи одного объекта.</p>
+
+<h2>Примеры реализации</h2>
+<div class="code-snippet">
+    <div class="code-snippet-header">
+        <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+        <button class="code-snippet-tab" data-language="php">PHP</button>
+        <button class="code-snippet-tab" data-language="go">Go</button>
+    </div>
+    <div class="code-snippet-content">
+        <button class="code-snippet-copy">Copy</button>
+        
+        <div class="code-snippet-panel" data-language="javascript">
+            <pre><code>// Table Module Pattern in JavaScript
+class CustomerTableModule {
+    constructor(database) {
+        this.db = database;
+        this.tableName = 'customers';
+    }
+    
+    async getAllCustomers() {
+        console.log('Getting all customers');
+        return await this.db.query(`SELECT * FROM ${this.tableName}`);
+    }
+    
+    async getCustomerById(id) {
+        console.log(`Getting customer ${id}`);
+        const result = await this.db.query(`SELECT * FROM ${this.tableName} WHERE id = ?`, [id]);
+        return result[0] || null;
+    }
+    
+    async createCustomer(customerData) {
+        console.log('Creating new customer');
+        const { name, email, creditLimit } = customerData;
+        const result = await this.db.query(
+            `INSERT INTO ${this.tableName} (name, email, credit_limit) VALUES (?, ?, ?)`,
+            [name, email, creditLimit]
+        );
+        return { id: result.insertId, ...customerData };
+    }
+    
+    async getCustomersWithHighCredit() {
+        console.log('Getting customers with high credit limit');
+        return await this.db.query(`SELECT * FROM ${this.tableName} WHERE credit_limit > 5000`);
+    }
+    
+    async getCustomerCount() {
+        console.log('Getting customer count');
+        const result = await this.db.query(`SELECT COUNT(*) as count FROM ${this.tableName}`);
+        return result[0].count;
+    }
+}
+
+class OrderTableModule {
+    constructor(database) {
+        this.db = database;
+        this.tableName = 'orders';
+    }
+    
+    async getAllOrders() {
+        console.log('Getting all orders');
+        return await this.db.query(`SELECT * FROM ${this.tableName}`);
+    }
+    
+    async getOrdersByCustomer(customerId) {
+        console.log(`Getting orders for customer ${customerId}`);
+        return await this.db.query(`SELECT * FROM ${this.tableName} WHERE customer_id = ?`, [customerId]);
+    }
+    
+    async createOrder(orderData) {
+        console.log('Creating new order');
+        const { customerId, total, status } = orderData;
+        const result = await this.db.query(
+            `INSERT INTO ${this.tableName} (customer_id, total, status, order_date) VALUES (?, ?, ?, NOW())`,
+            [customerId, total, status]
+        );
+        return { id: result.insertId, ...orderData };
+    }
+    
+    async getTotalRevenue() {
+        console.log('Calculating total revenue');
+        const result = await this.db.query(`SELECT SUM(total) as total FROM ${this.tableName} WHERE status = 'completed'`);
+        return result[0].total || 0;
+    }
+}
+
+// Usage
+const customerModule = new CustomerTableModule(database);
+const orderModule = new OrderTableModule(database);
+
+const customers = await customerModule.getAllCustomers();
+const customer = await customerModule.getCustomerById(1);
+const totalRevenue = await orderModule.getTotalRevenue();
+
+console.log(`Total customers: ${customers.length}`);
+console.log(`Total revenue: $${totalRevenue}`);</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="php">
+            <pre><code>&lt;?php
+// Table Module Pattern in PHP
+class CustomerTableModule {
+    private $db;
+    private $tableName = 'customers';
+    
+    public function __construct($database) {
+        $this->db = $database;
+    }
+    
+    public function getAllCustomers() {
+        echo "Getting all customers\n";
+        $stmt = $this->db->prepare("SELECT * FROM {$this->tableName}");
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+    
+    public function getCustomerById($id) {
+        echo "Getting customer $id\n";
+        $stmt = $this->db->prepare("SELECT * FROM {$this->tableName} WHERE id = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetch();
+    }
+    
+    public function createCustomer($customerData) {
+        echo "Creating new customer\n";
+        $stmt = $this->db->prepare("INSERT INTO {$this->tableName} (name, email, credit_limit) VALUES (?, ?, ?)");
+        $stmt->execute([$customerData['name'], $customerData['email'], $customerData['creditLimit']]);
+        return array_merge(['id' => $this->db->lastInsertId()], $customerData);
+    }
+    
+    public function getCustomersWithHighCredit() {
+        echo "Getting customers with high credit limit\n";
+        $stmt = $this->db->prepare("SELECT * FROM {$this->tableName} WHERE credit_limit > 5000");
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+    
+    public function getCustomerCount() {
+        echo "Getting customer count\n";
+        $stmt = $this->db->prepare("SELECT COUNT(*) as count FROM {$this->tableName}");
+        $stmt->execute();
+        $result = $stmt->fetch();
+        return $result['count'];
+    }
+}
+
+class OrderTableModule {
+    private $db;
+    private $tableName = 'orders';
+    
+    public function __construct($database) {
+        $this->db = $database;
+    }
+    
+    public function getAllOrders() {
+        echo "Getting all orders\n";
+        $stmt = $this->db->prepare("SELECT * FROM {$this->tableName}");
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+    
+    public function getOrdersByCustomer($customerId) {
+        echo "Getting orders for customer $customerId\n";
+        $stmt = $this->db->prepare("SELECT * FROM {$this->tableName} WHERE customer_id = ?");
+        $stmt->execute([$customerId]);
+        return $stmt->fetchAll();
+    }
+    
+    public function createOrder($orderData) {
+        echo "Creating new order\n";
+        $stmt = $this->db->prepare("INSERT INTO {$this->tableName} (customer_id, total, status, order_date) VALUES (?, ?, ?, NOW())");
+        $stmt->execute([$orderData['customerId'], $orderData['total'], $orderData['status']]);
+        return array_merge(['id' => $this->db->lastInsertId()], $orderData);
+    }
+    
+    public function getTotalRevenue() {
+        echo "Calculating total revenue\n";
+        $stmt = $this->db->prepare("SELECT SUM(total) as total FROM {$this->tableName} WHERE status = 'completed'");
+        $stmt->execute();
+        $result = $stmt->fetch();
+        return $result['total'] ?? 0;
+    }
+}
+
+// Usage
+$customerModule = new CustomerTableModule($database);
+$orderModule = new OrderTableModule($database);
+
+$customers = $customerModule->getAllCustomers();
+$customer = $customerModule->getCustomerById(1);
+$totalRevenue = $orderModule->getTotalRevenue();
+
+echo "Total customers: " . count($customers) . "\n";
+echo "Total revenue: $" . $totalRevenue . "\n";
+?&gt;</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="go">
+            <pre><code>// Table Module Pattern in Go
+package main
+
+import (
+    "database/sql"
+    "fmt"
+)
+
+type CustomerTableModule struct {
+    db        *sql.DB
+    tableName string
+}
+
+func NewCustomerTableModule(db *sql.DB) *CustomerTableModule {
+    return &CustomerTableModule{
+        db:        db,
+        tableName: "customers",
+    }
+}
+
+func (ctm *CustomerTableModule) GetAllCustomers() ([]map[string]interface{}, error) {
+    fmt.Println("Getting all customers")
+    rows, err := ctm.db.Query(fmt.Sprintf("SELECT * FROM %s", ctm.tableName))
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+    
+    var customers []map[string]interface{}
+    for rows.Next() {
+        var id int
+        var name, email string
+        var creditLimit float64
+        err := rows.Scan(&id, &name, &email, &creditLimit)
+        if err != nil {
+            return nil, err
+        }
+        customers = append(customers, map[string]interface{}{
+            "id":          id,
+            "name":        name,
+            "email":       email,
+            "creditLimit": creditLimit,
+        })
+    }
+    return customers, nil
+}
+
+func (ctm *CustomerTableModule) GetCustomerById(id int) (map[string]interface{}, error) {
+    fmt.Printf("Getting customer %d\n", id)
+    var name, email string
+    var creditLimit float64
+    err := ctm.db.QueryRow(fmt.Sprintf("SELECT name, email, credit_limit FROM %s WHERE id = ?", ctm.tableName), id).Scan(&name, &email, &creditLimit)
+    if err != nil {
+        return nil, err
+    }
+    return map[string]interface{}{
+        "id":          id,
+        "name":        name,
+        "email":       email,
+        "creditLimit": creditLimit,
+    }, nil
+}
+
+func (ctm *CustomerTableModule) CreateCustomer(customerData map[string]interface{}) (map[string]interface{}, error) {
+    fmt.Println("Creating new customer")
+    result, err := ctm.db.Exec(fmt.Sprintf("INSERT INTO %s (name, email, credit_limit) VALUES (?, ?, ?)", ctm.tableName),
+        customerData["name"], customerData["email"], customerData["creditLimit"])
+    if err != nil {
+        return nil, err
+    }
+    
+    id, err := result.LastInsertId()
+    if err != nil {
+        return nil, err
+    }
+    
+    customerData["id"] = int(id)
+    return customerData, nil
+}
+
+type OrderTableModule struct {
+    db        *sql.DB
+    tableName string
+}
+
+func NewOrderTableModule(db *sql.DB) *OrderTableModule {
+    return &OrderTableModule{
+        db:        db,
+        tableName: "orders",
+    }
+}
+
+func (otm *OrderTableModule) GetAllOrders() ([]map[string]interface{}, error) {
+    fmt.Println("Getting all orders")
+    rows, err := otm.db.Query(fmt.Sprintf("SELECT * FROM %s", otm.tableName))
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+    
+    var orders []map[string]interface{}
+    for rows.Next() {
+        var id, customerId int
+        var total float64
+        var status string
+        err := rows.Scan(&id, &customerId, &total, &status)
+        if err != nil {
+            return nil, err
+        }
+        orders = append(orders, map[string]interface{}{
+            "id":         id,
+            "customerId": customerId,
+            "total":      total,
+            "status":     status,
+        })
+    }
+    return orders, nil
+}
+
+func (otm *OrderTableModule) GetTotalRevenue() (float64, error) {
+    fmt.Println("Calculating total revenue")
+    var total float64
+    err := otm.db.QueryRow(fmt.Sprintf("SELECT SUM(total) FROM %s WHERE status = 'completed'", otm.tableName)).Scan(&total)
+    if err != nil {
+        return 0, err
+    }
+    return total, nil
+}
+
+// Usage
+func main() {
+    db, err := sql.Open("mysql", "user:password@/dbname")
+    if err != nil {
+        panic(err)
+    }
+    defer db.Close()
+    
+    customerModule := NewCustomerTableModule(db)
+    orderModule := NewOrderTableModule(db)
+    
+    customers, _ := customerModule.GetAllCustomers()
+    customer, _ := customerModule.GetCustomerById(1)
+    totalRevenue, _ := orderModule.GetTotalRevenue()
+    
+    fmt.Printf("Total customers: %d\n", len(customers))
+    fmt.Printf("Total revenue: $%.2f\n", totalRevenue)
+}</code></pre>
+        </div>
+    </div>
+</div>
+
+			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/tableModule.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">
     	<li><a href="../index.html">Главная</a></li>
         <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
-        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+        <li>Сайт создан и поддерживается <a href="https://vasiliy.pro">Василием Кулаковым</a>.</li>
     </ul>
 
    <!-- Google tag (gtag.js) -->
@@ -53,5 +402,71 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<!-- Code Snippet JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all code snippet components
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+        
+        // Set default active tab (JavaScript)
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+        
+        // Tab switching functionality
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                
+                // Remove active class from all tabs and panels
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding panel
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+        
+        // Copy functionality
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

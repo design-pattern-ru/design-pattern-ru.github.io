@@ -24,6 +24,277 @@
         <h2>Описание Abstract Factory</h2>
         <p>Абстрактная фабрика (англ. Abstract factory) — порождающий шаблон проектирования, предоставляет интерфейс для создания семейств взаимосвязанных или взаимозависимых объектов, не специфицируя их конкретных классов. Шаблон реализуется созданием абстрактного класса Factory, который представляет собой интерфейс для создания компонентов системы (например, для оконного интерфейса он может создавать окна и кнопки). Затем пишутся классы, реализующие этот интерфейс.</p>
         <p>Предоставляет интерфейс для создания семейств взаимосвязанных или взаимозависимых объектов, не специфицируя их конкретных классов.</p>
+        
+        <h2>Примеры реализации</h2>
+        <div class="code-snippet">
+            <div class="code-snippet-header">
+                <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+                <button class="code-snippet-tab" data-language="cpp">C++</button>
+                <button class="code-snippet-tab" data-language="go">Go</button>
+                <button class="code-snippet-tab" data-language="python">Python</button>
+                <button class="code-snippet-tab" data-language="php">PHP</button>
+            </div>
+            <div class="code-snippet-content">
+                <button class="code-snippet-copy">Copy</button>
+                
+                <div class="code-snippet-panel" data-language="javascript">
+                    <pre><code>// Abstract Factory Pattern in JavaScript
+class AbstractFactory {
+    createProductA() {
+        throw new Error('Method must be implemented');
+    }
+    
+    createProductB() {
+        throw new Error('Method must be implemented');
+    }
+}
+
+class ConcreteFactory1 extends AbstractFactory {
+    createProductA() {
+        return new ConcreteProductA1();
+    }
+    
+    createProductB() {
+        return new ConcreteProductB1();
+    }
+}
+
+class ConcreteProductA1 {
+    operation() {
+        return 'Product A1 operation';
+    }
+}
+
+class ConcreteProductB1 {
+    operation() {
+        return 'Product B1 operation';
+    }
+}
+
+// Usage
+const factory = new ConcreteFactory1();
+const productA = factory.createProductA();
+const productB = factory.createProductB();</code></pre>
+                </div>
+                
+                <div class="code-snippet-panel" data-language="cpp">
+                    <pre><code>// Abstract Factory Pattern in C++
+#include &lt;iostream&gt;
+#include &lt;memory&gt;
+
+// Abstract Product A
+class AbstractProductA {
+public:
+    virtual ~AbstractProductA() = default;
+    virtual std::string operation() = 0;
+};
+
+// Abstract Product B
+class AbstractProductB {
+public:
+    virtual ~AbstractProductB() = default;
+    virtual std::string operation() = 0;
+};
+
+// Abstract Factory
+class AbstractFactory {
+public:
+    virtual ~AbstractFactory() = default;
+    virtual std::unique_ptr&lt;AbstractProductA&gt; createProductA() = 0;
+    virtual std::unique_ptr&lt;AbstractProductB&gt; createProductB() = 0;
+};
+
+// Concrete Products
+class ConcreteProductA1 : public AbstractProductA {
+public:
+    std::string operation() override {
+        return "Product A1 operation";
+    }
+};
+
+class ConcreteProductB1 : public AbstractProductB {
+public:
+    std::string operation() override {
+        return "Product B1 operation";
+    }
+};
+
+// Concrete Factory
+class ConcreteFactory1 : public AbstractFactory {
+public:
+    std::unique_ptr&lt;AbstractProductA&gt; createProductA() override {
+        return std::make_unique&lt;ConcreteProductA1&gt;();
+    }
+    
+    std::unique_ptr&lt;AbstractProductB&gt; createProductB() override {
+        return std::make_unique&lt;ConcreteProductB1&gt;();
+    }
+};</code></pre>
+                </div>
+                
+                <div class="code-snippet-panel" data-language="go">
+                    <pre><code>// Abstract Factory Pattern in Go
+package main
+
+import "fmt"
+
+// Abstract Product interfaces
+type ProductA interface {
+    Operation() string
+}
+
+type ProductB interface {
+    Operation() string
+}
+
+// Abstract Factory interface
+type AbstractFactory interface {
+    CreateProductA() ProductA
+    CreateProductB() ProductB
+}
+
+// Concrete Products
+type ConcreteProductA1 struct{}
+
+func (p *ConcreteProductA1) Operation() string {
+    return "Product A1 operation"
+}
+
+type ConcreteProductB1 struct{}
+
+func (p *ConcreteProductB1) Operation() string {
+    return "Product B1 operation"
+}
+
+// Concrete Factory
+type ConcreteFactory1 struct{}
+
+func (f *ConcreteFactory1) CreateProductA() ProductA {
+    return &ConcreteProductA1{}
+}
+
+func (f *ConcreteFactory1) CreateProductB() ProductB {
+    return &ConcreteProductB1{}
+}
+
+// Usage
+func main() {
+    factory := &ConcreteFactory1{}
+    productA := factory.CreateProductA()
+    productB := factory.CreateProductB()
+    
+    fmt.Println(productA.Operation())
+    fmt.Println(productB.Operation())
+}</code></pre>
+                </div>
+                
+                <div class="code-snippet-panel" data-language="python">
+                    <pre><code># Abstract Factory Pattern in Python
+from abc import ABC, abstractmethod
+
+# Abstract Products
+class AbstractProductA(ABC):
+    @abstractmethod
+    def operation(self):
+        pass
+
+class AbstractProductB(ABC):
+    @abstractmethod
+    def operation(self):
+        pass
+
+# Abstract Factory
+class AbstractFactory(ABC):
+    @abstractmethod
+    def create_product_a(self):
+        pass
+    
+    @abstractmethod
+    def create_product_b(self):
+        pass
+
+# Concrete Products
+class ConcreteProductA1(AbstractProductA):
+    def operation(self):
+        return "Product A1 operation"
+
+class ConcreteProductB1(AbstractProductB):
+    def operation(self):
+        return "Product B1 operation"
+
+# Concrete Factory
+class ConcreteFactory1(AbstractFactory):
+    def create_product_a(self):
+        return ConcreteProductA1()
+    
+    def create_product_b(self):
+        return ConcreteProductB1()
+
+# Usage
+if __name__ == "__main__":
+    factory = ConcreteFactory1()
+    product_a = factory.create_product_a()
+    product_b = factory.create_product_b()
+    
+    print(product_a.operation())
+    print(product_b.operation())</code></pre>
+                </div>
+                
+                <div class="code-snippet-panel" data-language="php">
+                    <pre><code>&lt;?php
+// Abstract Factory Pattern in PHP
+
+// Abstract Products
+abstract class AbstractProductA {
+    abstract public function operation(): string;
+}
+
+abstract class AbstractProductB {
+    abstract public function operation(): string;
+}
+
+// Abstract Factory
+abstract class AbstractFactory {
+    abstract public function createProductA(): AbstractProductA;
+    abstract public function createProductB(): AbstractProductB;
+}
+
+// Concrete Products
+class ConcreteProductA1 extends AbstractProductA {
+    public function operation(): string {
+        return "Product A1 operation";
+    }
+}
+
+class ConcreteProductB1 extends AbstractProductB {
+    public function operation(): string {
+        return "Product B1 operation";
+    }
+}
+
+// Concrete Factory
+class ConcreteFactory1 extends AbstractFactory {
+    public function createProductA(): AbstractProductA {
+        return new ConcreteProductA1();
+    }
+    
+    public function createProductB(): AbstractProductB {
+        return new ConcreteProductB1();
+    }
+}
+
+// Usage
+$factory = new ConcreteFactory1();
+$productA = $factory->createProductA();
+$productB = $factory->createProductB();
+
+echo $productA->operation() . "\n";
+echo $productB->operation() . "\n";
+?&gt;</code></pre>
+                </div>
+            </div>
+        </div>
+        
         <p>Применение:</p>
         <ul>
             <li>Система не должна зависеть от того, как создаются, компонуются и представляются входящие в неё объекты.</li>
@@ -41,7 +312,7 @@
 <ul id="footer-menu">
     <li><a href="../index.html">Главная</a></li>
     <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
-    <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+    <li>Сайт создан и поддерживается <a href="https://vasiliy.pro">Василием Кулаковым</a>.</li>
 </ul>
 
 <!-- Google tag (gtag.js) -->
@@ -76,5 +347,71 @@
 <noscript>
     <div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt=""/></div>
 </noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<!-- Code Snippet JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all code snippet components
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+        
+        // Set default active tab (JavaScript)
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+        
+        // Tab switching functionality
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                
+                // Remove active class from all tabs and panels
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding panel
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+        
+        // Copy functionality
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

@@ -30,6 +30,321 @@
                 <li>изолирует код, реализующий конструирование и представление;</li>
                 <li>дает более тонкий контроль над процессом конструирования.</li>
             </ul>
+            
+            <h2>Примеры реализации</h2>
+            <div class="code-snippet">
+                <div class="code-snippet-header">
+                    <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+                    <button class="code-snippet-tab" data-language="cpp">C++</button>
+                    <button class="code-snippet-tab" data-language="go">Go</button>
+                    <button class="code-snippet-tab" data-language="python">Python</button>
+                    <button class="code-snippet-tab" data-language="php">PHP</button>
+                </div>
+                <div class="code-snippet-content">
+                    <button class="code-snippet-copy">Copy</button>
+                    
+                    <div class="code-snippet-panel" data-language="javascript">
+                        <pre><code>// Builder Pattern in JavaScript
+class Product {
+    constructor() {
+        this.parts = [];
+    }
+    
+    addPart(part) {
+        this.parts.push(part);
+    }
+    
+    listParts() {
+        console.log(`Product parts: ${this.parts.join(', ')}`);
+    }
+}
+
+class Builder {
+    constructor() {
+        this.product = new Product();
+    }
+    
+    buildPartA() {
+        this.product.addPart('Part A');
+        return this;
+    }
+    
+    buildPartB() {
+        this.product.addPart('Part B');
+        return this;
+    }
+    
+    buildPartC() {
+        this.product.addPart('Part C');
+        return this;
+    }
+    
+    getResult() {
+        return this.product;
+    }
+}
+
+// Usage
+const builder = new Builder();
+const product = builder
+    .buildPartA()
+    .buildPartB()
+    .buildPartC()
+    .getResult();
+
+product.listParts();</code></pre>
+                    </div>
+                    
+                    <div class="code-snippet-panel" data-language="cpp">
+                        <pre><code>// Builder Pattern in C++
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+
+class Product {
+private:
+    std::vector&lt;std::string&gt; parts;
+    
+public:
+    void addPart(const std::string& part) {
+        parts.push_back(part);
+    }
+    
+    void listParts() const {
+        std::cout &lt;&lt; "Product parts: ";
+        for (size_t i = 0; i &lt; parts.size(); ++i) {
+            std::cout &lt;&lt; parts[i];
+            if (i &lt; parts.size() - 1) std::cout &lt;&lt; ", ";
+        }
+        std::cout &lt;&lt; std::endl;
+    }
+};
+
+class Builder {
+protected:
+    Product* product;
+    
+public:
+    virtual ~Builder() = default;
+    virtual void buildPartA() = 0;
+    virtual void buildPartB() = 0;
+    virtual void buildPartC() = 0;
+    virtual Product* getResult() = 0;
+};
+
+class ConcreteBuilder : public Builder {
+public:
+    ConcreteBuilder() {
+        product = new Product();
+    }
+    
+    void buildPartA() override {
+        product->addPart("Part A");
+    }
+    
+    void buildPartB() override {
+        product->addPart("Part B");
+    }
+    
+    void buildPartC() override {
+        product->addPart("Part C");
+    }
+    
+    Product* getResult() override {
+        return product;
+    }
+};</code></pre>
+                    </div>
+                    
+                    <div class="code-snippet-panel" data-language="go">
+                        <pre><code>// Builder Pattern in Go
+package main
+
+import "fmt"
+
+type Product struct {
+    parts []string
+}
+
+func (p *Product) AddPart(part string) {
+    p.parts = append(p.parts, part)
+}
+
+func (p *Product) ListParts() {
+    fmt.Printf("Product parts: %v\n", p.parts)
+}
+
+type Builder interface {
+    BuildPartA()
+    BuildPartB()
+    BuildPartC()
+    GetResult() *Product
+}
+
+type ConcreteBuilder struct {
+    product *Product
+}
+
+func NewConcreteBuilder() *ConcreteBuilder {
+    return &ConcreteBuilder{
+        product: &Product{},
+    }
+}
+
+func (b *ConcreteBuilder) BuildPartA() {
+    b.product.AddPart("Part A")
+}
+
+func (b *ConcreteBuilder) BuildPartB() {
+    b.product.AddPart("Part B")
+}
+
+func (b *ConcreteBuilder) BuildPartC() {
+    b.product.AddPart("Part C")
+}
+
+func (b *ConcreteBuilder) GetResult() *Product {
+    return b.product
+}
+
+// Usage
+func main() {
+    builder := NewConcreteBuilder()
+    product := builder.
+        BuildPartA().
+        BuildPartB().
+        BuildPartC().
+        GetResult()
+    
+    product.ListParts()
+}</code></pre>
+                    </div>
+                    
+                    <div class="code-snippet-panel" data-language="python">
+                        <pre><code># Builder Pattern in Python
+from abc import ABC, abstractmethod
+
+class Product:
+    def __init__(self):
+        self.parts = []
+    
+    def add_part(self, part):
+        self.parts.append(part)
+    
+    def list_parts(self):
+        print(f"Product parts: {', '.join(self.parts)}")
+
+class Builder(ABC):
+    @abstractmethod
+    def build_part_a(self):
+        pass
+    
+    @abstractmethod
+    def build_part_b(self):
+        pass
+    
+    @abstractmethod
+    def build_part_c(self):
+        pass
+    
+    @abstractmethod
+    def get_result(self):
+        pass
+
+class ConcreteBuilder(Builder):
+    def __init__(self):
+        self.product = Product()
+    
+    def build_part_a(self):
+        self.product.add_part("Part A")
+        return self
+    
+    def build_part_b(self):
+        self.product.add_part("Part B")
+        return self
+    
+    def build_part_c(self):
+        self.product.add_part("Part C")
+        return self
+    
+    def get_result(self):
+        return self.product
+
+# Usage
+if __name__ == "__main__":
+    builder = ConcreteBuilder()
+    product = (builder
+               .build_part_a()
+               .build_part_b()
+               .build_part_c()
+               .get_result())
+    
+    product.list_parts()</code></pre>
+                    </div>
+                    
+                    <div class="code-snippet-panel" data-language="php">
+                        <pre><code>&lt;?php
+// Builder Pattern in PHP
+class Product {
+    private $parts = [];
+    
+    public function addPart($part) {
+        $this->parts[] = $part;
+    }
+    
+    public function listParts() {
+        echo "Product parts: " . implode(', ', $this->parts) . "\n";
+    }
+}
+
+abstract class Builder {
+    protected $product;
+    
+    abstract public function buildPartA();
+    abstract public function buildPartB();
+    abstract public function buildPartC();
+    abstract public function getResult();
+}
+
+class ConcreteBuilder extends Builder {
+    public function __construct() {
+        $this->product = new Product();
+    }
+    
+    public function buildPartA() {
+        $this->product->addPart("Part A");
+        return $this;
+    }
+    
+    public function buildPartB() {
+        $this->product->addPart("Part B");
+        return $this;
+    }
+    
+    public function buildPartC() {
+        $this->product->addPart("Part C");
+        return $this;
+    }
+    
+    public function getResult() {
+        return $this->product;
+    }
+}
+
+// Usage
+$builder = new ConcreteBuilder();
+$product = $builder
+    ->buildPartA()
+    ->buildPartB()
+    ->buildPartC()
+    ->getResult();
+
+$product->listParts();
+?&gt;</code></pre>
+                    </div>
+                </div>
+            </div>
+            
             <br>
             <!--<p class="expamle"><span class="ex_title">Пример:</span> объект "Работник" содержит данные об одном работнике и методы: добавить, обновить или удалить. Помимо прочего, отдельным методом вынесена <em>смена имени.</em></p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a> со страницы о паттерне <noindex><a href="http://martinfowler.com/eaaCatalog/activeRecord.html">Active Record</a></noindex></p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/activeRecord.html">Источник</a></noindex></p>        </div>-->
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
@@ -37,7 +352,7 @@
     <ul id="footer-menu">
     	<li><a href="../index.html">Главная</a></li>
         <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
-        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+        <li>Сайт создан и поддерживается <a href="https://vasiliy.pro">Василием Кулаковым</a>.</li>
     </ul>
 
    <!-- Google tag (gtag.js) -->
@@ -64,5 +379,71 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<!-- Code Snippet JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all code snippet components
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+        
+        // Set default active tab (JavaScript)
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+        
+        // Tab switching functionality
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                
+                // Remove active class from all tabs and panels
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding panel
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+        
+        // Copy functionality
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

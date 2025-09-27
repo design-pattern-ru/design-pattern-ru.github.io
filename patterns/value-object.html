@@ -17,13 +17,353 @@
 			
 			<h2>Описание Value Object</h2>
 						<p>Маленький объект для хранения величин таких как деньги или диапазон дат, равенство которых не основано на идентичности.</p>
-            <p>При работе с ООП, приходишь к выводу, что полезно разделять ссылочные объекты и объекты-значения. Объект-значение обычно гораздо меньше. Он как простой тип данных из тех языков, которые не являются полностью объектно-ориентированными.</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/valueObject.html">Источник</a></noindex></p>        </div>
+            <p>При работе с ООП, приходишь к выводу, что полезно разделять ссылочные объекты и объекты-значения. Объект-значение обычно гораздо меньше. Он как простой тип данных из тех языков, которые не являются полностью объектно-ориентированными.</p>
+
+<h2>Примеры реализации</h2>
+<div class="code-snippet">
+    <div class="code-snippet-header">
+        <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+        <button class="code-snippet-tab" data-language="cpp">C++</button>
+        <button class="code-snippet-tab" data-language="go">Go</button>
+        <button class="code-snippet-tab" data-language="python">Python</button>
+        <button class="code-snippet-tab" data-language="php">PHP</button>
+    </div>
+    <div class="code-snippet-content">
+        <button class="code-snippet-copy">Copy</button>
+        
+        <div class="code-snippet-panel" data-language="javascript">
+            <pre><code>// Value Object Pattern in JavaScript
+class Money {
+    constructor(amount, currency) {
+        this.amount = amount;
+        this.currency = currency;
+    }
+    
+    equals(other) {
+        return other instanceof Money && 
+               this.amount === other.amount && 
+               this.currency === other.currency;
+    }
+    
+    add(other) {
+        if (this.currency !== other.currency) {
+            throw new Error('Cannot add different currencies');
+        }
+        return new Money(this.amount + other.amount, this.currency);
+    }
+    
+    multiply(factor) {
+        return new Money(this.amount * factor, this.currency);
+    }
+    
+    toString() {
+        return `${this.amount} ${this.currency}`;
+    }
+}
+
+class Point {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+    
+    equals(other) {
+        return other instanceof Point && 
+               this.x === other.x && 
+               this.y === other.y;
+    }
+    
+    distance(other) {
+        const dx = this.x - other.x;
+        const dy = this.y - other.y;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+    
+    toString() {
+        return `(${this.x}, ${this.y})`;
+    }
+}
+
+// Usage
+const money1 = new Money(100, 'USD');
+const money2 = new Money(50, 'USD');
+const money3 = money1.add(money2);
+console.log(money3.toString()); // 150 USD
+
+const point1 = new Point(0, 0);
+const point2 = new Point(3, 4);
+console.log(point1.distance(point2)); // 5</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="cpp">
+            <pre><code>// Value Object Pattern in C++
+#include &lt;iostream&gt;
+#include &lt;string&gt;
+#include &lt;cmath&gt;
+
+class Money {
+private:
+    double amount;
+    std::string currency;
+    
+public:
+    Money(double amount, const std::string& currency) 
+        : amount(amount), currency(currency) {}
+    
+    bool equals(const Money& other) const {
+        return amount == other.amount && currency == other.currency;
+    }
+    
+    Money add(const Money& other) const {
+        if (currency != other.currency) {
+            throw std::runtime_error("Cannot add different currencies");
+        }
+        return Money(amount + other.amount, currency);
+    }
+    
+    Money multiply(double factor) const {
+        return Money(amount * factor, currency);
+    }
+    
+    std::string toString() const {
+        return std::to_string(amount) + " " + currency;
+    }
+};
+
+class Point {
+private:
+    double x, y;
+    
+public:
+    Point(double x, double y) : x(x), y(y) {}
+    
+    bool equals(const Point& other) const {
+        return x == other.x && y == other.y;
+    }
+    
+    double distance(const Point& other) const {
+        double dx = x - other.x;
+        double dy = y - other.y;
+        return std::sqrt(dx * dx + dy * dy);
+    }
+    
+    std::string toString() const {
+        return "(" + std::to_string(x) + ", " + std::to_string(y) + ")";
+    }
+};
+
+// Usage
+int main() {
+    Money money1(100, "USD");
+    Money money2(50, "USD");
+    Money money3 = money1.add(money2);
+    std::cout &lt;&lt; money3.toString() &lt;&lt; std::endl; // 150 USD
+    
+    Point point1(0, 0);
+    Point point2(3, 4);
+    std::cout &lt;&lt; point1.distance(point2) &lt;&lt; std::endl; // 5
+    
+    return 0;
+}</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="go">
+            <pre><code>// Value Object Pattern in Go
+package main
+
+import (
+    "fmt"
+    "math"
+)
+
+type Money struct {
+    Amount   float64
+    Currency string
+}
+
+func NewMoney(amount float64, currency string) Money {
+    return Money{Amount: amount, Currency: currency}
+}
+
+func (m Money) Equals(other Money) bool {
+    return m.Amount == other.Amount && m.Currency == other.Currency
+}
+
+func (m Money) Add(other Money) (Money, error) {
+    if m.Currency != other.Currency {
+        return Money{}, fmt.Errorf("cannot add different currencies")
+    }
+    return Money{Amount: m.Amount + other.Amount, Currency: m.Currency}, nil
+}
+
+func (m Money) Multiply(factor float64) Money {
+    return Money{Amount: m.Amount * factor, Currency: m.Currency}
+}
+
+func (m Money) String() string {
+    return fmt.Sprintf("%.2f %s", m.Amount, m.Currency)
+}
+
+type Point struct {
+    X, Y float64
+}
+
+func NewPoint(x, y float64) Point {
+    return Point{X: x, Y: y}
+}
+
+func (p Point) Equals(other Point) bool {
+    return p.X == other.X && p.Y == other.Y
+}
+
+func (p Point) Distance(other Point) float64 {
+    dx := p.X - other.X
+    dy := p.Y - other.Y
+    return math.Sqrt(dx*dx + dy*dy)
+}
+
+func (p Point) String() string {
+    return fmt.Sprintf("(%.2f, %.2f)", p.X, p.Y)
+}
+
+// Usage
+func main() {
+    money1 := NewMoney(100, "USD")
+    money2 := NewMoney(50, "USD")
+    money3, _ := money1.Add(money2)
+    fmt.Println(money3.String()) // 150.00 USD
+    
+    point1 := NewPoint(0, 0)
+    point2 := NewPoint(3, 4)
+    fmt.Println(point1.Distance(point2)) // 5
+}</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="python">
+            <pre><code># Value Object Pattern in Python
+from dataclasses import dataclass
+from typing import Union
+import math
+
+@dataclass(frozen=True)
+class Money:
+    amount: float
+    currency: str
+    
+    def __add__(self, other: 'Money') -> 'Money':
+        if self.currency != other.currency:
+            raise ValueError("Cannot add different currencies")
+        return Money(self.amount + other.amount, self.currency)
+    
+    def __mul__(self, factor: float) -> 'Money':
+        return Money(self.amount * factor, self.currency)
+    
+    def __str__(self) -> str:
+        return f"{self.amount} {self.currency}"
+
+@dataclass(frozen=True)
+class Point:
+    x: float
+    y: float
+    
+    def distance(self, other: 'Point') -> float:
+        dx = self.x - other.x
+        dy = self.y - other.y
+        return math.sqrt(dx * dx + dy * dy)
+    
+    def __str__(self) -> str:
+        return f"({self.x}, {self.y})"
+
+# Usage
+if __name__ == "__main__":
+    money1 = Money(100, "USD")
+    money2 = Money(50, "USD")
+    money3 = money1 + money2
+    print(money3)  # 150 USD
+    
+    point1 = Point(0, 0)
+    point2 = Point(3, 4)
+    print(point1.distance(point2))  # 5.0</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="php">
+            <pre><code>&lt;?php
+// Value Object Pattern in PHP
+class Money {
+    private $amount;
+    private $currency;
+    
+    public function __construct($amount, $currency) {
+        $this->amount = $amount;
+        $this->currency = $currency;
+    }
+    
+    public function equals(Money $other) {
+        return $this->amount === $other->amount && 
+               $this->currency === $other->currency;
+    }
+    
+    public function add(Money $other) {
+        if ($this->currency !== $other->currency) {
+            throw new InvalidArgumentException("Cannot add different currencies");
+        }
+        return new Money($this->amount + $other->amount, $this->currency);
+    }
+    
+    public function multiply($factor) {
+        return new Money($this->amount * $factor, $this->currency);
+    }
+    
+    public function __toString() {
+        return $this->amount . " " . $this->currency;
+    }
+}
+
+class Point {
+    private $x;
+    private $y;
+    
+    public function __construct($x, $y) {
+        $this->x = $x;
+        $this->y = $y;
+    }
+    
+    public function equals(Point $other) {
+        return $this->x === $other->x && $this->y === $other->y;
+    }
+    
+    public function distance(Point $other) {
+        $dx = $this->x - $other->x;
+        $dy = $this->y - $other->y;
+        return sqrt($dx * $dx + $dy * $dy);
+    }
+    
+    public function __toString() {
+        return "({$this->x}, {$this->y})";
+    }
+}
+
+// Usage
+$money1 = new Money(100, "USD");
+$money2 = new Money(50, "USD");
+$money3 = $money1->add($money2);
+echo $money3 . "\n"; // 150 USD
+
+$point1 = new Point(0, 0);
+$point2 = new Point(3, 4);
+echo $point1->distance($point2) . "\n"; // 5
+?&gt;</code></pre>
+        </div>
+    </div>
+</div>
+
+<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/valueObject.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">
     	<li><a href="../index.html">Главная</a></li>
         <li><a href="index.html" title="Список шаблонов проектирования">Список паттернов</a></li>
-        <li>Сайт создан и поддерживается <a href="http://kulakovvasiliy.moikrug.ru/">Василием Кулаковым</a>.</li>
+        <li>Сайт создан и поддерживается <a href="https://vasiliy.pro">Василием Кулаковым</a>.</li>
     </ul>
 
    <!-- Google tag (gtag.js) -->
@@ -50,5 +390,71 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<!-- Code Snippet JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all code snippet components
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+        
+        // Set default active tab (JavaScript)
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+        
+        // Tab switching functionality
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                
+                // Remove active class from all tabs and panels
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding panel
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+        
+        // Copy functionality
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>
