@@ -19,7 +19,189 @@
 			<h2>Описание Coarse Grained Lock</h2>
 			<p>Блокирует набор связанных объектов при помощи одной блокировки.</p>
 <p>Объекты часто могут отредактироваться в группе. Например, есть клиент и набор его адресов. В таком случае можно блокировать их все, если надо обратиться к одному из них. Блокировка их по отдельности приведёт к множеству проблем. Во-первых все кто пытается работать с такими данными, будет вынужден создавать код для поиска всех записей, чтобы потом заблокировать их. Это достаточно просто в примере с клиентом и адресами, но что, если группа будет более сложной или групп будет больше. Куда поместить часть программной логики, которая отвечает за слияние блокировок. Если в стратегию блокировки входит правило, в соответствии с которым объект должен быть загружен перед блокировкой, как например в <a href="optimistic-offline-lock.html" title="Паттерн проектирования Optimistic Offline Lock (Оптимистичная блокировка)">Optimistic Offline Lock</a> , то блокировка большого массива объектов вызовет провал в производительности. А в случае с <a href="pessimistic-offline-lock.html" title="Паттерн проектирования Pessimistic Offline Lock (Пессимистичная блокировка)">Pessimistic Offline Lock</a> , большая блокировка вызовет проблемы с управлением и увеличит конкуренцию за блокировки.</p>
-<p>Паттерн Coarse-Grained Lock представляет собой одиночную блокировку, которая покрывает множество объектов. Она не только упрощает работу с блокировками, но ещё и освобождает разработчика от необходимости загружать все элементы группы, чтобы заблокировать их.</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/coarseGrainedLock.html">Источник</a></noindex></p>        </div>
+			<p>Паттерн Coarse-Grained Lock представляет собой одиночную блокировку, которая покрывает множество объектов. Она не только упрощает работу с блокировками, но ещё и освобождает разработчика от необходимости загружать все элементы группы, чтобы заблокировать их.</p>
+
+<h2>Реализация в популярных СУБД</h2>
+
+<h3>PostgreSQL</h3>
+<p>PostgreSQL поддерживает грубую блокировку через различные механизмы:</p>
+<ul>
+<li><strong>Table-Level Locks</strong> - блокировки на уровне таблиц</li>
+<li><strong>Schema-Level Locks</strong> - блокировки на уровне схем</li>
+<li><strong>Database-Level Locks</strong> - блокировки на уровне базы данных</li>
+</ul>
+
+<pre><code>-- Блокировка таблицы для обновления
+BEGIN;
+LOCK TABLE users IN EXCLUSIVE MODE;
+-- Работа с данными...
+UPDATE users SET status = 'active' WHERE department_id = 1;
+UPDATE user_addresses SET is_primary = false WHERE user_id IN (
+    SELECT id FROM users WHERE department_id = 1
+);
+COMMIT;
+
+-- Блокировка с таймаутом
+LOCK TABLE users IN EXCLUSIVE MODE NOWAIT;</code></pre>
+
+<h3>MySQL (InnoDB)</h3>
+<p>MySQL поддерживает грубую блокировку через различные уровни:</p>
+<ul>
+<li><strong>Table Locks</strong> - блокировки таблиц</li>
+<li><strong>Database Locks</strong> - блокировки баз данных</li>
+<li><strong>Global Locks</strong> - глобальные блокировки</li>
+</ul>
+
+<pre><code>-- Блокировка таблицы
+LOCK TABLES users WRITE, user_addresses WRITE;
+-- Работа с данными...
+UPDATE users SET status = 'active' WHERE department_id = 1;
+UPDATE user_addresses SET is_primary = false WHERE user_id IN (
+    SELECT id FROM users WHERE department_id = 1
+);
+UNLOCK TABLES;
+
+-- Блокировка с таймаутом
+LOCK TABLES users WRITE, user_addresses WRITE;
+-- Если блокировка не получена, операция завершится с ошибкой</code></pre>
+
+<h3>Oracle Database</h3>
+<p>Oracle предоставляет мощные механизмы для грубой блокировки:</p>
+<ul>
+<li><strong>Table Locks</strong> - блокировки таблиц</li>
+<li><strong>Schema Locks</strong> - блокировки схем</li>
+<li><strong>Database Locks</strong> - блокировки базы данных</li>
+</ul>
+
+<pre><code>-- Блокировка таблицы для обновления
+LOCK TABLE users IN EXCLUSIVE MODE;
+-- Работа с данными...
+UPDATE users SET status = 'active' WHERE department_id = 1;
+UPDATE user_addresses SET is_primary = false WHERE user_id IN (
+    SELECT id FROM users WHERE department_id = 1
+);
+COMMIT;
+
+-- Блокировка с NOWAIT
+LOCK TABLE users IN EXCLUSIVE MODE NOWAIT;</code></pre>
+
+<h3>SQL Server</h3>
+<p>SQL Server поддерживает грубую блокировку через различные механизмы:</p>
+<ul>
+<li><strong>Table Hints</strong> - подсказки для таблиц</li>
+<li><strong>Schema Locks</strong> - блокировки схем</li>
+<li><strong>Database Locks</strong> - блокировки базы данных</li>
+</ul>
+
+<pre><code>-- Блокировка таблицы
+BEGIN TRANSACTION;
+SELECT * FROM users WITH (TABLOCKX) WHERE department_id = 1;
+-- Работа с данными...
+UPDATE users SET status = 'active' WHERE department_id = 1;
+UPDATE user_addresses SET is_primary = false WHERE user_id IN (
+    SELECT id FROM users WHERE department_id = 1
+);
+COMMIT;
+
+-- Блокировка с таймаутом
+SELECT * FROM users WITH (TABLOCKX, READPAST) WHERE department_id = 1;</code></pre>
+
+<h3>SQLite</h3>
+<p>SQLite использует файловые блокировки для грубой блокировки:</p>
+<ul>
+<li><strong>Database Locks</strong> - блокировки базы данных</li>
+<li><strong>File Locks</strong> - файловые блокировки</li>
+<li><strong>Shared Cache Locks</strong> - блокировки общего кэша</li>
+</ul>
+
+<pre><code>-- Блокировка базы данных
+BEGIN EXCLUSIVE;
+-- Работа с данными...
+UPDATE users SET status = 'active' WHERE department_id = 1;
+UPDATE user_addresses SET is_primary = false WHERE user_id IN (
+    SELECT id FROM users WHERE department_id = 1
+);
+COMMIT;
+
+-- Блокировка с таймаутом
+BEGIN IMMEDIATE;
+-- Если блокировка не получена, операция завершится с ошибкой</code></pre>
+
+<h2>Сравнение производительности</h2>
+<table border="1" cellpadding="5" cellspacing="0">
+<tr>
+<th>СУБД</th>
+<th>Тип блокировок</th>
+<th>Производительность</th>
+<th>Масштабируемость</th>
+</tr>
+<tr>
+<td>PostgreSQL</td>
+<td>Table-level + Row-level</td>
+<td>Высокая</td>
+<td>Хорошая</td>
+</tr>
+<tr>
+<td>MySQL</td>
+<td>Table-level + Row-level</td>
+<td>Средняя</td>
+<td>Ограниченная</td>
+</tr>
+<tr>
+<td>Oracle</td>
+<td>Table-level + Row-level</td>
+<td>Очень высокая</td>
+<td>Отличная</td>
+</tr>
+<tr>
+<td>SQL Server</td>
+<td>Table-level + Row-level</td>
+<td>Высокая</td>
+<td>Хорошая</td>
+</tr>
+<tr>
+<td>SQLite</td>
+<td>Database-level</td>
+<td>Низкая</td>
+<td>Очень ограниченная</td>
+</tr>
+</table>
+
+<h2>Рекомендации по использованию</h2>
+<ul>
+<li><strong>PostgreSQL</strong> - лучший выбор для веб-приложений с умеренной конкурентностью</li>
+<li><strong>MySQL</strong> - подходит для простых приложений с низкой конкурентностью</li>
+<li><strong>Oracle</strong> - для корпоративных приложений с высокими требованиями</li>
+<li><strong>SQL Server</strong> - для Windows-среды и .NET приложений</li>
+<li><strong>SQLite</strong> - только для встраиваемых приложений</li>
+</ul>
+
+<h2>Паттерны реализации</h2>
+<h3>Parent-Child Locking</h3>
+<pre><code>-- Блокировка родительской записи
+LOCK TABLE departments IN EXCLUSIVE MODE;
+-- Работа с дочерними записями
+UPDATE users SET status = 'active' WHERE department_id = 1;
+UPDATE user_addresses SET is_primary = false WHERE user_id IN (
+    SELECT id FROM users WHERE department_id = 1
+);</code></pre>
+
+<h3>Aggregate Root Locking</h3>
+<pre><code>-- Блокировка корневого агрегата
+LOCK TABLE orders IN EXCLUSIVE MODE;
+-- Работа с составными частями
+UPDATE orders SET status = 'shipped' WHERE id = 1;
+UPDATE order_items SET shipped_quantity = quantity WHERE order_id = 1;
+UPDATE order_addresses SET is_shipping = true WHERE order_id = 1;</code></pre>
+
+<h3>Domain Locking</h3>
+<pre><code>-- Блокировка домена
+LOCK TABLE user_domains IN EXCLUSIVE MODE;
+-- Работа с объектами домена
+UPDATE users SET status = 'active' WHERE domain_id = 1;
+UPDATE user_roles SET is_active = true WHERE user_id IN (
+    SELECT id FROM users WHERE domain_id = 1
+);</code></pre>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/coarseGrainedLock.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">

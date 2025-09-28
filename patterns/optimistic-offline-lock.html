@@ -20,7 +20,222 @@
 			<p>Предотвращает конфликты между конкурирующими бизнес-транзакциями, выявляя их и откатывая транзакцию назад.</p>
 <p>Зачастую бизнес-транзакция подразумевает выполнение нескольких системных транзакций. Выходя за пределы одиночной системной транзакции, мы не можем полагаться только на систему управления БД, чтобы быть уверенными в том, что бизнес-транзакция оставит данные в консистентном состоянии. Целостность данных находится под угрозой, каждый раз, когда две бизнес-транзакции начинают работу над одними и теми же данными. Также может случиться ситуация, когда один процесс читает данные в то время, как другой - обновляет.</p>
 <p>Паттерн <acronym title="Паттерн Optimistic Offline Lock (Оптимистичная блокировка)">Optimistic Offline Lock</acronym> решает эту проблему, проверяя завершённость одной транзакции и отсутствие конфликтов с другой. Успешная pre-commit проверка, в известном смысле, получает сигнал блокировки, что можно продолжать работать с изменениями в данных. Так как проверка происходит во время завершения каждой системной транзакции, бизнес-транзакции будут также консистентны.</p>
-<p>Тогда как <a href="pessimistic-offline-lock.html" title="Паттерн проектирования Pessimistic Offline Lock (Пессимистичная блокировка)">Pessimistic Offline Lock</a> подразумевает, что шанс сессии на конфликт высок и по этому ограничивает системную конкуренцию, <acronym title="Паттерн Optimistic Offline Lock (Оптимистичная блокировка)">Optimistic Offline Lock</acronym> подразумевает, что шансы на конфликт не велики. Такое предположение не очень подходит для одновременной работы нескольких пользователей над одними данными.</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/optimisticOfflineLock.html">Источник</a></noindex></p>        </div>
+			<p>Тогда как <a href="pessimistic-offline-lock.html" title="Паттерн проектирования Pessimistic Offline Lock (Пессимистичная блокировка)">Pessimistic Offline Lock</a> подразумевает, что шанс сессии на конфликт высок и по этому ограничивает системную конкуренцию, <acronym title="Паттерн Optimistic Offline Lock (Оптимистичная блокировка)">Optimistic Offline Lock</acronym> подразумевает, что шансы на конфликт не велики. Такое предположение не очень подходит для одновременной работы нескольких пользователей над одними данными.</p>
+
+<h2>Реализация в популярных СУБД</h2>
+
+<h3>PostgreSQL</h3>
+<p>PostgreSQL поддерживает оптимистичную блокировку через версионирование и проверку изменений:</p>
+<ul>
+<li><strong>Versioning</strong> - использование поля версии</li>
+<li><strong>Timestamp</strong> - использование временных меток</li>
+<li><strong>Checksum</strong> - проверка контрольных сумм</li>
+</ul>
+
+<pre><code>-- Создание таблицы с версионированием
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(100),
+    version INTEGER DEFAULT 1,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Обновление с проверкой версии
+UPDATE users 
+SET name = 'New Name', 
+    version = version + 1,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = 1 AND version = 5;
+
+-- Проверка количества затронутых строк
+SELECT ROW_COUNT(); -- Должно быть 1, иначе конфликт</code></pre>
+
+<h3>MySQL (InnoDB)</h3>
+<p>MySQL поддерживает оптимистичную блокировку через механизмы версионирования:</p>
+<ul>
+<li><strong>Row Versioning</strong> - версионирование строк</li>
+<li><strong>Timestamp Comparison</strong> - сравнение временных меток</li>
+<li><strong>Checksum Validation</strong> - валидация контрольных сумм</li>
+</ul>
+
+<pre><code>-- Создание таблицы с версионированием
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(100),
+    version INT DEFAULT 1,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- Обновление с проверкой версии
+UPDATE users 
+SET name = 'New Name', 
+    version = version + 1
+WHERE id = 1 AND version = 5;
+
+-- Проверка через ROW_COUNT()
+SELECT ROW_COUNT(); -- 1 = успех, 0 = конфликт</code></pre>
+
+<h3>Oracle Database</h3>
+<p>Oracle предоставляет мощные механизмы для оптимистичной блокировки:</p>
+<ul>
+<li><strong>ORA_ROWSCN</strong> - системный номер изменения строки</li>
+<li><strong>Version Columns</strong> - пользовательские поля версий</li>
+<li><strong>Flashback Queries</strong> - запросы к предыдущим версиям</li>
+</ul>
+
+<pre><code>-- Создание таблицы с версионированием
+CREATE TABLE users (
+    id NUMBER PRIMARY KEY,
+    name VARCHAR2(100),
+    email VARCHAR2(100),
+    version NUMBER DEFAULT 1,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Обновление с проверкой версии
+UPDATE users 
+SET name = 'New Name', 
+    version = version + 1,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = 1 AND version = 5;
+
+-- Проверка через SQL%ROWCOUNT
+IF SQL%ROWCOUNT = 0 THEN
+    RAISE_APPLICATION_ERROR(-20001, 'Optimistic lock conflict');
+END IF;</code></pre>
+
+<h3>SQL Server</h3>
+<p>SQL Server поддерживает оптимистичную блокировку через различные механизмы:</p>
+<ul>
+<li><strong>Rowversion</strong> - автоматическое версионирование строк</li>
+<li><strong>Timestamp</strong> - временные метки (устаревший)</li>
+<li><strong>Checksum</strong> - контрольные суммы</li>
+</ul>
+
+<pre><code>-- Создание таблицы с версионированием
+CREATE TABLE users (
+    id INT IDENTITY PRIMARY KEY,
+    name NVARCHAR(100),
+    email NVARCHAR(100),
+    version ROWVERSION,
+    updated_at DATETIME2 DEFAULT GETDATE()
+);
+
+-- Обновление с проверкой версии
+UPDATE users 
+SET name = 'New Name',
+    updated_at = GETDATE()
+WHERE id = 1 AND version = @expected_version;
+
+-- Проверка через @@ROWCOUNT
+IF @@ROWCOUNT = 0
+    THROW 50001, 'Optimistic lock conflict', 1;</code></pre>
+
+<h3>SQLite</h3>
+<p>SQLite поддерживает оптимистичную блокировку через пользовательские механизмы:</p>
+<ul>
+<li><strong>Version Fields</strong> - поля версий</li>
+<li><strong>Timestamp Fields</strong> - поля временных меток</li>
+<li><strong>Checksum Fields</strong> - поля контрольных сумм</li>
+</ul>
+
+<pre><code>-- Создание таблицы с версионированием
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    email TEXT,
+    version INTEGER DEFAULT 1,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Обновление с проверкой версии
+UPDATE users 
+SET name = 'New Name', 
+    version = version + 1,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = 1 AND version = 5;
+
+-- Проверка через changes()
+SELECT changes(); -- 1 = успех, 0 = конфликт</code></pre>
+
+<h2>Сравнение механизмов</h2>
+<table border="1" cellpadding="5" cellspacing="0">
+<tr>
+<th>СУБД</th>
+<th>Встроенная поддержка</th>
+<th>Производительность</th>
+<th>Простота реализации</th>
+</tr>
+<tr>
+<td>PostgreSQL</td>
+<td>Частичная</td>
+<td>Высокая</td>
+<td>Средняя</td>
+</tr>
+<tr>
+<td>MySQL</td>
+<td>Частичная</td>
+<td>Высокая</td>
+<td>Средняя</td>
+</tr>
+<tr>
+<td>Oracle</td>
+<td>Полная</td>
+<td>Очень высокая</td>
+<td>Высокая</td>
+</tr>
+<tr>
+<td>SQL Server</td>
+<td>Полная</td>
+<td>Высокая</td>
+<td>Высокая</td>
+</tr>
+<tr>
+<td>SQLite</td>
+<td>Отсутствует</td>
+<td>Средняя</td>
+<td>Низкая</td>
+</tr>
+</table>
+
+<h2>Рекомендации по выбору</h2>
+<ul>
+<li><strong>PostgreSQL</strong> - хороший выбор для веб-приложений с умеренной конкурентностью</li>
+<li><strong>MySQL</strong> - подходит для простых приложений с низкой конкурентностью</li>
+<li><strong>Oracle</strong> - лучший выбор для корпоративных приложений</li>
+<li><strong>SQL Server</strong> - отличный выбор для Windows-среды</li>
+<li><strong>SQLite</strong> - только для простых случаев с минимальной конкурентностью</li>
+</ul>
+
+<h2>Паттерны реализации</h2>
+<h3>Version Field Pattern</h3>
+<pre><code>-- Добавление поля версии
+ALTER TABLE users ADD COLUMN version INTEGER DEFAULT 1;
+
+-- Обновление с проверкой версии
+UPDATE users 
+SET name = ?, version = version + 1
+WHERE id = ? AND version = ?;</code></pre>
+
+<h3>Timestamp Pattern</h3>
+<pre><code>-- Добавление поля временной метки
+ALTER TABLE users ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+-- Обновление с проверкой времени
+UPDATE users 
+SET name = ?, updated_at = CURRENT_TIMESTAMP
+WHERE id = ? AND updated_at = ?;</code></pre>
+
+<h3>Checksum Pattern</h3>
+<pre><code>-- Добавление поля контрольной суммы
+ALTER TABLE users ADD COLUMN checksum VARCHAR(32);
+
+-- Обновление с проверкой контрольной суммы
+UPDATE users 
+SET name = ?, checksum = MD5(CONCAT(name, email, updated_at))
+WHERE id = ? AND checksum = ?;</code></pre>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/optimisticOfflineLock.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">

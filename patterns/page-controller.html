@@ -21,7 +21,177 @@
 			<p>Большинство людей получают первый опыт в веб-программировании на статичных HTML-страницах. Когда происходит запрос к статической HTML-странице, веб-серверу передаётся имя и путь к хранящемуся на нём HTML-документу. Главная идея здесь в том, что каждая страница на веб-сайте является отдельным документом, хранящимся на сервере. В случае с динамическими страницами всё гораздо сложнее, так как сложнее связь между введённым адресом и отображённой страницей. Тем не менее, подход, когда один путь соответствует одному файлу, который обрабатывает запрос достаточно очевиден и прост для понимания.</p>
 			<p>В результате контроллер страницы (<acronym title="Паттерн Page Controller (Контроллер страницы)">Page Controller</acronym>) - паттерн, в котором один контроллер отвечает за отображение одной логической страницы. Это может быть как отдельная страница, хранящаяся на веб-сервере, так и отдельный объект, который отвечает за страницу.</p>
 
-<h2>Примеры реализации</h2>			<p class="note">Использована переведённая иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/pageController.html">Источник</a></noindex></p>        </div>
+<h2>Примеры реализации</h2>
+<div class="code-snippet">
+    <div class="code-snippet-header">
+        <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+        <button class="code-snippet-tab" data-language="php">PHP</button>
+        <button class="code-snippet-tab" data-language="go">Go</button>
+    </div>
+    <div class="code-snippet-content">
+        <button class="code-snippet-copy">Copy</button>
+        
+        <div class="code-snippet-panel" data-language="javascript">
+            <pre><code>// Page Controller Pattern in JavaScript
+class PageController {
+    constructor(request, response) {
+        this.request = request;
+        this.response = response;
+    }
+    
+    handleRequest() {
+        throw new Error('handleRequest method must be implemented');
+    }
+    
+    render(template, data = {}) {
+        let html = template;
+        for (const [key, value] of Object.entries(data)) {
+            html = html.replace(new RegExp(`{{${key}}}`, 'g'), value);
+        }
+        return html;
+    }
+}
+
+class HomePageController extends PageController {
+    handleRequest() {
+        const template = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>{{title}}</title>
+            </head>
+            <body>
+                <h1>{{title}}</h1>
+                <p>{{message}}</p>
+            </body>
+            </html>
+        `;
+        
+        const data = {
+            title: 'Welcome to Our Site',
+            message: 'This is the home page'
+        };
+        
+        this.response.setHeader('Content-Type', 'text/html');
+        this.response.end(this.render(template, data));
+    }
+}
+
+// Usage
+console.log('Page Controller pattern implemented');</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="php">
+            <pre><code>&lt;?php
+// Page Controller Pattern in PHP
+abstract class PageController {
+    protected $request;
+    protected $response;
+    
+    public function __construct($request, $response) {
+        $this->request = $request;
+        $this->response = $response;
+    }
+    
+    abstract public function handleRequest();
+    
+    protected function render($template, $data = []) {
+        $html = $template;
+        foreach ($data as $key => $value) {
+            $html = str_replace("{{$key}}", $value, $html);
+        }
+        return $html;
+    }
+}
+
+class HomePageController extends PageController {
+    public function handleRequest() {
+        $template = '
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>{{title}}</title>
+            </head>
+            <body>
+                <h1>{{title}}</h1>
+                <p>{{message}}</p>
+            </body>
+            </html>
+        ';
+        
+        $data = [
+            'title' => 'Welcome to Our Site',
+            'message' => 'This is the home page'
+        ];
+        
+        header('Content-Type: text/html');
+        echo $this->render($template, $data);
+    }
+}
+
+echo "Page Controller pattern implemented";
+?&gt;</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="go">
+            <pre><code>// Page Controller Pattern in Go
+package main
+
+import (
+    "fmt"
+    "html/template"
+    "net/http"
+)
+
+type PageController interface {
+    HandleRequest(w http.ResponseWriter, r *http.Request)
+}
+
+type HomePageController struct{}
+
+func (hpc *HomePageController) HandleRequest(w http.ResponseWriter, r *http.Request) {
+    templateStr := `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>{{.Title}}</title>
+        </head>
+        <body>
+            <h1>{{.Title}}</h1>
+            <p>{{.Message}}</p>
+        </body>
+        </html>
+    `
+    
+    data := map[string]interface{}{
+        "Title":   "Welcome to Our Site",
+        "Message": "This is the home page",
+    }
+    
+    tmpl, err := template.New("page").Parse(templateStr)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    
+    err = tmpl.Execute(w, data)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+}
+
+func main() {
+    homeController := &HomePageController{}
+    http.HandleFunc("/", homeController.HandleRequest)
+    
+    fmt.Println("Server starting on :8080")
+    fmt.Println("Page Controller pattern implemented")
+    http.ListenAndServe(":8080", nil)
+}</code></pre>
+        </div>
+    </div>
+</div>			<p class="note">Использована переведённая иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/pageController.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">
@@ -54,5 +224,58 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

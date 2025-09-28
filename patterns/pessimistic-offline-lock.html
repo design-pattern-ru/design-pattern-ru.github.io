@@ -20,7 +20,156 @@
 			<p>Предотвращает конфликты между конкурирующими бизнес-транзакциями, разрешая доступ к одинм данным только одной бизнес-транзакции за раз.</p>
 <p>Так как локальная конкуренция включает в себя работу с данными бизнес-транзакции, которая содержит несколько запросов, то наиболее простой подход был бы держать транзакцию открытой на протяжении всей бизнес-транзакции. Но, к сожалению, этот подход не всегда работает хорошо, потому что системы управления транзакциями не заточены под работу с длинными транзацкиями. По этому приходится делать несколько системных транзакций, а остальную конкуренцию отслеживать самостоятельно.</p>
 <p>Первый из подходов, который следует попробовать в этом случае - <a href="optimistic-offline-lock.html" title="Паттерн проектирования Optimistic Offline Lock (Оптимистичная блокировка)">Optimistic Offline Lock</a>. Однако, этот паттерн имеет свои недостатки. Например, если несколько людей пытаются получить доступ к одним данным в одной бизнес-транзакции, один из них легко сможет сделать commit, но остальные получат конфликт и не смогут продолжить работу. Из-за того, что конфликты определяются только в конце бизнес-транзакции (а не предотвращаются), жертвы будут делать все действия тразакции и в последний момент обнаружат, что вся их работа псу под хвост. Если так будет происходить, системы с длинными транзакциями вскоре станут непопулярны.</p>
-<p><acronym title="Паттерн Pessimistic Offline Lock (Пессимистичная блокировка)">Pessimistic Offline Lock</acronym> предотвращает конфликты, исключая их вообще. Этот паттерн заставляет бизнес-транзакцию накладывать блокировку на ту часть данных, с которыми она работает, так что чтобы начать работу с данными другой пользователь сначала ждёт, пока данные освободятся.</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/pessimisticOfflineLock.html">Источник</a></noindex></p>        </div>
+			<p><acronym title="Паттерн Pessimistic Offline Lock (Пессимистичная блокировка)">Pessimistic Offline Lock</acronym> предотвращает конфликты, исключая их вообще. Этот паттерн заставляет бизнес-транзакцию накладывать блокировку на ту часть данных, с которыми она работает, так что чтобы начать работу с данными другой пользователь сначала ждёт, пока данные освободятся.</p>
+
+<h2>Реализация в популярных СУБД</h2>
+
+<h3>PostgreSQL</h3>
+<p>PostgreSQL предоставляет несколько типов блокировок для реализации пессимистичной блокировки:</p>
+<ul>
+<li><strong>SELECT FOR UPDATE</strong> - блокирует строки для обновления</li>
+<li><strong>SELECT FOR SHARE</strong> - блокирует строки для чтения</li>
+<li><strong>SELECT FOR NO KEY UPDATE</strong> - блокирует строки, но не ключи</li>
+<li><strong>SELECT FOR KEY SHARE</strong> - блокирует только ключи</li>
+</ul>
+
+<pre><code>-- Блокировка строки для обновления
+BEGIN;
+SELECT * FROM users WHERE id = 1 FOR UPDATE;
+-- Работа с данными...
+UPDATE users SET name = 'New Name' WHERE id = 1;
+COMMIT;
+
+-- Блокировка с таймаутом
+SELECT * FROM users WHERE id = 1 FOR UPDATE NOWAIT;
+
+-- Блокировка с ожиданием
+SELECT * FROM users WHERE id = 1 FOR UPDATE SKIP LOCKED;</code></pre>
+
+<h3>MySQL (InnoDB)</h3>
+<p>MySQL InnoDB поддерживает различные уровни блокировок:</p>
+<ul>
+<li><strong>Shared Lock (S)</strong> - блокировка на чтение</li>
+<li><strong>Exclusive Lock (X)</strong> - блокировка на запись</li>
+<li><strong>Intention Locks</strong> - намерения блокировки</li>
+<li><strong>Gap Locks</strong> - блокировки промежутков</li>
+</ul>
+
+<pre><code>-- Блокировка строки для обновления
+START TRANSACTION;
+SELECT * FROM users WHERE id = 1 FOR UPDATE;
+-- Работа с данными...
+UPDATE users SET name = 'New Name' WHERE id = 1;
+COMMIT;
+
+-- Блокировка с таймаутом
+SELECT * FROM users WHERE id = 1 FOR UPDATE;
+-- Если блокировка не получена в течение innodb_lock_wait_timeout, 
+-- транзакция откатывается</code></pre>
+
+<h3>Oracle Database</h3>
+<p>Oracle предоставляет мощные механизмы блокировок:</p>
+<ul>
+<li><strong>Row-Level Locking</strong> - блокировка на уровне строк</li>
+<li><strong>Table-Level Locking</strong> - блокировка на уровне таблиц</li>
+<li><strong>Deadlock Detection</strong> - автоматическое обнаружение взаимных блокировок</li>
+</ul>
+
+<pre><code>-- Блокировка строки для обновления
+SELECT * FROM users WHERE id = 1 FOR UPDATE;
+-- Работа с данными...
+UPDATE users SET name = 'New Name' WHERE id = 1;
+COMMIT;
+
+-- Блокировка с NOWAIT
+SELECT * FROM users WHERE id = 1 FOR UPDATE NOWAIT;
+
+-- Блокировка с таймаутом
+SELECT * FROM users WHERE id = 1 FOR UPDATE WAIT 10;</code></pre>
+
+<h3>SQL Server</h3>
+<p>SQL Server использует различные типы блокировок:</p>
+<ul>
+<li><strong>Shared (S)</strong> - разделяемая блокировка</li>
+<li><strong>Exclusive (X)</strong> - исключительная блокировка</li>
+<li><strong>Update (U)</strong> - блокировка обновления</li>
+<li><strong>Intent Locks</strong> - намерения блокировки</li>
+</ul>
+
+<pre><code>-- Блокировка строки для обновления
+BEGIN TRANSACTION;
+SELECT * FROM users WITH (UPDLOCK) WHERE id = 1;
+-- Работа с данными...
+UPDATE users SET name = 'New Name' WHERE id = 1;
+COMMIT;
+
+-- Блокировка с таймаутом
+SELECT * FROM users WITH (UPDLOCK, READPAST) WHERE id = 1;</code></pre>
+
+<h3>SQLite</h3>
+<p>SQLite использует файловые блокировки:</p>
+<ul>
+<li><strong>SHARED</strong> - разделяемая блокировка</li>
+<li><strong>RESERVED</strong> - зарезервированная блокировка</li>
+<li><strong>PENDING</strong> - ожидающая блокировка</li>
+<li><strong>EXCLUSIVE</strong> - исключительная блокировка</li>
+</ul>
+
+<pre><code>-- Блокировка строки для обновления
+BEGIN IMMEDIATE;
+SELECT * FROM users WHERE id = 1;
+-- Работа с данными...
+UPDATE users SET name = 'New Name' WHERE id = 1;
+COMMIT;</code></pre>
+
+<h2>Сравнение производительности</h2>
+<table border="1" cellpadding="5" cellspacing="0">
+<tr>
+<th>СУБД</th>
+<th>Тип блокировок</th>
+<th>Производительность</th>
+<th>Масштабируемость</th>
+</tr>
+<tr>
+<td>PostgreSQL</td>
+<td>MVCC + Row-level</td>
+<td>Высокая</td>
+<td>Отличная</td>
+</tr>
+<tr>
+<td>MySQL InnoDB</td>
+<td>MVCC + Row-level</td>
+<td>Высокая</td>
+<td>Хорошая</td>
+</tr>
+<tr>
+<td>Oracle</td>
+<td>MVCC + Row-level</td>
+<td>Очень высокая</td>
+<td>Отличная</td>
+</tr>
+<tr>
+<td>SQL Server</td>
+<td>Row-level + Page-level</td>
+<td>Высокая</td>
+<td>Хорошая</td>
+</tr>
+<tr>
+<td>SQLite</td>
+<td>File-level</td>
+<td>Средняя</td>
+<td>Ограниченная</td>
+</tr>
+</table>
+
+<h2>Рекомендации по использованию</h2>
+<ul>
+<li><strong>PostgreSQL</strong> - лучший выбор для веб-приложений с высокой конкурентностью</li>
+<li><strong>MySQL</strong> - хороший баланс производительности и простоты</li>
+<li><strong>Oracle</strong> - для корпоративных приложений с высокими требованиями</li>
+<li><strong>SQL Server</strong> - для Windows-среды и .NET приложений</li>
+<li><strong>SQLite</strong> - для встраиваемых приложений и прототипирования</li>
+</ul>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/pessimisticOfflineLock.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">

@@ -19,7 +19,310 @@
 			<h2>Описание Query Object</h2>
 			<p>Объект, представляющий запрос к БД</p>
 <p>SQL зачастую сопряженно используемый язык и многие разработчики не совсем хорошо в нём разбираются. Более того, необходимо знать, как выглядит структура базы данных, чтобы создавать запросы. Можно избежать этого, создав специальные методы поиска, которые сожержат в себе весь SQL и управляются ограниченным набором параметров. Такой подход делает сложным создание и тюнинг запросов для конкретных ситуаций. Также это ведёт к дублированию в SQL-выражениях.</p>
-<p>Паттерн <acronym title="Паттерн Query Object (Объект-запрос)">Query Object</acronym> - это структура объектов, которая может интерпретироваться в SQL-запрос. Можно создавать такой запрос ссылаясь на классы и поля так же как на таблицы и столбцы. Таким образом создаётся независимость разработчика от струткуры БД и конкретной реализации БД.</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/queryObject.html">Источник</a></noindex></p>        </div>
+			<p>Паттерн <acronym title="Паттерн Query Object (Объект-запрос)">Query Object</acronym> - это структура объектов, которая может интерпретироваться в SQL-запрос. Можно создавать такой запрос ссылаясь на классы и поля так же как на таблицы и столбцы. Таким образом создаётся независимость разработчика от струткуры БД и конкретной реализации БД.</p>
+
+<h2>Примеры реализации</h2>
+<div class="code-snippet">
+    <div class="code-snippet-header">
+        <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+        <button class="code-snippet-tab" data-language="php">PHP</button>
+        <button class="code-snippet-tab" data-language="go">Go</button>
+    </div>
+    <div class="code-snippet-content">
+        <button class="code-snippet-copy">Copy</button>
+        
+        <div class="code-snippet-panel" data-language="javascript">
+            <pre><code>// Query Object Pattern in JavaScript
+class QueryObject {
+    constructor() {
+        this.selectFields = [];
+        this.fromTable = '';
+        this.whereConditions = [];
+        this.orderByFields = [];
+        this.limitCount = null;
+        this.offsetCount = null;
+    }
+    
+    select(fields) {
+        this.selectFields = Array.isArray(fields) ? fields : [fields];
+        return this;
+    }
+    
+    from(table) {
+        this.fromTable = table;
+        return this;
+    }
+    
+    where(condition) {
+        this.whereConditions.push(condition);
+        return this;
+    }
+    
+    orderBy(field, direction = 'ASC') {
+        this.orderByFields.push({ field, direction });
+        return this;
+    }
+    
+    limit(count) {
+        this.limitCount = count;
+        return this;
+    }
+    
+    offset(count) {
+        this.offsetCount = count;
+        return this;
+    }
+    
+    toSQL() {
+        let sql = 'SELECT ';
+        
+        if (this.selectFields.length === 0) {
+            sql += '*';
+        } else {
+            sql += this.selectFields.join(', ');
+        }
+        
+        sql += ` FROM ${this.fromTable}`;
+        
+        if (this.whereConditions.length > 0) {
+            sql += ' WHERE ' + this.whereConditions.join(' AND ');
+        }
+        
+        if (this.orderByFields.length > 0) {
+            const orderClauses = this.orderByFields.map(item => 
+                `${item.field} ${item.direction}`
+            );
+            sql += ' ORDER BY ' + orderClauses.join(', ');
+        }
+        
+        if (this.limitCount !== null) {
+            sql += ` LIMIT ${this.limitCount}`;
+        }
+        
+        if (this.offsetCount !== null) {
+            sql += ` OFFSET ${this.offsetCount}`;
+        }
+        
+        return sql;
+    }
+}
+
+// Usage
+const query = new QueryObject()
+    .select(['id', 'name', 'email'])
+    .from('users')
+    .where('active = 1')
+    .orderBy('name', 'ASC')
+    .limit(10);
+
+console.log('Query SQL:', query.toSQL());</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="php">
+            <pre><code>&lt;?php
+// Query Object Pattern in PHP
+class QueryObject {
+    private $selectFields = [];
+    private $fromTable = '';
+    private $whereConditions = [];
+    private $orderByFields = [];
+    private $limitCount = null;
+    private $offsetCount = null;
+    
+    public function select($fields) {
+        $this->selectFields = is_array($fields) ? $fields : [$fields];
+        return $this;
+    }
+    
+    public function from($table) {
+        $this->fromTable = $table;
+        return $this;
+    }
+    
+    public function where($condition) {
+        $this->whereConditions[] = $condition;
+        return $this;
+    }
+    
+    public function orderBy($field, $direction = 'ASC') {
+        $this->orderByFields[] = ['field' => $field, 'direction' => $direction];
+        return $this;
+    }
+    
+    public function limit($count) {
+        $this->limitCount = $count;
+        return $this;
+    }
+    
+    public function offset($count) {
+        $this->offsetCount = $count;
+        return $this;
+    }
+    
+    public function toSQL() {
+        $sql = 'SELECT ';
+        
+        if (empty($this->selectFields)) {
+            $sql .= '*';
+        } else {
+            $sql .= implode(', ', $this->selectFields);
+        }
+        
+        $sql .= " FROM {$this->fromTable}";
+        
+        if (!empty($this->whereConditions)) {
+            $sql .= ' WHERE ' . implode(' AND ', $this->whereConditions);
+        }
+        
+        if (!empty($this->orderByFields)) {
+            $orderClauses = array_map(function($item) {
+                return "{$item['field']} {$item['direction']}";
+            }, $this->orderByFields);
+            $sql .= ' ORDER BY ' . implode(', ', $orderClauses);
+        }
+        
+        if ($this->limitCount !== null) {
+            $sql .= " LIMIT {$this->limitCount}";
+        }
+        
+        if ($this->offsetCount !== null) {
+            $sql .= " OFFSET {$this->offsetCount}";
+        }
+        
+        return $sql;
+    }
+}
+
+// Usage
+$query = (new QueryObject())
+    ->select(['id', 'name', 'email'])
+    ->from('users')
+    ->where('active = 1')
+    ->orderBy('name', 'ASC')
+    ->limit(10);
+
+echo "Query SQL: " . $query->toSQL() . "\n";
+?&gt;</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="go">
+            <pre><code>// Query Object Pattern in Go
+package main
+
+import (
+    "fmt"
+    "strings"
+)
+
+type QueryObject struct {
+    selectFields   []string
+    fromTable     string
+    whereConditions []string
+    orderByFields []OrderByField
+    limitCount    *int
+    offsetCount   *int
+}
+
+type OrderByField struct {
+    Field     string
+    Direction string
+}
+
+func NewQueryObject() *QueryObject {
+    return &QueryObject{
+        selectFields:    []string{},
+        whereConditions: []string{},
+        orderByFields:   []OrderByField{},
+    }
+}
+
+func (q *QueryObject) Select(fields ...string) *QueryObject {
+    q.selectFields = fields
+    return q
+}
+
+func (q *QueryObject) From(table string) *QueryObject {
+    q.fromTable = table
+    return q
+}
+
+func (q *QueryObject) Where(condition string) *QueryObject {
+    q.whereConditions = append(q.whereConditions, condition)
+    return q
+}
+
+func (q *QueryObject) OrderBy(field, direction string) *QueryObject {
+    if direction == "" {
+        direction = "ASC"
+    }
+    q.orderByFields = append(q.orderByFields, OrderByField{
+        Field:     field,
+        Direction: direction,
+    })
+    return q
+}
+
+func (q *QueryObject) Limit(count int) *QueryObject {
+    q.limitCount = &count
+    return q
+}
+
+func (q *QueryObject) Offset(count int) *QueryObject {
+    q.offsetCount = &count
+    return q
+}
+
+func (q *QueryObject) ToSQL() string {
+    var sql strings.Builder
+    
+    sql.WriteString("SELECT ")
+    if len(q.selectFields) == 0 {
+        sql.WriteString("*")
+    } else {
+        sql.WriteString(strings.Join(q.selectFields, ", "))
+    }
+    
+    sql.WriteString(" FROM ")
+    sql.WriteString(q.fromTable)
+    
+    if len(q.whereConditions) > 0 {
+        sql.WriteString(" WHERE ")
+        sql.WriteString(strings.Join(q.whereConditions, " AND "))
+    }
+    
+    if len(q.orderByFields) > 0 {
+        sql.WriteString(" ORDER BY ")
+        orderClauses := make([]string, len(q.orderByFields))
+        for i, field := range q.orderByFields {
+            orderClauses[i] = fmt.Sprintf("%s %s", field.Field, field.Direction)
+        }
+        sql.WriteString(strings.Join(orderClauses, ", "))
+    }
+    
+    if q.limitCount != nil {
+        sql.WriteString(fmt.Sprintf(" LIMIT %d", *q.limitCount))
+    }
+    
+    if q.offsetCount != nil {
+        sql.WriteString(fmt.Sprintf(" OFFSET %d", *q.offsetCount))
+    }
+    
+    return sql.String()
+}
+
+func main() {
+    query := NewQueryObject().
+        Select("id", "name", "email").
+        From("users").
+        Where("active = 1").
+        OrderBy("name", "ASC").
+        Limit(10)
+
+    fmt.Printf("Query SQL: %s\n", query.ToSQL())
+}</code></pre>
+        </div>
+    </div>
+</div>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/queryObject.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">
@@ -52,5 +355,58 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

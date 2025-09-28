@@ -20,7 +20,75 @@
 			<p>Представляет иерархию наследования классов в виде структуры БД, когда одна таблица отвечает одному классу.</p>
 <p>Одно из самых заметных несоответствий между объектной и реляционной моделью - отсутствие в РБД поддержки наследования. Иногда необходима структура БД, точно соответсвующая объектной модели и позволяющая наращивать дерево наследования. Паттерн <acronym title="Паттерн Class Table Inheritance (Наследование с таблицами классов)">Class Table Inheritance</acronym> (Наследование с таблицами классов) предоставляет такие возможности, используя одну таблицу на один класс из структуры наследования.</p>
 
-<h2>Примеры реализации</h2>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/classTableInheritance.html">Источник</a></noindex></p>        </div>
+<h2>Примеры реализации</h2>
+
+<h3>SQL Схема</h3>
+<pre><code>-- Базовая таблица для всех пользователей
+CREATE TABLE users (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Таблица для клиентов
+CREATE TABLE customers (
+    user_id INT PRIMARY KEY,
+    phone VARCHAR(20),
+    address TEXT,
+    loyalty_points INT DEFAULT 0,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Таблица для сотрудников
+CREATE TABLE employees (
+    user_id INT PRIMARY KEY,
+    employee_id VARCHAR(20) UNIQUE NOT NULL,
+    department VARCHAR(50),
+    salary DECIMAL(10,2),
+    hire_date DATE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Таблица для менеджеров
+CREATE TABLE managers (
+    user_id INT PRIMARY KEY,
+    employee_id VARCHAR(20) UNIQUE NOT NULL,
+    department VARCHAR(50),
+    salary DECIMAL(10,2),
+    hire_date DATE,
+    team_size INT DEFAULT 0,
+    budget DECIMAL(12,2),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Вставка данных
+-- Создание клиента
+INSERT INTO users (name, email) VALUES ('John Doe', 'john@example.com');
+SET @user_id = LAST_INSERT_ID();
+INSERT INTO customers (user_id, phone, address, loyalty_points) 
+VALUES (@user_id, '+1234567890', '123 Main St', 100);
+
+-- Создание менеджера
+INSERT INTO users (name, email) VALUES ('Bob Johnson', 'bob@company.com');
+SET @user_id = LAST_INSERT_ID();
+INSERT INTO managers (user_id, employee_id, department, salary, hire_date, team_size, budget) 
+VALUES (@user_id, 'MGR001', 'IT', 95000.00, '2022-06-01', 5, 500000.00);
+
+-- Запросы
+-- Получить всех клиентов с их данными
+SELECT u.*, c.phone, c.address, c.loyalty_points 
+FROM users u 
+JOIN customers c ON u.id = c.user_id;
+
+-- Получить всех сотрудников (включая менеджеров)
+SELECT u.*, e.employee_id, e.department, e.salary, e.hire_date 
+FROM users u 
+JOIN employees e ON u.id = e.user_id
+UNION
+SELECT u.*, m.employee_id, m.department, m.salary, m.hire_date 
+FROM users u 
+JOIN managers m ON u.id = m.user_id;</code></pre>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/classTableInheritance.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">
@@ -53,5 +121,58 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

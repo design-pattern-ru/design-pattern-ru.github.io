@@ -19,7 +19,648 @@
 			<h2>Описание Embedded Value</h2>
 			<p>Записывает объект в несколько полей таблицы другого объекта.</p>
 <p>Множество небольших объектов играют важную роль в объектно-ориентированной системе, но не подходят для хранения в отдельной таблице. Это, к примеру, объекты-деньги, зависящие от валюты и диапазоны дат. Не смотря на то, что обычно для хранения отдельного объекта используется отдельная таблица, ни один человек в трезвом уме не станет делать отдельную таблицу для денег.</p>
-<p>Паттерн <acronym title="Паттерн Embedded Value (Объединённое свойство)">Embedded Value</acronym> (Объединённое свойство) распределяет значения полей объекта в поля таблицы объекта-владельца.</p>
+			<p>Паттерн <acronym title="Паттерн Embedded Value (Объединённое свойство)">Embedded Value</acronym> (Объединённое свойство) распределяет значения полей объекта в поля таблицы объекта-владельца.</p>
+
+<h2>Примеры реализации</h2>
+<div class="code-snippet">
+    <div class="code-snippet-header">
+        <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+        <button class="code-snippet-tab" data-language="php">PHP</button>
+        <button class="code-snippet-tab" data-language="go">Go</button>
+    </div>
+    <div class="code-snippet-content">
+        <button class="code-snippet-copy">Copy</button>
+        
+        <div class="code-snippet-panel" data-language="javascript">
+            <pre><code>// Embedded Value Pattern in JavaScript
+class Money {
+    constructor(amount, currency) {
+        this.amount = amount;
+        this.currency = currency;
+    }
+    
+    getAmount() {
+        return this.amount;
+    }
+    
+    getCurrency() {
+        return this.currency;
+    }
+    
+    toString() {
+        return `${this.amount} ${this.currency}`;
+    }
+}
+
+class DateRange {
+    constructor(startDate, endDate) {
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+    
+    getStartDate() {
+        return this.startDate;
+    }
+    
+    getEndDate() {
+        return this.endDate;
+    }
+    
+    getDuration() {
+        return Math.ceil((this.endDate - this.startDate) / (1000 * 60 * 60 * 24));
+    }
+}
+
+class Employment {
+    constructor(company, position, salary, startDate, endDate) {
+        this.company = company;
+        this.position = position;
+        this.salary = salary; // Embedded Money object
+        this.period = new DateRange(startDate, endDate); // Embedded DateRange object
+    }
+    
+    getCompany() {
+        return this.company;
+    }
+    
+    getPosition() {
+        return this.position;
+    }
+    
+    getSalary() {
+        return this.salary;
+    }
+    
+    getPeriod() {
+        return this.period;
+    }
+    
+    // Method to get salary as separate fields (for database storage)
+    getSalaryFields() {
+        return {
+            salaryAmount: this.salary.getAmount(),
+            salaryCurrency: this.salary.getCurrency()
+        };
+    }
+    
+    // Method to get period as separate fields (for database storage)
+    getPeriodFields() {
+        return {
+            startDate: this.period.getStartDate(),
+            endDate: this.period.getEndDate()
+        };
+    }
+    
+    // Method to create from database fields
+    static fromFields(company, position, salaryAmount, salaryCurrency, startDate, endDate) {
+        const salary = new Money(salaryAmount, salaryCurrency);
+        return new Employment(company, position, salary, startDate, endDate);
+    }
+}
+
+class Address {
+    constructor(street, city, state, zipCode, country) {
+        this.street = street;
+        this.city = city;
+        this.state = state;
+        this.zipCode = zipCode;
+        this.country = country;
+    }
+    
+    getFullAddress() {
+        return `${this.street}, ${this.city}, ${this.state} ${this.zipCode}, ${this.country}`;
+    }
+    
+    // Method to get address as separate fields (for database storage)
+    getAddressFields() {
+        return {
+            street: this.street,
+            city: this.city,
+            state: this.state,
+            zipCode: this.zipCode,
+            country: this.country
+        };
+    }
+    
+    // Method to create from database fields
+    static fromFields(street, city, state, zipCode, country) {
+        return new Address(street, city, state, zipCode, country);
+    }
+}
+
+class Person {
+    constructor(name, email, address) {
+        this.name = name;
+        this.email = email;
+        this.address = address; // Embedded Address object
+    }
+    
+    getName() {
+        return this.name;
+    }
+    
+    getEmail() {
+        return this.email;
+    }
+    
+    getAddress() {
+        return this.address;
+    }
+    
+    // Method to get address as separate fields (for database storage)
+    getAddressFields() {
+        return this.address.getAddressFields();
+    }
+    
+    // Method to create from database fields
+    static fromFields(name, email, street, city, state, zipCode, country) {
+        const address = Address.fromFields(street, city, state, zipCode, country);
+        return new Person(name, email, address);
+    }
+}
+
+// Usage
+const salary = new Money(75000, 'USD');
+const period = new DateRange(new Date('2020-01-01'), new Date('2023-12-31'));
+const employment = new Employment('Tech Corp', 'Software Engineer', salary, new Date('2020-01-01'), new Date('2023-12-31'));
+
+console.log('Employment:', employment.getCompany(), employment.getPosition());
+console.log('Salary:', employment.getSalary().toString());
+console.log('Period:', employment.getPeriod().getDuration(), 'days');
+
+// Get fields for database storage
+const salaryFields = employment.getSalaryFields();
+const periodFields = employment.getPeriodFields();
+console.log('Salary fields:', salaryFields);
+console.log('Period fields:', periodFields);
+
+// Create from database fields
+const employmentFromDB = Employment.fromFields(
+    'Tech Corp',
+    'Software Engineer',
+    75000,
+    'USD',
+    new Date('2020-01-01'),
+    new Date('2023-12-31')
+);
+
+console.log('Employment from DB:', employmentFromDB.getCompany());
+
+// Address example
+const address = new Address('123 Main St', 'New York', 'NY', '10001', 'USA');
+const person = new Person('John Doe', 'john@example.com', address);
+
+console.log('Person:', person.getName());
+console.log('Address:', person.getAddress().getFullAddress());
+
+// Get address fields for database storage
+const addressFields = person.getAddressFields();
+console.log('Address fields:', addressFields);
+
+// Create person from database fields
+const personFromDB = Person.fromFields('John Doe', 'john@example.com', '123 Main St', 'New York', 'NY', '10001', 'USA');
+console.log('Person from DB:', personFromDB.getName());</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="php">
+            <pre><code>&lt;?php
+// Embedded Value Pattern in PHP
+class Money {
+    private $amount;
+    private $currency;
+    
+    public function __construct($amount, $currency) {
+        $this->amount = $amount;
+        $this->currency = $currency;
+    }
+    
+    public function getAmount() {
+        return $this->amount;
+    }
+    
+    public function getCurrency() {
+        return $this->currency;
+    }
+    
+    public function __toString() {
+        return $this->amount . ' ' . $this->currency;
+    }
+}
+
+class DateRange {
+    private $startDate;
+    private $endDate;
+    
+    public function __construct($startDate, $endDate) {
+        $this->startDate = $startDate;
+        $this->endDate = $endDate;
+    }
+    
+    public function getStartDate() {
+        return $this->startDate;
+    }
+    
+    public function getEndDate() {
+        return $this->endDate;
+    }
+    
+    public function getDuration() {
+        return ceil(($this->endDate->getTimestamp() - $this->startDate->getTimestamp()) / (60 * 60 * 24));
+    }
+}
+
+class Employment {
+    private $company;
+    private $position;
+    private $salary;
+    private $period;
+    
+    public function __construct($company, $position, $salary, $startDate, $endDate) {
+        $this->company = $company;
+        $this->position = $position;
+        $this->salary = $salary; // Embedded Money object
+        $this->period = new DateRange($startDate, $endDate); // Embedded DateRange object
+    }
+    
+    public function getCompany() {
+        return $this->company;
+    }
+    
+    public function getPosition() {
+        return $this->position;
+    }
+    
+    public function getSalary() {
+        return $this->salary;
+    }
+    
+    public function getPeriod() {
+        return $this->period;
+    }
+    
+    // Method to get salary as separate fields (for database storage)
+    public function getSalaryFields() {
+        return [
+            'salaryAmount' => $this->salary->getAmount(),
+            'salaryCurrency' => $this->salary->getCurrency()
+        ];
+    }
+    
+    // Method to get period as separate fields (for database storage)
+    public function getPeriodFields() {
+        return [
+            'startDate' => $this->period->getStartDate(),
+            'endDate' => $this->period->getEndDate()
+        ];
+    }
+    
+    // Method to create from database fields
+    public static function fromFields($company, $position, $salaryAmount, $salaryCurrency, $startDate, $endDate) {
+        $salary = new Money($salaryAmount, $salaryCurrency);
+        return new Employment($company, $position, $salary, $startDate, $endDate);
+    }
+}
+
+class Address {
+    private $street;
+    private $city;
+    private $state;
+    private $zipCode;
+    private $country;
+    
+    public function __construct($street, $city, $state, $zipCode, $country) {
+        $this->street = $street;
+        $this->city = $city;
+        $this->state = $state;
+        $this->zipCode = $zipCode;
+        $this->country = $country;
+    }
+    
+    public function getFullAddress() {
+        return $this->street . ', ' . $this->city . ', ' . $this->state . ' ' . $this->zipCode . ', ' . $this->country;
+    }
+    
+    // Method to get address as separate fields (for database storage)
+    public function getAddressFields() {
+        return [
+            'street' => $this->street,
+            'city' => $this->city,
+            'state' => $this->state,
+            'zipCode' => $this->zipCode,
+            'country' => $this->country
+        ];
+    }
+    
+    // Method to create from database fields
+    public static function fromFields($street, $city, $state, $zipCode, $country) {
+        return new Address($street, $city, $state, $zipCode, $country);
+    }
+}
+
+class Person {
+    private $name;
+    private $email;
+    private $address;
+    
+    public function __construct($name, $email, $address) {
+        $this->name = $name;
+        $this->email = $email;
+        $this->address = $address; // Embedded Address object
+    }
+    
+    public function getName() {
+        return $this->name;
+    }
+    
+    public function getEmail() {
+        return $this->email;
+    }
+    
+    public function getAddress() {
+        return $this->address;
+    }
+    
+    // Method to get address as separate fields (for database storage)
+    public function getAddressFields() {
+        return $this->address->getAddressFields();
+    }
+    
+    // Method to create from database fields
+    public static function fromFields($name, $email, $street, $city, $state, $zipCode, $country) {
+        $address = Address::fromFields($street, $city, $state, $zipCode, $country);
+        return new Person($name, $email, $address);
+    }
+}
+
+// Usage
+$salary = new Money(75000, 'USD');
+$period = new DateRange(new DateTime('2020-01-01'), new DateTime('2023-12-31'));
+$employment = new Employment('Tech Corp', 'Software Engineer', $salary, new DateTime('2020-01-01'), new DateTime('2023-12-31'));
+
+echo "Employment: " . $employment->getCompany() . " - " . $employment->getPosition() . "\n";
+echo "Salary: " . $employment->getSalary() . "\n";
+echo "Period: " . $employment->getPeriod()->getDuration() . " days\n";
+
+// Get fields for database storage
+$salaryFields = $employment->getSalaryFields();
+$periodFields = $employment->getPeriodFields();
+echo "Salary fields: " . json_encode($salaryFields) . "\n";
+echo "Period fields: " . json_encode($periodFields) . "\n";
+
+// Create from database fields
+$employmentFromDB = Employment::fromFields(
+    'Tech Corp',
+    'Software Engineer',
+    75000,
+    'USD',
+    new DateTime('2020-01-01'),
+    new DateTime('2023-12-31')
+);
+
+echo "Employment from DB: " . $employmentFromDB->getCompany() . "\n";
+
+// Address example
+$address = new Address('123 Main St', 'New York', 'NY', '10001', 'USA');
+$person = new Person('John Doe', 'john@example.com', $address);
+
+echo "Person: " . $person->getName() . "\n";
+echo "Address: " . $person->getAddress()->getFullAddress() . "\n";
+
+// Get address fields for database storage
+$addressFields = $person->getAddressFields();
+echo "Address fields: " . json_encode($addressFields) . "\n";
+
+// Create person from database fields
+$personFromDB = Person::fromFields('John Doe', 'john@example.com', '123 Main St', 'New York', 'NY', '10001', 'USA');
+echo "Person from DB: " . $personFromDB->getName() . "\n";
+?&gt;</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="go">
+            <pre><code>// Embedded Value Pattern in Go
+package main
+
+import (
+    "fmt"
+    "time"
+)
+
+type Money struct {
+    Amount   float64
+    Currency string
+}
+
+func (m *Money) GetAmount() float64 {
+    return m.Amount
+}
+
+func (m *Money) GetCurrency() string {
+    return m.Currency
+}
+
+func (m *Money) String() string {
+    return fmt.Sprintf("%.2f %s", m.Amount, m.Currency)
+}
+
+type DateRange struct {
+    StartDate time.Time
+    EndDate   time.Time
+}
+
+func (dr *DateRange) GetStartDate() time.Time {
+    return dr.StartDate
+}
+
+func (dr *DateRange) GetEndDate() time.Time {
+    return dr.EndDate
+}
+
+func (dr *DateRange) GetDuration() int {
+    return int(dr.EndDate.Sub(dr.StartDate).Hours() / 24)
+}
+
+type Employment struct {
+    Company  string
+    Position string
+    Salary   Money     // Embedded Money object
+    Period   DateRange // Embedded DateRange object
+}
+
+func (e *Employment) GetCompany() string {
+    return e.Company
+}
+
+func (e *Employment) GetPosition() string {
+    return e.Position
+}
+
+func (e *Employment) GetSalary() Money {
+    return e.Salary
+}
+
+func (e *Employment) GetPeriod() DateRange {
+    return e.Period
+}
+
+// Method to get salary as separate fields (for database storage)
+func (e *Employment) GetSalaryFields() map[string]interface{} {
+    return map[string]interface{}{
+        "salaryAmount":   e.Salary.GetAmount(),
+        "salaryCurrency": e.Salary.GetCurrency(),
+    }
+}
+
+// Method to get period as separate fields (for database storage)
+func (e *Employment) GetPeriodFields() map[string]interface{} {
+    return map[string]interface{}{
+        "startDate": e.Period.GetStartDate(),
+        "endDate":   e.Period.GetEndDate(),
+    }
+}
+
+// Method to create from database fields
+func NewEmploymentFromFields(company, position string, salaryAmount float64, salaryCurrency string, startDate, endDate time.Time) *Employment {
+    salary := Money{Amount: salaryAmount, Currency: salaryCurrency}
+    period := DateRange{StartDate: startDate, EndDate: endDate}
+    return &Employment{
+        Company:  company,
+        Position: position,
+        Salary:   salary,
+        Period:   period,
+    }
+}
+
+type Address struct {
+    Street  string
+    City    string
+    State   string
+    ZipCode string
+    Country string
+}
+
+func (a *Address) GetFullAddress() string {
+    return fmt.Sprintf("%s, %s, %s %s, %s", a.Street, a.City, a.State, a.ZipCode, a.Country)
+}
+
+// Method to get address as separate fields (for database storage)
+func (a *Address) GetAddressFields() map[string]string {
+    return map[string]string{
+        "street":  a.Street,
+        "city":    a.City,
+        "state":   a.State,
+        "zipCode": a.ZipCode,
+        "country": a.Country,
+    }
+}
+
+// Method to create from database fields
+func NewAddressFromFields(street, city, state, zipCode, country string) *Address {
+    return &Address{
+        Street:  street,
+        City:    city,
+        State:   state,
+        ZipCode: zipCode,
+        Country: country,
+    }
+}
+
+type Person struct {
+    Name    string
+    Email   string
+    Address Address // Embedded Address object
+}
+
+func (p *Person) GetName() string {
+    return p.Name
+}
+
+func (p *Person) GetEmail() string {
+    return p.Email
+}
+
+func (p *Person) GetAddress() Address {
+    return p.Address
+}
+
+// Method to get address as separate fields (for database storage)
+func (p *Person) GetAddressFields() map[string]string {
+    return p.Address.GetAddressFields()
+}
+
+// Method to create from database fields
+func NewPersonFromFields(name, email, street, city, state, zipCode, country string) *Person {
+    address := NewAddressFromFields(street, city, state, zipCode, country)
+    return &Person{
+        Name:    name,
+        Email:   email,
+        Address: *address,
+    }
+}
+
+func main() {
+    // Usage
+    salary := Money{Amount: 75000, Currency: "USD"}
+    period := DateRange{
+        StartDate: time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
+        EndDate:   time.Date(2023, 12, 31, 0, 0, 0, 0, time.UTC),
+    }
+    employment := Employment{
+        Company:  "Tech Corp",
+        Position: "Software Engineer",
+        Salary:   salary,
+        Period:   period,
+    }
+
+    fmt.Printf("Employment: %s - %s\n", employment.GetCompany(), employment.GetPosition())
+    fmt.Printf("Salary: %s\n", employment.GetSalary().String())
+    fmt.Printf("Period: %d days\n", employment.GetPeriod().GetDuration())
+
+    // Get fields for database storage
+    salaryFields := employment.GetSalaryFields()
+    periodFields := employment.GetPeriodFields()
+    fmt.Printf("Salary fields: %+v\n", salaryFields)
+    fmt.Printf("Period fields: %+v\n", periodFields)
+
+    // Create from database fields
+    employmentFromDB := NewEmploymentFromFields(
+        "Tech Corp",
+        "Software Engineer",
+        75000,
+        "USD",
+        time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
+        time.Date(2023, 12, 31, 0, 0, 0, 0, time.UTC),
+    )
+
+    fmt.Printf("Employment from DB: %s\n", employmentFromDB.GetCompany())
+
+    // Address example
+    address := Address{
+        Street:  "123 Main St",
+        City:    "New York",
+        State:   "NY",
+        ZipCode: "10001",
+        Country: "USA",
+    }
+    person := Person{
+        Name:    "John Doe",
+        Email:   "john@example.com",
+        Address: address,
+    }
+
+    fmt.Printf("Person: %s\n", person.GetName())
+    fmt.Printf("Address: %s\n", person.GetAddress().GetFullAddress())
+
+    // Get address fields for database storage
+    addressFields := person.GetAddressFields()
+    fmt.Printf("Address fields: %+v\n", addressFields)
+
+    // Create person from database fields
+    personFromDB := NewPersonFromFields("John Doe", "john@example.com", "123 Main St", "New York", "NY", "10001", "USA")
+    fmt.Printf("Person from DB: %s\n", personFromDB.GetName())
+}</code></pre>
+        </div>
+    </div>
+</div>
 <p class="example">На схеме представлен объект "Место работы" (Employment) со ссылками на объекты диапазона дат и денег. В таблице, хранящей объект "место работы", объекты дат и денег раскладываются на отдельные поля, но не хранятся в отдельных таблицах.</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/embeddedValue.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
@@ -53,5 +694,58 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

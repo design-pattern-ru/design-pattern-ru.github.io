@@ -18,7 +18,241 @@
 			<p><span class="quot">Паттерн проектирования Concrete Table Inheritance</span></p>
 			<h2>Описание Concrete Table Inheritance</h2>
 			<p>Представляет иерархию наследования классов в виде структуры БД, когда одна таблица отвечает <strong>целиком</strong> одному классу.</p>
-<p>Проблема объектно-реляционного взаимодействия заключается в отсутствии поддержки наследования в РБД. Если рассматривать таблицы с объектной точки зрения, есть смысл записывать каждый объект в отдельную запись в БД. Такой подход реализует паттерн <acronym title="Паттерн Concrete Table Inheritance (Наследование с таблицами конечных классов)">Concrete Table Inheritance</acronym>, в котором каждому конкретному классу из иерархии наследования соответствует своя таблица.</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/concreteTableInheritance.html">Источник</a></noindex></p>        </div>
+			<p>Проблема объектно-реляционного взаимодействия заключается в отсутствии поддержки наследования в РБД. Если рассматривать таблицы с объектной точки зрения, есть смысл записывать каждый объект в отдельную запись в БД. Такой подход реализует паттерн <acronym title="Паттерн Concrete Table Inheritance (Наследование с таблицами конечных классов)">Concrete Table Inheritance</acronym>, в котором каждому конкретному классу из иерархии наследования соответствует своя таблица.</p>
+
+<h2>Примеры реализации</h2>
+
+<h3>SQL Схема</h3>
+<pre><code>-- Таблица для клиентов
+CREATE TABLE customers (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    phone VARCHAR(20),
+    address TEXT,
+    loyalty_points INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Таблица для сотрудников
+CREATE TABLE employees (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    employee_id VARCHAR(20) UNIQUE NOT NULL,
+    department VARCHAR(50),
+    salary DECIMAL(10,2),
+    hire_date DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Таблица для менеджеров
+CREATE TABLE managers (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    employee_id VARCHAR(20) UNIQUE NOT NULL,
+    department VARCHAR(50),
+    salary DECIMAL(10,2),
+    hire_date DATE,
+    team_size INT DEFAULT 0,
+    budget DECIMAL(12,2),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Вставка данных
+INSERT INTO customers (name, email, phone, address, loyalty_points) 
+VALUES ('John Doe', 'john@example.com', '+1234567890', '123 Main St', 100);
+
+INSERT INTO employees (name, email, employee_id, department, salary, hire_date) 
+VALUES ('Jane Smith', 'jane@company.com', 'EMP001', 'IT', 75000.00, '2023-01-15');
+
+INSERT INTO managers (name, email, employee_id, department, salary, hire_date, team_size, budget) 
+VALUES ('Bob Johnson', 'bob@company.com', 'MGR001', 'IT', 95000.00, '2022-06-01', 5, 500000.00);
+
+-- Запросы
+-- Получить всех клиентов
+SELECT * FROM customers ORDER BY created_at DESC;
+
+-- Получить всех сотрудников (включая менеджеров)
+SELECT * FROM employees 
+UNION ALL
+SELECT id, name, email, employee_id, department, salary, hire_date, created_at, NULL, NULL FROM managers;</code></pre>
+
+<h3>PHP Реализация</h3>
+<pre><code><?php
+// Базовый абстрактный класс
+abstract class User {
+    protected $id;
+    protected $name;
+    protected $email;
+    protected $createdAt;
+    
+    public function __construct($id = null, $name = '', $email = '') {
+        $this->id = $id;
+        $this->name = $name;
+        $this->email = $email;
+        $this->createdAt = new DateTime();
+    }
+    
+    public function getId() { return $this->id; }
+    public function getName() { return $this->name; }
+    public function getEmail() { return $this->email; }
+    public function getCreatedAt() { return $this->createdAt; }
+    
+    public function setName($name) { $this->name = $name; }
+    public function setEmail($email) { $this->email = $email; }
+    
+    abstract public function getType();
+    abstract public function save(PDO $pdo);
+    abstract public function load(PDO $pdo, $id);
+}
+
+// Класс клиента
+class Customer extends User {
+    private $phone;
+    private $address;
+    private $loyaltyPoints;
+    
+    public function __construct($id = null, $name = '', $email = '', $phone = '', $address = '', $loyaltyPoints = 0) {
+        parent::__construct($id, $name, $email);
+        $this->phone = $phone;
+        $this->address = $address;
+        $this->loyaltyPoints = $loyaltyPoints;
+    }
+    
+    public function getType() { return 'Customer'; }
+    
+    public function getPhone() { return $this->phone; }
+    public function getAddress() { return $this->address; }
+    public function getLoyaltyPoints() { return $this->loyaltyPoints; }
+    
+    public function setPhone($phone) { $this->phone = $phone; }
+    public function setAddress($address) { $this->address = $address; }
+    public function setLoyaltyPoints($points) { $this->loyaltyPoints = $points; }
+    
+    public function save(PDO $pdo) {
+        if ($this->id) {
+            $stmt = $pdo->prepare("UPDATE customers SET name = ?, email = ?, phone = ?, address = ?, loyalty_points = ? WHERE id = ?");
+            $stmt->execute([$this->name, $this->email, $this->phone, $this->address, $this->loyaltyPoints, $this->id]);
+        } else {
+            $stmt = $pdo->prepare("INSERT INTO customers (name, email, phone, address, loyalty_points, created_at) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$this->name, $this->email, $this->phone, $this->address, $this->loyaltyPoints, $this->createdAt->format('Y-m-d H:i:s')]);
+            $this->id = $pdo->lastInsertId();
+        }
+        return true;
+    }
+    
+    public function load(PDO $pdo, $id) {
+        $stmt = $pdo->prepare("SELECT * FROM customers WHERE id = ?");
+        $stmt->execute([$id]);
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($data) {
+            $this->id = $data['id'];
+            $this->name = $data['name'];
+            $this->email = $data['email'];
+            $this->phone = $data['phone'];
+            $this->address = $data['address'];
+            $this->loyaltyPoints = $data['loyalty_points'];
+            $this->createdAt = new DateTime($data['created_at']);
+            return true;
+        }
+        return false;
+    }
+}
+
+// Класс менеджера
+class Manager extends User {
+    private $employeeId;
+    private $department;
+    private $salary;
+    private $hireDate;
+    private $teamSize;
+    private $budget;
+    
+    public function __construct($id = null, $name = '', $email = '', $employeeId = '', $department = '', $salary = 0, $hireDate = null, $teamSize = 0, $budget = 0) {
+        parent::__construct($id, $name, $email);
+        $this->employeeId = $employeeId;
+        $this->department = $department;
+        $this->salary = $salary;
+        $this->hireDate = $hireDate ?: new DateTime();
+        $this->teamSize = $teamSize;
+        $this->budget = $budget;
+    }
+    
+    public function getType() { return 'Manager'; }
+    
+    public function getEmployeeId() { return $this->employeeId; }
+    public function getDepartment() { return $this->department; }
+    public function getSalary() { return $this->salary; }
+    public function getHireDate() { return $this->hireDate; }
+    public function getTeamSize() { return $this->teamSize; }
+    public function getBudget() { return $this->budget; }
+    
+    public function setEmployeeId($employeeId) { $this->employeeId = $employeeId; }
+    public function setDepartment($department) { $this->department = $department; }
+    public function setSalary($salary) { $this->salary = $salary; }
+    public function setHireDate($hireDate) { $this->hireDate = $hireDate; }
+    public function setTeamSize($teamSize) { $this->teamSize = $teamSize; }
+    public function setBudget($budget) { $this->budget = $budget; }
+    
+    public function save(PDO $pdo) {
+        if ($this->id) {
+            $stmt = $pdo->prepare("UPDATE managers SET name = ?, email = ?, employee_id = ?, department = ?, salary = ?, hire_date = ?, team_size = ?, budget = ? WHERE id = ?");
+            $stmt->execute([$this->name, $this->email, $this->employeeId, $this->department, $this->salary, $this->hireDate->format('Y-m-d'), $this->teamSize, $this->budget, $this->id]);
+        } else {
+            $stmt = $pdo->prepare("INSERT INTO managers (name, email, employee_id, department, salary, hire_date, team_size, budget, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$this->name, $this->email, $this->employeeId, $this->department, $this->salary, $this->hireDate->format('Y-m-d'), $this->teamSize, $this->budget, $this->createdAt->format('Y-m-d H:i:s')]);
+            $this->id = $pdo->lastInsertId();
+        }
+        return true;
+    }
+    
+    public function load(PDO $pdo, $id) {
+        $stmt = $pdo->prepare("SELECT * FROM managers WHERE id = ?");
+        $stmt->execute([$id]);
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($data) {
+            $this->id = $data['id'];
+            $this->name = $data['name'];
+            $this->email = $data['email'];
+            $this->employeeId = $data['employee_id'];
+            $this->department = $data['department'];
+            $this->salary = $data['salary'];
+            $this->hireDate = new DateTime($data['hire_date']);
+            $this->teamSize = $data['team_size'];
+            $this->budget = $data['budget'];
+            $this->createdAt = new DateTime($data['created_at']);
+            return true;
+        }
+        return false;
+    }
+}
+
+// Использование
+try {
+    $pdo = new PDO('mysql:host=localhost;dbname=test', 'username', 'password');
+    
+    // Создание и сохранение клиента
+    $customer = new Customer(null, 'John Doe', 'john@example.com', '+1234567890', '123 Main St', 100);
+    $customer->save($pdo);
+    
+    // Создание и сохранение менеджера
+    $manager = new Manager(null, 'Jane Smith', 'jane@company.com', 'MGR001', 'IT', 95000, new DateTime('2022-06-01'), 5, 500000);
+    $manager->save($pdo);
+    
+    // Загрузка клиента
+    $loadedCustomer = new Customer();
+    if ($loadedCustomer->load($pdo, 1)) {
+        echo "Loaded customer: " . $loadedCustomer->getName() . "\n";
+    }
+    
+} catch (Exception $e) {
+    echo "Error: " . $e->getMessage();
+}
+?></code></pre>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/concreteTableInheritance.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">

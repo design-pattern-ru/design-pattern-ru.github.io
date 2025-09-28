@@ -19,7 +19,274 @@
 			<h2>Описание Implicit Lock</h2>
 			<p>Позволяет коду фреймворка или супертипа уровня использовать локальные блокировки</p>
 <p>Суть всех блокировок в том, что при их использовании нельзя делать исключений. Если забыть написать одну строку кода, которая вызывает блокировку, можно придти к полной бесполезности всей блокировочной схемы. Не вызвав блокировку на чтение, даже если остальные транзакции её используют, можно поставить под вопрос актуальность данных. В целом - если что-то может быть заблокировано где-то, оно должно блокироваться везде. Игнорируя это правило, блокировочные стратегии приложений рискуют целостностью данных. Если не завершить блокировку вовремя, то с данными ничего плохого не случится, однако, это приведёт к провалу производительности. Из-за сложности тестирования локальных блокировок, такие ошибки могут пройти все тесты и не быть обнаруженными</p>
-<p>Единственное решение здесь - не дать разработчикам ошибиться. Задачи, использующие блокировки, которые не могут быть невыявленными, должны быть обработаны не явно для разработчика, но скрыто для приложения. А тот факт, что большинство приложений промышленного масштаба используют нектотрый набор фреймворков, <a href="layer-supertype.html" title="Паттерн проектирования Layer Supertype (Супертип Уровня)">Layer Supertype</a> и генерацию кода, даёт большие возможности для внедрения паттерна <acronym title="Паттерн Implicit Lock (Скрытая блокировка)">Implicit Lock</acronym>.</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/implicitLock.html">Источник</a></noindex></p>        </div>
+			<p>Единственное решение здесь - не дать разработчикам ошибиться. Задачи, использующие блокировки, которые не могут быть невыявленными, должны быть обработаны не явно для разработчика, но скрыто для приложения. А тот факт, что большинство приложений промышленного масштаба используют нектотрый набор фреймворков, <a href="layer-supertype.html" title="Паттерн проектирования Layer Supertype (Супертип Уровня)">Layer Supertype</a> и генерацию кода, даёт большие возможности для внедрения паттерна <acronym title="Паттерн Implicit Lock (Скрытая блокировка)">Implicit Lock</acronym>.</p>
+
+<h2>Реализация в популярных СУБД</h2>
+
+<h3>PostgreSQL</h3>
+<p>PostgreSQL поддерживает скрытые блокировки через различные механизмы:</p>
+<ul>
+<li><strong>Automatic Locking</strong> - автоматические блокировки</li>
+<li><strong>Trigger-Based Locking</strong> - блокировки через триггеры</li>
+<li><strong>Function-Based Locking</strong> - блокировки через функции</li>
+</ul>
+
+<pre><code>-- Создание функции с автоматической блокировкой
+CREATE OR REPLACE FUNCTION update_user_with_lock(
+    user_id INTEGER,
+    new_name VARCHAR
+) RETURNS BOOLEAN AS $$
+BEGIN
+    -- Автоматическая блокировка строки
+    PERFORM * FROM users WHERE id = user_id FOR UPDATE;
+    
+    -- Обновление данных
+    UPDATE users SET name = new_name WHERE id = user_id;
+    
+    RETURN TRUE;
+EXCEPTION
+    WHEN OTHERS THEN
+        RETURN FALSE;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Использование функции
+SELECT update_user_with_lock(1, 'New Name');</code></pre>
+
+<h3>MySQL (InnoDB)</h3>
+<p>MySQL поддерживает скрытые блокировки через различные механизмы:</p>
+<ul>
+<li><strong>Stored Procedures</strong> - хранимые процедуры</li>
+<li><strong>Triggers</strong> - триггеры</li>
+<li><strong>Functions</strong> - функции</li>
+</ul>
+
+<pre><code>-- Создание процедуры с автоматической блокировкой
+DELIMITER //
+CREATE PROCEDURE update_user_with_lock(
+    IN user_id INT,
+    IN new_name VARCHAR(100)
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+    
+    START TRANSACTION;
+    
+    -- Автоматическая блокировка строки
+    SELECT * FROM users WHERE id = user_id FOR UPDATE;
+    
+    -- Обновление данных
+    UPDATE users SET name = new_name WHERE id = user_id;
+    
+    COMMIT;
+END //
+DELIMITER ;
+
+-- Использование процедуры
+CALL update_user_with_lock(1, 'New Name');</code></pre>
+
+<h3>Oracle Database</h3>
+<p>Oracle предоставляет мощные механизмы для скрытых блокировок:</p>
+<ul>
+<li><strong>PL/SQL Packages</strong> - пакеты PL/SQL</li>
+<li><strong>Triggers</strong> - триггеры</li>
+<li><strong>Functions</strong> - функции</li>
+</ul>
+
+<pre><code>-- Создание пакета с автоматической блокировкой
+CREATE OR REPLACE PACKAGE user_locking AS
+    FUNCTION update_user_with_lock(
+        p_user_id NUMBER,
+        p_new_name VARCHAR2
+    ) RETURN BOOLEAN;
+END user_locking;
+/
+
+CREATE OR REPLACE PACKAGE BODY user_locking AS
+    FUNCTION update_user_with_lock(
+        p_user_id NUMBER,
+        p_new_name VARCHAR2
+    ) RETURN BOOLEAN IS
+    BEGIN
+        -- Автоматическая блокировка строки
+        SELECT * FROM users WHERE id = p_user_id FOR UPDATE;
+        
+        -- Обновление данных
+        UPDATE users SET name = p_new_name WHERE id = p_user_id;
+        
+        COMMIT;
+        RETURN TRUE;
+    EXCEPTION
+        WHEN OTHERS THEN
+            ROLLBACK;
+            RETURN FALSE;
+    END;
+END user_locking;
+/
+
+-- Использование пакета
+SELECT user_locking.update_user_with_lock(1, 'New Name') FROM dual;</code></pre>
+
+<h3>SQL Server</h3>
+<p>SQL Server поддерживает скрытые блокировки через различные механизмы:</p>
+<ul>
+<li><strong>Stored Procedures</strong> - хранимые процедуры</li>
+<li><strong>Functions</strong> - функции</li>
+<li><strong>Triggers</strong> - триггеры</li>
+</ul>
+
+<pre><code>-- Создание процедуры с автоматической блокировкой
+CREATE PROCEDURE update_user_with_lock
+    @user_id INT,
+    @new_name NVARCHAR(100)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        
+        -- Автоматическая блокировка строки
+        SELECT * FROM users WITH (UPDLOCK) WHERE id = @user_id;
+        
+        -- Обновление данных
+        UPDATE users SET name = @new_name WHERE id = @user_id;
+        
+        COMMIT TRANSACTION;
+        SELECT 1 AS result;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        SELECT 0 AS result;
+    END CATCH
+END;
+
+-- Использование процедуры
+EXEC update_user_with_lock @user_id = 1, @new_name = 'New Name';</code></pre>
+
+<h3>SQLite</h3>
+<p>SQLite поддерживает скрытые блокировки через пользовательские механизмы:</p>
+<ul>
+<li><strong>Custom Functions</strong> - пользовательские функции</li>
+<li><strong>Triggers</strong> - триггеры</li>
+<li><strong>Views</strong> - представления</li>
+</ul>
+
+<pre><code>-- Создание функции с автоматической блокировкой
+CREATE TABLE user_locks (
+    user_id INTEGER PRIMARY KEY,
+    locked_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Создание триггера для автоматической блокировки
+CREATE TRIGGER user_update_lock
+BEFORE UPDATE ON users
+BEGIN
+    INSERT OR REPLACE INTO user_locks (user_id, locked_at)
+    VALUES (NEW.id, CURRENT_TIMESTAMP);
+END;
+
+-- Обновление данных (блокировка происходит автоматически)
+UPDATE users SET name = 'New Name' WHERE id = 1;</code></pre>
+
+<h2>Сравнение механизмов</h2>
+<table border="1" cellpadding="5" cellspacing="0">
+<tr>
+<th>СУБД</th>
+<th>Встроенная поддержка</th>
+<th>Производительность</th>
+<th>Простота реализации</th>
+</tr>
+<tr>
+<td>PostgreSQL</td>
+<td>Полная</td>
+<td>Высокая</td>
+<td>Высокая</td>
+</tr>
+<tr>
+<td>MySQL</td>
+<td>Полная</td>
+<td>Высокая</td>
+<td>Высокая</td>
+</tr>
+<tr>
+<td>Oracle</td>
+<td>Полная</td>
+<td>Очень высокая</td>
+<td>Высокая</td>
+</tr>
+<tr>
+<td>SQL Server</td>
+<td>Полная</td>
+<td>Высокая</td>
+<td>Высокая</td>
+</tr>
+<tr>
+<td>SQLite</td>
+<td>Частичная</td>
+<td>Средняя</td>
+<td>Средняя</td>
+</tr>
+</table>
+
+<h2>Рекомендации по выбору</h2>
+<ul>
+<li><strong>PostgreSQL</strong> - лучший выбор для веб-приложений с высокой конкурентностью</li>
+<li><strong>MySQL</strong> - хороший баланс производительности и простоты</li>
+<li><strong>Oracle</strong> - для корпоративных приложений с высокими требованиями</li>
+<li><strong>SQL Server</strong> - для Windows-среды и .NET приложений</li>
+<li><strong>SQLite</strong> - для встраиваемых приложений и прототипирования</li>
+</ul>
+
+<h2>Паттерны реализации</h2>
+<h3>Framework-Based Locking</h3>
+<pre><code>-- Автоматическая блокировка через фреймворк
+@Entity
+@Table(name = "users")
+public class User {
+    @Id
+    private Long id;
+    
+    @Version
+    private Integer version;
+    
+    private String name;
+    
+    // Автоматическая блокировка при обновлении
+    @PreUpdate
+    public void preUpdate() {
+        // Логика блокировки
+    }
+}</code></pre>
+
+<h3>ORM-Based Locking</h3>
+<pre><code>-- Автоматическая блокировка через ORM
+class User < ActiveRecord::Base
+  # Автоматическая блокировка при обновлении
+  def update_with_lock(attributes)
+    with_lock do
+      update(attributes)
+    end
+  end
+end</code></pre>
+
+<h3>Service-Based Locking</h3>
+<pre><code>-- Автоматическая блокировка через сервис
+@Service
+public class UserService {
+    
+    @Transactional
+    public void updateUser(Long id, String name) {
+        // Автоматическая блокировка через транзакцию
+        User user = userRepository.findById(id);
+        user.setName(name);
+        userRepository.save(user);
+    }
+}</code></pre>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/implicitLock.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">

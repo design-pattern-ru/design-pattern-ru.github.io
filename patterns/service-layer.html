@@ -21,7 +21,264 @@
 <p>Бизнес-приложения обычно нуждаются в различных интерфейсах к данным, которые они хранят и логике, которую реализуют: загрузчики данных, пользовательские интерфейсы, интеграционные шлюзы и другое. Вопреки различным целям, эти интерфейсы часто нуждаются во взаимодействии с приложением для доступа и управления его данными и исполнения логики. Эти взаимодействия могут быть сложными, использующими транзакции на нескольких ресурсах и управление несколькими ответами на действие. Программирование логики взаимодействия для каждого интерфейса вызовет больше количество дублирования.</p>
             <p>Паттерн <acronym title="Паттерн Service Layer (Сервисный уровень)">Service Layer</acronym> определяет для приложения границу и набор допустимых операций с точки зрения взаимодействующих с ним клиентских. Он инкапсулирует бизнес-логику приложения, управляя транзакциями и управляя ответами в реализации этих операций.</p>
 
-<h2>Примеры реализации</h2>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/serviceLayer.html">Источник</a></noindex></p>        </div>
+<h2>Примеры реализации</h2>
+<div class="code-snippet">
+    <div class="code-snippet-header">
+        <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+        <button class="code-snippet-tab" data-language="php">PHP</button>
+        <button class="code-snippet-tab" data-language="go">Go</button>
+    </div>
+    <div class="code-snippet-content">
+        <button class="code-snippet-copy">Copy</button>
+        
+        <div class="code-snippet-panel" data-language="javascript">
+            <pre><code>// Service Layer Pattern in JavaScript
+class UserService {
+    constructor(userRepository, emailService, logger) {
+        this.userRepository = userRepository;
+        this.emailService = emailService;
+        this.logger = logger;
+    }
+    
+    async createUser(userData) {
+        try {
+            this.logger.info('Creating new user', { email: userData.email });
+            
+            // Validate user data
+            this.validateUserData(userData);
+            
+            // Check if user already exists
+            const existingUser = await this.userRepository.findByEmail(userData.email);
+            if (existingUser) {
+                throw new Error('User with this email already exists');
+            }
+            
+            // Create user
+            const user = await this.userRepository.create({
+                ...userData,
+                createdAt: new Date(),
+                isActive: true
+            });
+            
+            // Send welcome email
+            await this.emailService.sendWelcomeEmail(user.email, user.name);
+            
+            this.logger.info('User created successfully', { userId: user.id });
+            return user;
+            
+        } catch (error) {
+            this.logger.error('Failed to create user', { error: error.message });
+            throw error;
+        }
+    }
+    
+    validateUserData(userData) {
+        if (!userData.email || !userData.name) {
+            throw new Error('Email and name are required');
+        }
+        
+        if (!this.isValidEmail(userData.email)) {
+            throw new Error('Invalid email format');
+        }
+    }
+    
+    isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+}
+
+// Usage
+const userService = new UserService(userRepository, emailService, logger);
+const user = await userService.createUser({
+    name: 'John Doe',
+    email: 'john@example.com'
+});
+
+console.log('Service Layer pattern implemented');</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="php">
+            <pre><code>&lt;?php
+// Service Layer Pattern in PHP
+class UserService {
+    private $userRepository;
+    private $emailService;
+    private $logger;
+    
+    public function __construct($userRepository, $emailService, $logger) {
+        $this->userRepository = $userRepository;
+        $this->emailService = $emailService;
+        $this->logger = $logger;
+    }
+    
+    public function createUser($userData) {
+        try {
+            $this->logger->info('Creating new user', ['email' => $userData['email']]);
+            
+            // Validate user data
+            $this->validateUserData($userData);
+            
+            // Check if user already exists
+            $existingUser = $this->userRepository->findByEmail($userData['email']);
+            if ($existingUser) {
+                throw new Exception('User with this email already exists');
+            }
+            
+            // Create user
+            $user = $this->userRepository->create([
+                'name' => $userData['name'],
+                'email' => $userData['email'],
+                'created_at' => date('Y-m-d H:i:s'),
+                'is_active' => true
+            ]);
+            
+            // Send welcome email
+            $this->emailService->sendWelcomeEmail($user['email'], $user['name']);
+            
+            $this->logger->info('User created successfully', ['user_id' => $user['id']]);
+            return $user;
+            
+        } catch (Exception $e) {
+            $this->logger->error('Failed to create user', ['error' => $e->getMessage()]);
+            throw $e;
+        }
+    }
+    
+    private function validateUserData($userData) {
+        if (empty($userData['email']) || empty($userData['name'])) {
+            throw new Exception('Email and name are required');
+        }
+        
+        if (!$this->isValidEmail($userData['email'])) {
+            throw new Exception('Invalid email format');
+        }
+    }
+    
+    private function isValidEmail($email) {
+        return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
+    }
+}
+
+// Usage
+$userService = new UserService($userRepository, $emailService, $logger);
+$user = $userService->createUser([
+    'name' => 'John Doe',
+    'email' => 'john@example.com'
+]);
+
+echo "Service Layer pattern implemented\n";
+?&gt;</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="go">
+            <pre><code>// Service Layer Pattern in Go
+package main
+
+import (
+    "fmt"
+    "time"
+)
+
+type User struct {
+    ID        int       `json:"id"`
+    Name      string    `json:"name"`
+    Email     string    `json:"email"`
+    IsActive  bool      `json:"is_active"`
+    CreatedAt time.Time `json:"created_at"`
+}
+
+type UserService struct {
+    userRepo     UserRepository
+    emailService EmailService
+    logger       Logger
+}
+
+func NewUserService(userRepo UserRepository, emailService EmailService, logger Logger) *UserService {
+    return &UserService{
+        userRepo:     userRepo,
+        emailService: emailService,
+        logger:       logger,
+    }
+}
+
+func (us *UserService) CreateUser(userData map[string]interface{}) (*User, error) {
+    us.logger.Info("Creating new user", map[string]interface{}{
+        "email": userData["email"],
+    })
+    
+    // Validate user data
+    if err := us.validateUserData(userData); err != nil {
+        return nil, err
+    }
+    
+    // Check if user already exists
+    existingUser, err := us.userRepo.FindByEmail(userData["email"].(string))
+    if err == nil && existingUser != nil {
+        return nil, fmt.Errorf("user with this email already exists")
+    }
+    
+    // Create user
+    user := &User{
+        Name:      userData["name"].(string),
+        Email:     userData["email"].(string),
+        IsActive:  true,
+        CreatedAt: time.Now(),
+    }
+    
+    createdUser, err := us.userRepo.Create(user)
+    if err != nil {
+        us.logger.Error("Failed to create user", map[string]interface{}{
+            "error": err.Error(),
+        })
+        return nil, err
+    }
+    
+    // Send welcome email
+    if err := us.emailService.SendWelcomeEmail(createdUser.Email, createdUser.Name); err != nil {
+        us.logger.Error("Failed to send welcome email", map[string]interface{}{
+            "error": err.Error(),
+        })
+    }
+    
+    us.logger.Info("User created successfully", map[string]interface{}{
+        "user_id": createdUser.ID,
+    })
+    
+    return createdUser, nil
+}
+
+func (us *UserService) validateUserData(userData map[string]interface{}) error {
+    email, emailOk := userData["email"].(string)
+    name, nameOk := userData["name"].(string)
+    
+    if !emailOk || !nameOk || email == "" || name == "" {
+        return fmt.Errorf("email and name are required")
+    }
+    
+    if !us.isValidEmail(email) {
+        return fmt.Errorf("invalid email format")
+    }
+    
+    return nil
+}
+
+func (us *UserService) isValidEmail(email string) bool {
+    return len(email) > 0 && len(email) < 255
+}
+
+func main() {
+    fmt.Println("Service Layer pattern implemented")
+    fmt.Println("Key benefits:")
+    fmt.Println("1. Encapsulates business logic")
+    fmt.Println("2. Manages transactions")
+    fmt.Println("3. Coordinates between repositories")
+    fmt.Println("4. Provides clear API boundaries")
+    fmt.Println("5. Handles cross-cutting concerns")
+}</code></pre>
+        </div>
+    </div>
+</div>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/serviceLayer.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">
@@ -54,5 +311,58 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>
