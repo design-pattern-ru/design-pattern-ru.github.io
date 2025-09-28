@@ -19,7 +19,439 @@
 			<h2>Описание Identity Field</h2>
 								<p>Хранит первичный ключ из БД в объекте, чтобы обеспечивать соответствие между объектом и строкой в БД.</p>
 					<p>Реляционные базы данных отличают одну запись от другой при помощи первичного ключа. Но объекты в памяти не нуждаются в таком ключе, так как объектная система следит отличием объектов сама. При чтении из БД проблем не возникает, но для записи, нужна привязка объектной системы к БД.</p>
-					<p>Для этого нет ничего проще и очевиднее, чем <acronym title="Паттерн Identity Field (Поле первичного ключа)">Identity Field</acronym>. Всё, что нужно - это хранить первичный ключ из БД в свостве объекта</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/identityField.html">Источник</a></noindex></p>        </div>
+					<p>Для этого нет ничего проще и очевиднее, чем <acronym title="Паттерн Identity Field (Поле первичного ключа)">Identity Field</acronym>. Всё, что нужно - это хранить первичный ключ из БД в свостве объекта</p>
+
+<h2>Примеры реализации</h2>
+<div class="code-snippet">
+    <div class="code-snippet-header">
+        <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+        <button class="code-snippet-tab" data-language="php">PHP</button>
+        <button class="code-snippet-tab" data-language="go">Go</button>
+    </div>
+    <div class="code-snippet-content">
+        <button class="code-snippet-copy">Copy</button>
+        
+        <div class="code-snippet-panel" data-language="javascript">
+            <pre><code>// Identity Field Pattern in JavaScript
+class User {
+    constructor(id, name, email) {
+        this.id = id; // Identity Field - primary key from database
+        this.name = name;
+        this.email = email;
+    }
+    
+    getId() {
+        return this.id;
+    }
+    
+    setId(id) {
+        this.id = id;
+    }
+    
+    getName() {
+        return this.name;
+    }
+    
+    getEmail() {
+        return this.email;
+    }
+    
+    // Method to check if object is persisted
+    isPersisted() {
+        return this.id !== null && this.id !== undefined;
+    }
+    
+    // Method to mark as new (no ID yet)
+    markAsNew() {
+        this.id = null;
+    }
+}
+
+class Product {
+    constructor(id, name, price, categoryId) {
+        this.id = id; // Identity Field - primary key
+        this.name = name;
+        this.price = price;
+        this.categoryId = categoryId; // Foreign key reference
+    }
+    
+    getId() {
+        return this.id;
+    }
+    
+    setId(id) {
+        this.id = id;
+    }
+    
+    getCategoryId() {
+        return this.categoryId;
+    }
+    
+    setCategoryId(categoryId) {
+        this.categoryId = categoryId;
+    }
+}
+
+class Order {
+    constructor(id, userId, orderDate, totalAmount) {
+        this.id = id; // Identity Field
+        this.userId = userId; // Foreign key to User
+        this.orderDate = orderDate;
+        this.totalAmount = totalAmount;
+        this.items = [];
+    }
+    
+    getId() {
+        return this.id;
+    }
+    
+    getUserId() {
+        return this.userId;
+    }
+    
+    addItem(productId, quantity, price) {
+        this.items.push({
+            id: null, // Will be set when saved to database
+            productId: productId,
+            quantity: quantity,
+            price: price
+        });
+    }
+}
+
+// Usage examples
+const user = new User(1, 'John Doe', 'john@example.com');
+console.log('User ID:', user.getId());
+console.log('Is persisted:', user.isPersisted());
+
+const product = new Product(101, 'Laptop', 999.99, 5);
+console.log('Product ID:', product.getId());
+console.log('Category ID:', product.getCategoryId());
+
+const order = new Order(1001, 1, new Date(), 1999.98);
+order.addItem(101, 1, 999.99);
+order.addItem(102, 1, 999.99);
+
+console.log('Order ID:', order.getId());
+console.log('User ID:', order.getUserId());
+console.log('Order items:', order.items);
+
+// Creating new objects (no ID yet)
+const newUser = new User(null, 'Jane Smith', 'jane@example.com');
+newUser.markAsNew();
+console.log('New user is persisted:', newUser.isPersisted());
+
+// After saving to database, ID would be set
+newUser.setId(2);
+console.log('After save - User ID:', newUser.getId());
+console.log('After save - Is persisted:', newUser.isPersisted());</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="php">
+            <pre><code>&lt;?php
+// Identity Field Pattern in PHP
+class User {
+    private $id; // Identity Field - primary key from database
+    private $name;
+    private $email;
+    
+    public function __construct($id, $name, $email) {
+        $this->id = $id;
+        $this->name = $name;
+        $this->email = $email;
+    }
+    
+    public function getId() {
+        return $this->id;
+    }
+    
+    public function setId($id) {
+        $this->id = $id;
+    }
+    
+    public function getName() {
+        return $this->name;
+    }
+    
+    public function getEmail() {
+        return $this->email;
+    }
+    
+    // Method to check if object is persisted
+    public function isPersisted() {
+        return $this->id !== null;
+    }
+    
+    // Method to mark as new (no ID yet)
+    public function markAsNew() {
+        $this->id = null;
+    }
+}
+
+class Product {
+    private $id; // Identity Field - primary key
+    private $name;
+    private $price;
+    private $categoryId; // Foreign key reference
+    
+    public function __construct($id, $name, $price, $categoryId) {
+        $this->id = $id;
+        $this->name = $name;
+        $this->price = $price;
+        $this->categoryId = $categoryId;
+    }
+    
+    public function getId() {
+        return $this->id;
+    }
+    
+    public function setId($id) {
+        $this->id = $id;
+    }
+    
+    public function getCategoryId() {
+        return $this->categoryId;
+    }
+    
+    public function setCategoryId($categoryId) {
+        $this->categoryId = $categoryId;
+    }
+}
+
+class Order {
+    private $id; // Identity Field
+    private $userId; // Foreign key to User
+    private $orderDate;
+    private $totalAmount;
+    private $items;
+    
+    public function __construct($id, $userId, $orderDate, $totalAmount) {
+        $this->id = $id;
+        $this->userId = $userId;
+        $this->orderDate = $orderDate;
+        $this->totalAmount = $totalAmount;
+        $this->items = [];
+    }
+    
+    public function getId() {
+        return $this->id;
+    }
+    
+    public function getUserId() {
+        return $this->userId;
+    }
+    
+    public function addItem($productId, $quantity, $price) {
+        $this->items[] = [
+            'id' => null, // Will be set when saved to database
+            'productId' => $productId,
+            'quantity' => $quantity,
+            'price' => $price
+        ];
+    }
+    
+    public function getItems() {
+        return $this->items;
+    }
+}
+
+// Usage examples
+$user = new User(1, 'John Doe', 'john@example.com');
+echo "User ID: " . $user->getId() . "\n";
+echo "Is persisted: " . ($user->isPersisted() ? 'true' : 'false') . "\n";
+
+$product = new Product(101, 'Laptop', 999.99, 5);
+echo "Product ID: " . $product->getId() . "\n";
+echo "Category ID: " . $product->getCategoryId() . "\n";
+
+$order = new Order(1001, 1, new DateTime(), 1999.98);
+$order->addItem(101, 1, 999.99);
+$order->addItem(102, 1, 999.99);
+
+echo "Order ID: " . $order->getId() . "\n";
+echo "User ID: " . $order->getUserId() . "\n";
+echo "Order items: " . json_encode($order->getItems()) . "\n";
+
+// Creating new objects (no ID yet)
+$newUser = new User(null, 'Jane Smith', 'jane@example.com');
+$newUser->markAsNew();
+echo "New user is persisted: " . ($newUser->isPersisted() ? 'true' : 'false') . "\n";
+
+// After saving to database, ID would be set
+$newUser->setId(2);
+echo "After save - User ID: " . $newUser->getId() . "\n";
+echo "After save - Is persisted: " . ($newUser->isPersisted() ? 'true' : 'false') . "\n";
+?&gt;</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="go">
+            <pre><code>// Identity Field Pattern in Go
+package main
+
+import (
+    "fmt"
+    "time"
+)
+
+type User struct {
+    ID    *int   // Identity Field - primary key from database (pointer to allow nil)
+    Name  string
+    Email string
+}
+
+func NewUser(id *int, name, email string) *User {
+    return &User{
+        ID:    id,
+        Name:  name,
+        Email: email,
+    }
+}
+
+func (u *User) GetID() *int {
+    return u.ID
+}
+
+func (u *User) SetID(id *int) {
+    u.ID = id
+}
+
+func (u *User) GetName() string {
+    return u.Name
+}
+
+func (u *User) GetEmail() string {
+    return u.Email
+}
+
+// Method to check if object is persisted
+func (u *User) IsPersisted() bool {
+    return u.ID != nil
+}
+
+// Method to mark as new (no ID yet)
+func (u *User) MarkAsNew() {
+    u.ID = nil
+}
+
+type Product struct {
+    ID         *int    // Identity Field - primary key
+    Name       string
+    Price      float64
+    CategoryID *int    // Foreign key reference
+}
+
+func NewProduct(id *int, name string, price float64, categoryID *int) *Product {
+    return &Product{
+        ID:         id,
+        Name:       name,
+        Price:      price,
+        CategoryID: categoryID,
+    }
+}
+
+func (p *Product) GetID() *int {
+    return p.ID
+}
+
+func (p *Product) SetID(id *int) {
+    p.ID = id
+}
+
+func (p *Product) GetCategoryID() *int {
+    return p.CategoryID
+}
+
+func (p *Product) SetCategoryID(categoryID *int) {
+    p.CategoryID = categoryID
+}
+
+type OrderItem struct {
+    ID        *int
+    ProductID *int
+    Quantity  int
+    Price     float64
+}
+
+type Order struct {
+    ID          *int         // Identity Field
+    UserID      *int         // Foreign key to User
+    OrderDate   time.Time
+    TotalAmount float64
+    Items       []OrderItem
+}
+
+func NewOrder(id *int, userID *int, orderDate time.Time, totalAmount float64) *Order {
+    return &Order{
+        ID:          id,
+        UserID:      userID,
+        OrderDate:   orderDate,
+        TotalAmount: totalAmount,
+        Items:       make([]OrderItem, 0),
+    }
+}
+
+func (o *Order) GetID() *int {
+    return o.ID
+}
+
+func (o *Order) GetUserID() *int {
+    return o.UserID
+}
+
+func (o *Order) AddItem(productID *int, quantity int, price float64) {
+    item := OrderItem{
+        ID:        nil, // Will be set when saved to database
+        ProductID: productID,
+        Quantity:  quantity,
+        Price:     price,
+    }
+    o.Items = append(o.Items, item)
+}
+
+func (o *Order) GetItems() []OrderItem {
+    return o.Items
+}
+
+func main() {
+    // Usage examples
+    userID := 1
+    user := NewUser(&userID, "John Doe", "john@example.com")
+    fmt.Printf("User ID: %d\n", *user.GetID())
+    fmt.Printf("Is persisted: %t\n", user.IsPersisted())
+    
+    productID := 101
+    categoryID := 5
+    product := NewProduct(&productID, "Laptop", 999.99, &categoryID)
+    fmt.Printf("Product ID: %d\n", *product.GetID())
+    fmt.Printf("Category ID: %d\n", *product.GetCategoryID())
+    
+    orderID := 1001
+    orderUserID := 1
+    order := NewOrder(&orderID, &orderUserID, time.Now(), 1999.98)
+    
+    productID1 := 101
+    productID2 := 102
+    order.AddItem(&productID1, 1, 999.99)
+    order.AddItem(&productID2, 1, 999.99)
+    
+    fmt.Printf("Order ID: %d\n", *order.GetID())
+    fmt.Printf("User ID: %d\n", *order.GetUserID())
+    fmt.Printf("Order items: %+v\n", order.GetItems())
+    
+    // Creating new objects (no ID yet)
+    newUser := NewUser(nil, "Jane Smith", "jane@example.com")
+    newUser.MarkAsNew()
+    fmt.Printf("New user is persisted: %t\n", newUser.IsPersisted())
+    
+    // After saving to database, ID would be set
+    newUserID := 2
+    newUser.SetID(&newUserID)
+    fmt.Printf("After save - User ID: %d\n", *newUser.GetID())
+    fmt.Printf("After save - Is persisted: %t\n", newUser.IsPersisted())
+}</code></pre>
+        </div>
+    </div>
+</div>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/identityField.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">
@@ -52,5 +484,58 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

@@ -19,7 +19,487 @@
 			<h2>Описание Two Step View</h2>
 			<p>Преобразует данные в HTML в два шага: сначала формирует логическую структуру, а позже - заполняет её отформатированными данными</p>
 			<p>Если web-приложение состоит из множества страниц, необходим единый вид и единая структура сайта. Если каждая страница выглядит по своему, получится сайт, который будет непонятным для пользователя. Также возможна ситуация, когда нужно сделать глобальные изменения на всём сайте (например поменять заголовок), но при использовании <a href="template-view.html" title="Паттерн проектирования Template View (Шаблонизатор)">Template View</a> или <a href="transform-view.html" title="Паттерн проектирования Transform View (Преобразователь)">Transform View</a> возникают трудности, потому что код представления дублируется от страницы к странице и надо исправлять его во всех файлах.</p>
-			<p>Шаблон <acronym title="Паттерн Two Step View (Двухшаговая шаблонизация)">Two Step View</acronym> решает эту проблему разбиением шаблонизации на две части. В первой, данные из модели преобразуются в логическое представление без какого-либо другого, специфического форматирования. Второй шаг преобразует это логическое представление с использование необходимого конкретного форматирования. Таким образом, можно делать глобальные изменения, изменяя только второй шаг. Также можно сделать несколько представлений для одной и той же информации, выбирая на лету форматирование для второго шага.</p>
+            <p>Шаблон <acronym title="Паттерн Two Step View (Двухшаговая шаблонизация)">Two Step View</acronym> решает эту проблему разбиением шаблонизации на две части. В первой, данные из модели преобразуются в логическое представление без какого-либо другого, специфического форматирования. Второй шаг преобразует это логическое представление с использование необходимого конкретного форматирования. Таким образом, можно делать глобальные изменения, изменяя только второй шаг. Также можно сделать несколько представлений для одной и той же информации, выбирая на лету форматирование для второго шага.</p>
+
+<h2>Примеры реализации</h2>
+<div class="code-snippet">
+    <div class="code-snippet-header">
+        <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+        <button class="code-snippet-tab" data-language="php">PHP</button>
+        <button class="code-snippet-tab" data-language="go">Go</button>
+    </div>
+    <div class="code-snippet-content">
+        <button class="code-snippet-copy">Copy</button>
+        
+        <div class="code-snippet-panel" data-language="javascript">
+            <pre><code>// Two Step View Pattern in JavaScript
+class TwoStepView {
+    constructor() {
+        this.layouts = new Map();
+        this.templates = new Map();
+    }
+    
+    // Step 1: Create logical structure
+    createLogicalStructure(data) {
+        console.log('Step 1: Creating logical structure');
+        
+        const structure = {
+            title: data.title,
+            content: data.content,
+            navigation: data.navigation,
+            sidebar: data.sidebar,
+            footer: data.footer
+        };
+        
+        console.log('Logical structure created:', structure);
+        return structure;
+    }
+    
+    // Step 2: Apply formatting
+    applyFormatting(structure, layoutName) {
+        console.log(`Step 2: Applying formatting with layout: ${layoutName}`);
+        
+        const layout = this.layouts.get(layoutName) || this.getDefaultLayout();
+        const formatted = layout(structure);
+        
+        console.log('Formatting applied');
+        return formatted;
+    }
+    
+    registerLayout(name, layoutFunction) {
+        this.layouts.set(name, layoutFunction);
+        console.log(`Layout registered: ${name}`);
+    }
+    
+    getDefaultLayout() {
+        return (structure) => {
+            return `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>${structure.title}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+                        .header { background: #333; color: white; padding: 10px; }
+                        .content { margin: 20px 0; }
+                        .sidebar { float: right; width: 200px; background: #f0f0f0; padding: 10px; }
+                        .footer { clear: both; background: #333; color: white; padding: 10px; text-align: center; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>${structure.title}</h1>
+                        <nav>${structure.navigation}</nav>
+                    </div>
+                    <div class="content">
+                        ${structure.content}
+                    </div>
+                    <div class="sidebar">
+                        ${structure.sidebar}
+                    </div>
+                    <div class="footer">
+                        ${structure.footer}
+                    </div>
+                </body>
+                </html>
+            `;
+        };
+    }
+    
+    // Complete two-step process
+    render(data, layoutName = 'default') {
+        console.log('Starting two-step view rendering');
+        
+        // Step 1: Create logical structure
+        const structure = this.createLogicalStructure(data);
+        
+        // Step 2: Apply formatting
+        const html = this.applyFormatting(structure, layoutName);
+        
+        console.log('Two-step view rendering completed');
+        return html;
+    }
+}
+
+// Usage
+const twoStepView = new TwoStepView();
+
+// Register custom layout
+twoStepView.registerLayout('mobile', (structure) => {
+    return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>${structure.title}</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <style>
+                body { font-family: Arial, sans-serif; margin: 0; padding: 10px; }
+                .header { background: #333; color: white; padding: 10px; }
+                .content { margin: 10px 0; }
+                .sidebar { background: #f0f0f0; padding: 10px; margin: 10px 0; }
+                .footer { background: #333; color: white; padding: 10px; text-align: center; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>${structure.title}</h1>
+                <nav>${structure.navigation}</nav>
+            </div>
+            <div class="content">
+                ${structure.content}
+            </div>
+            <div class="sidebar">
+                ${structure.sidebar}
+            </div>
+            <div class="footer">
+                ${structure.footer}
+            </div>
+        </body>
+        </html>
+    `;
+});
+
+// Sample data
+const pageData = {
+    title: 'My Website',
+    content: '<h2>Welcome to our site!</h2><p>This is the main content.</p>',
+    navigation: '<a href="/">Home</a> | <a href="/about">About</a>',
+    sidebar: '<h3>News</h3><p>Latest updates...</p>',
+    footer: '&copy; 2024 My Website. All rights reserved.'
+};
+
+// Render with default layout
+const defaultHtml = twoStepView.render(pageData);
+console.log('Default layout HTML generated');
+
+// Render with mobile layout
+const mobileHtml = twoStepView.render(pageData, 'mobile');
+console.log('Mobile layout HTML generated');</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="php">
+            <pre><code>&lt;?php
+// Two Step View Pattern in PHP
+class TwoStepView {
+    private $layouts = [];
+    private $templates = [];
+    
+    // Step 1: Create logical structure
+    public function createLogicalStructure($data) {
+        echo "Step 1: Creating logical structure\n";
+        
+        $structure = [
+            'title' => $data['title'],
+            'content' => $data['content'],
+            'navigation' => $data['navigation'],
+            'sidebar' => $data['sidebar'],
+            'footer' => $data['footer']
+        ];
+        
+        echo "Logical structure created\n";
+        return $structure;
+    }
+    
+    // Step 2: Apply formatting
+    public function applyFormatting($structure, $layoutName) {
+        echo "Step 2: Applying formatting with layout: $layoutName\n";
+        
+        $layout = $this->layouts[$layoutName] ?? $this->getDefaultLayout();
+        $formatted = $layout($structure);
+        
+        echo "Formatting applied\n";
+        return $formatted;
+    }
+    
+    public function registerLayout($name, $layoutFunction) {
+        $this->layouts[$name] = $layoutFunction;
+        echo "Layout registered: $name\n";
+    }
+    
+    private function getDefaultLayout() {
+        return function($structure) {
+            return "
+                &lt;!DOCTYPE html&gt;
+                &lt;html&gt;
+                &lt;head&gt;
+                    &lt;title&gt;{$structure['title']}&lt;/title&gt;
+                    &lt;style&gt;
+                        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+                        .header { background: #333; color: white; padding: 10px; }
+                        .content { margin: 20px 0; }
+                        .sidebar { float: right; width: 200px; background: #f0f0f0; padding: 10px; }
+                        .footer { clear: both; background: #333; color: white; padding: 10px; text-align: center; }
+                    &lt;/style&gt;
+                &lt;/head&gt;
+                &lt;body&gt;
+                    &lt;div class=\"header\"&gt;
+                        &lt;h1&gt;{$structure['title']}&lt;/h1&gt;
+                        &lt;nav&gt;{$structure['navigation']}&lt;/nav&gt;
+                    &lt;/div&gt;
+                    &lt;div class=\"content\"&gt;
+                        {$structure['content']}
+                    &lt;/div&gt;
+                    &lt;div class=\"sidebar\"&gt;
+                        {$structure['sidebar']}
+                    &lt;/div&gt;
+                    &lt;div class=\"footer\"&gt;
+                        {$structure['footer']}
+                    &lt;/div&gt;
+                &lt;/body&gt;
+                &lt;/html&gt;
+            ";
+        };
+    }
+    
+    // Complete two-step process
+    public function render($data, $layoutName = 'default') {
+        echo "Starting two-step view rendering\n";
+        
+        // Step 1: Create logical structure
+        $structure = $this->createLogicalStructure($data);
+        
+        // Step 2: Apply formatting
+        $html = $this->applyFormatting($structure, $layoutName);
+        
+        echo "Two-step view rendering completed\n";
+        return $html;
+    }
+}
+
+// Usage
+$twoStepView = new TwoStepView();
+
+// Register custom layout
+$twoStepView->registerLayout('mobile', function($structure) {
+    return "
+        &lt;!DOCTYPE html&gt;
+        &lt;html&gt;
+        &lt;head&gt;
+            &lt;title&gt;{$structure['title']}&lt;/title&gt;
+            &lt;meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"&gt;
+            &lt;style&gt;
+                body { font-family: Arial, sans-serif; margin: 0; padding: 10px; }
+                .header { background: #333; color: white; padding: 10px; }
+                .content { margin: 10px 0; }
+                .sidebar { background: #f0f0f0; padding: 10px; margin: 10px 0; }
+                .footer { background: #333; color: white; padding: 10px; text-align: center; }
+            &lt;/style&gt;
+        &lt;/head&gt;
+        &lt;body&gt;
+            &lt;div class=\"header\"&gt;
+                &lt;h1&gt;{$structure['title']}&lt;/h1&gt;
+                &lt;nav&gt;{$structure['navigation']}&lt;/nav&gt;
+            &lt;/div&gt;
+            &lt;div class=\"content\"&gt;
+                {$structure['content']}
+            &lt;/div&gt;
+            &lt;div class=\"sidebar\"&gt;
+                {$structure['sidebar']}
+            &lt;/div&gt;
+            &lt;div class=\"footer\"&gt;
+                {$structure['footer']}
+            &lt;/div&gt;
+        &lt;/body&gt;
+        &lt;/html&gt;
+    ";
+});
+
+// Sample data
+$pageData = [
+    'title' => 'My Website',
+    'content' => '&lt;h2&gt;Welcome to our site!&lt;/h2&gt;&lt;p&gt;This is the main content.&lt;/p&gt;',
+    'navigation' => '&lt;a href=\"/\"&gt;Home&lt;/a&gt; | &lt;a href=\"/about\"&gt;About&lt;/a&gt;',
+    'sidebar' => '&lt;h3&gt;News&lt;/h3&gt;&lt;p&gt;Latest updates...&lt;/p&gt;',
+    'footer' => '&amp;copy; 2024 My Website. All rights reserved.'
+];
+
+// Render with default layout
+$defaultHtml = $twoStepView->render($pageData);
+echo "Default layout HTML generated\n";
+
+// Render with mobile layout
+$mobileHtml = $twoStepView->render($pageData, 'mobile');
+echo "Mobile layout HTML generated\n";
+?&gt;</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="go">
+            <pre><code>// Two Step View Pattern in Go
+package main
+
+import (
+    "fmt"
+    "html/template"
+    "strings"
+)
+
+type TwoStepView struct {
+    layouts   map[string]func(Structure) string
+    templates map[string]func(Structure) string
+}
+
+type Structure struct {
+    Title      string
+    Content    string
+    Navigation string
+    Sidebar    string
+    Footer     string
+}
+
+func NewTwoStepView() *TwoStepView {
+    return &TwoStepView{
+        layouts:   make(map[string]func(Structure) string),
+        templates: make(map[string]func(Structure) string),
+    }
+}
+
+// Step 1: Create logical structure
+func (tsv *TwoStepView) CreateLogicalStructure(data map[string]string) Structure {
+    fmt.Println("Step 1: Creating logical structure")
+    
+    structure := Structure{
+        Title:      data["title"],
+        Content:    data["content"],
+        Navigation: data["navigation"],
+        Sidebar:    data["sidebar"],
+        Footer:     data["footer"],
+    }
+    
+    fmt.Println("Logical structure created")
+    return structure
+}
+
+// Step 2: Apply formatting
+func (tsv *TwoStepView) ApplyFormatting(structure Structure, layoutName string) string {
+    fmt.Printf("Step 2: Applying formatting with layout: %s\n", layoutName)
+    
+    layout, exists := tsv.layouts[layoutName]
+    if !exists {
+        layout = tsv.getDefaultLayout()
+    }
+    
+    formatted := layout(structure)
+    
+    fmt.Println("Formatting applied")
+    return formatted
+}
+
+func (tsv *TwoStepView) RegisterLayout(name string, layoutFunction func(Structure) string) {
+    tsv.layouts[name] = layoutFunction
+    fmt.Printf("Layout registered: %s\n", name)
+}
+
+func (tsv *TwoStepView) getDefaultLayout() func(Structure) string {
+    return func(structure Structure) string {
+        return fmt.Sprintf(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>%s</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+                    .header { background: #333; color: white; padding: 10px; }
+                    .content { margin: 20px 0; }
+                    .sidebar { float: right; width: 200px; background: #f0f0f0; padding: 10px; }
+                    .footer { clear: both; background: #333; color: white; padding: 10px; text-align: center; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>%s</h1>
+                    <nav>%s</nav>
+                </div>
+                <div class="content">
+                    %s
+                </div>
+                <div class="sidebar">
+                    %s
+                </div>
+                <div class="footer">
+                    %s
+                </div>
+            </body>
+            </html>
+        `, structure.Title, structure.Title, structure.Navigation, structure.Content, structure.Sidebar, structure.Footer)
+    }
+}
+
+// Complete two-step process
+func (tsv *TwoStepView) Render(data map[string]string, layoutName string) string {
+    fmt.Println("Starting two-step view rendering")
+    
+    // Step 1: Create logical structure
+    structure := tsv.CreateLogicalStructure(data)
+    
+    // Step 2: Apply formatting
+    html := tsv.ApplyFormatting(structure, layoutName)
+    
+    fmt.Println("Two-step view rendering completed")
+    return html
+}
+
+func main() {
+    twoStepView := NewTwoStepView()
+    
+    // Register custom layout
+    twoStepView.RegisterLayout("mobile", func(structure Structure) string {
+        return fmt.Sprintf(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>%s</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 0; padding: 10px; }
+                    .header { background: #333; color: white; padding: 10px; }
+                    .content { margin: 10px 0; }
+                    .sidebar { background: #f0f0f0; padding: 10px; margin: 10px 0; }
+                    .footer { background: #333; color: white; padding: 10px; text-align: center; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>%s</h1>
+                    <nav>%s</nav>
+                </div>
+                <div class="content">
+                    %s
+                </div>
+                <div class="sidebar">
+                    %s
+                </div>
+                <div class="footer">
+                    %s
+                </div>
+            </body>
+            </html>
+        `, structure.Title, structure.Title, structure.Navigation, structure.Content, structure.Sidebar, structure.Footer)
+    })
+    
+    // Sample data
+    pageData := map[string]string{
+        "title":      "My Website",
+        "content":    "<h2>Welcome to our site!</h2><p>This is the main content.</p>",
+        "navigation": "<a href=\"/\">Home</a> | <a href=\"/about\">About</a>",
+        "sidebar":    "<h3>News</h3><p>Latest updates...</p>",
+        "footer":     "&copy; 2024 My Website. All rights reserved.",
+    }
+    
+    // Render with default layout
+    defaultHtml := twoStepView.Render(pageData, "default")
+    fmt.Println("Default layout HTML generated")
+    
+    // Render with mobile layout
+    mobileHtml := twoStepView.Render(pageData, "mobile")
+    fmt.Println("Mobile layout HTML generated")
+    
+    // Print first 100 characters of each
+    fmt.Printf("Default HTML preview: %s...\n", defaultHtml[:100])
+    fmt.Printf("Mobile HTML preview: %s...\n", mobileHtml[:100])
+}</code></pre>
+        </div>
+    </div>
+</div>
 			<p class="expamle"><span class="ex_title">Пример:</span> хорошая реализация двухшаговой шаблонизации есть в фреймфорке Zend Framework в классе <a href="http://framework.zend.com/manual/en/zend.layout.html">Zend_Layout</a>. Общая оплётка отделяется от конкретного вида посредством <a href="http://framework.zend.com/manual/en/zend.layout.quickstart.html#zend.layout.quickstart.example">layout'а</a>.</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/twoStepView.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
@@ -53,5 +533,58 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

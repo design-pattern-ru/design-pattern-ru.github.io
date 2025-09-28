@@ -18,7 +18,366 @@
 			<p><span class="quot">Паттерн проектирования Metadata Mapping</span></p>
 			<h2>Описание Metadata Mapping</h2>
 			<p>Хранит данные об объектно-реляционном распределении в метаданных</p>
-<p>В большинстве случаев, код, управляющий объектно-реляционным распределением описывает, как поля в БД соотносятся с полями в объектах. Такой код получается сильно повторяющимся и скучным. Паттерн <acronym title="Паттерн Metadata Mapping (Распределение на основе метаданных)">Metadata Mapping</acronym> позволяет разработчикам определять правила распределения (маппинга) в простой табличной форме, которая может быть обработана общим кодом, который получает данные о правилах записи и чтения данных из БД.</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/metadataMapping.html">Источник</a></noindex></p>        </div>
+<p>В большинстве случаев, код, управляющий объектно-реляционным распределением описывает, как поля в БД соотносятся с полями в объектах. Такой код получается сильно повторяющимся и скучным. Паттерн <acronym title="Паттерн Metadata Mapping (Распределение на основе метаданных)">Metadata Mapping</acronym> позволяет разработчикам определять правила распределения (маппинга) в простой табличной форме, которая может быть обработана общим кодом, который получает данные о правилах записи и чтения данных из БД.</p>
+
+<h2>Примеры реализации</h2>
+<div class="code-snippet">
+    <div class="code-snippet-header">
+        <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+        <button class="code-snippet-tab" data-language="php">PHP</button>
+        <button class="code-snippet-tab" data-language="go">Go</button>
+    </div>
+    <div class="code-snippet-content">
+        <button class="code-snippet-copy">Copy</button>
+        
+        <div class="code-snippet-panel" data-language="javascript">
+            <pre><code>// Metadata Mapping Pattern in JavaScript
+class MetadataMapping {
+    constructor() {
+        this.mappings = new Map();
+    }
+    
+    addMapping(className, mapping) {
+        this.mappings.set(className, mapping);
+        console.log(`Mapping added for class: ${className}`);
+    }
+    
+    getMapping(className) {
+        return this.mappings.get(className);
+    }
+    
+    mapObjectToRecord(obj, className) {
+        const mapping = this.getMapping(className);
+        if (!mapping) {
+            throw new Error(`No mapping found for class: ${className}`);
+        }
+        
+        const record = {};
+        for (const [fieldName, columnName] of Object.entries(mapping.fields)) {
+            record[columnName] = obj[fieldName];
+        }
+        
+        console.log(`Mapped ${className} object to record:`, record);
+        return record;
+    }
+    
+    mapRecordToObject(record, className) {
+        const mapping = this.getMapping(className);
+        if (!mapping) {
+            throw new Error(`No mapping found for class: ${className}`);
+        }
+        
+        const obj = {};
+        for (const [fieldName, columnName] of Object.entries(mapping.fields)) {
+            obj[fieldName] = record[columnName];
+        }
+        
+        console.log(`Mapped record to ${className} object:`, obj);
+        return obj;
+    }
+}
+
+// Define metadata mappings
+const userMapping = {
+    tableName: 'users',
+    fields: {
+        id: 'user_id',
+        name: 'full_name',
+        email: 'email_address',
+        createdAt: 'created_at'
+    }
+};
+
+const productMapping = {
+    tableName: 'products',
+    fields: {
+        id: 'product_id',
+        name: 'product_name',
+        price: 'unit_price',
+        categoryId: 'category_id'
+    }
+};
+
+// Usage
+const metadataMapping = new MetadataMapping();
+
+// Register mappings
+metadataMapping.addMapping('User', userMapping);
+metadataMapping.addMapping('Product', productMapping);
+
+// Example objects
+const user = {
+    id: 1,
+    name: 'John Doe',
+    email: 'john@example.com',
+    createdAt: new Date()
+};
+
+const product = {
+    id: 101,
+    name: 'Laptop',
+    price: 999.99,
+    categoryId: 5
+};
+
+// Map objects to database records
+const userRecord = metadataMapping.mapObjectToRecord(user, 'User');
+const productRecord = metadataMapping.mapObjectToRecord(product, 'Product');
+
+// Map database records back to objects
+const userFromRecord = metadataMapping.mapRecordToObject(userRecord, 'User');
+const productFromRecord = metadataMapping.mapRecordToObject(productRecord, 'Product');
+
+console.log('User from record:', userFromRecord);
+console.log('Product from record:', productFromRecord);</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="php">
+            <pre><code>&lt;?php
+// Metadata Mapping Pattern in PHP
+class MetadataMapping {
+    private $mappings = [];
+    
+    public function addMapping($className, $mapping) {
+        $this->mappings[$className] = $mapping;
+        echo "Mapping added for class: $className\n";
+    }
+    
+    public function getMapping($className) {
+        return $this->mappings[$className] ?? null;
+    }
+    
+    public function mapObjectToRecord($obj, $className) {
+        $mapping = $this->getMapping($className);
+        if (!$mapping) {
+            throw new Exception("No mapping found for class: $className");
+        }
+        
+        $record = [];
+        foreach ($mapping['fields'] as $fieldName => $columnName) {
+            $record[$columnName] = $obj[$fieldName];
+        }
+        
+        echo "Mapped $className object to record: " . json_encode($record) . "\n";
+        return $record;
+    }
+    
+    public function mapRecordToObject($record, $className) {
+        $mapping = $this->getMapping($className);
+        if (!$mapping) {
+            throw new Exception("No mapping found for class: $className");
+        }
+        
+        $obj = [];
+        foreach ($mapping['fields'] as $fieldName => $columnName) {
+            $obj[$fieldName] = $record[$columnName];
+        }
+        
+        echo "Mapped record to $className object: " . json_encode($obj) . "\n";
+        return $obj;
+    }
+}
+
+// Define metadata mappings
+$userMapping = [
+    'tableName' => 'users',
+    'fields' => [
+        'id' => 'user_id',
+        'name' => 'full_name',
+        'email' => 'email_address',
+        'createdAt' => 'created_at'
+    ]
+];
+
+$productMapping = [
+    'tableName' => 'products',
+    'fields' => [
+        'id' => 'product_id',
+        'name' => 'product_name',
+        'price' => 'unit_price',
+        'categoryId' => 'category_id'
+    ]
+];
+
+// Usage
+$metadataMapping = new MetadataMapping();
+
+// Register mappings
+$metadataMapping->addMapping('User', $userMapping);
+$metadataMapping->addMapping('Product', $productMapping);
+
+// Example objects
+$user = [
+    'id' => 1,
+    'name' => 'John Doe',
+    'email' => 'john@example.com',
+    'createdAt' => date('Y-m-d H:i:s')
+];
+
+$product = [
+    'id' => 101,
+    'name' => 'Laptop',
+    'price' => 999.99,
+    'categoryId' => 5
+];
+
+// Map objects to database records
+$userRecord = $metadataMapping->mapObjectToRecord($user, 'User');
+$productRecord = $metadataMapping->mapObjectToRecord($product, 'Product');
+
+// Map database records back to objects
+$userFromRecord = $metadataMapping->mapRecordToObject($userRecord, 'User');
+$productFromRecord = $metadataMapping->mapRecordToObject($productRecord, 'Product');
+
+echo "User from record: " . json_encode($userFromRecord) . "\n";
+echo "Product from record: " . json_encode($productFromRecord) . "\n";
+?&gt;</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="go">
+            <pre><code>// Metadata Mapping Pattern in Go
+package main
+
+import (
+    "fmt"
+    "time"
+)
+
+type FieldMapping struct {
+    TableName string
+    Fields    map[string]string
+}
+
+type MetadataMapping struct {
+    mappings map[string]FieldMapping
+}
+
+func NewMetadataMapping() *MetadataMapping {
+    return &MetadataMapping{
+        mappings: make(map[string]FieldMapping),
+    }
+}
+
+func (mm *MetadataMapping) AddMapping(className string, mapping FieldMapping) {
+    mm.mappings[className] = mapping
+    fmt.Printf("Mapping added for class: %s\n", className)
+}
+
+func (mm *MetadataMapping) GetMapping(className string) (FieldMapping, bool) {
+    mapping, exists := mm.mappings[className]
+    return mapping, exists
+}
+
+func (mm *MetadataMapping) MapObjectToRecord(obj map[string]interface{}, className string) (map[string]interface{}, error) {
+    mapping, exists := mm.GetMapping(className)
+    if !exists {
+        return nil, fmt.Errorf("no mapping found for class: %s", className)
+    }
+    
+    record := make(map[string]interface{})
+    for fieldName, columnName := range mapping.Fields {
+        if value, exists := obj[fieldName]; exists {
+            record[columnName] = value
+        }
+    }
+    
+    fmt.Printf("Mapped %s object to record: %+v\n", className, record)
+    return record, nil
+}
+
+func (mm *MetadataMapping) MapRecordToObject(record map[string]interface{}, className string) (map[string]interface{}, error) {
+    mapping, exists := mm.GetMapping(className)
+    if !exists {
+        return nil, fmt.Errorf("no mapping found for class: %s", className)
+    }
+    
+    obj := make(map[string]interface{})
+    for fieldName, columnName := range mapping.Fields {
+        if value, exists := record[columnName]; exists {
+            obj[fieldName] = value
+        }
+    }
+    
+    fmt.Printf("Mapped record to %s object: %+v\n", className, obj)
+    return obj, nil
+}
+
+func main() {
+    // Define metadata mappings
+    userMapping := FieldMapping{
+        TableName: "users",
+        Fields: map[string]string{
+            "id":        "user_id",
+            "name":      "full_name",
+            "email":     "email_address",
+            "createdAt": "created_at",
+        },
+    }
+    
+    productMapping := FieldMapping{
+        TableName: "products",
+        Fields: map[string]string{
+            "id":         "product_id",
+            "name":       "product_name",
+            "price":      "unit_price",
+            "categoryId": "category_id",
+        },
+    }
+    
+    // Usage
+    metadataMapping := NewMetadataMapping()
+    
+    // Register mappings
+    metadataMapping.AddMapping("User", userMapping)
+    metadataMapping.AddMapping("Product", productMapping)
+    
+    // Example objects
+    user := map[string]interface{}{
+        "id":        1,
+        "name":      "John Doe",
+        "email":     "john@example.com",
+        "createdAt": time.Now(),
+    }
+    
+    product := map[string]interface{}{
+        "id":         101,
+        "name":       "Laptop",
+        "price":      999.99,
+        "categoryId": 5,
+    }
+    
+    // Map objects to database records
+    userRecord, err := metadataMapping.MapObjectToRecord(user, "User")
+    if err != nil {
+        fmt.Printf("Error mapping user: %v\n", err)
+        return
+    }
+    
+    productRecord, err := metadataMapping.MapObjectToRecord(product, "Product")
+    if err != nil {
+        fmt.Printf("Error mapping product: %v\n", err)
+        return
+    }
+    
+    // Map database records back to objects
+    userFromRecord, err := metadataMapping.MapRecordToObject(userRecord, "User")
+    if err != nil {
+        fmt.Printf("Error mapping user from record: %v\n", err)
+        return
+    }
+    
+    productFromRecord, err := metadataMapping.MapRecordToObject(productRecord, "Product")
+    if err != nil {
+        fmt.Printf("Error mapping product from record: %v\n", err)
+        return
+    }
+    
+    fmt.Printf("User from record: %+v\n", userFromRecord)
+    fmt.Printf("Product from record: %+v\n", productFromRecord)
+}</code></pre>
+        </div>
+    </div>
+</div>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/metadataMapping.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
     <ul id="footer-menu">
@@ -51,5 +410,58 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

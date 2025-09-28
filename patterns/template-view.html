@@ -21,7 +21,575 @@
 			<p>Создание приложений, генерирующих HTML, зачастую гораздо более сложно, чем кажется. Несмотря на то, что современные языки программирования стали лучше справляться с обработкой текста, создание, и конкатенация строк всё ещё представляется проблемой. Если надо выводить немного информации - это не так страшно, но если надо сгенерировать целую HTML-страницу - появляется много работы с текстом.</p>
 			<p>В случае со статическими HTML-страницами, которые не меняются от запроса к запросу, можно использоваться удобный WYSIWYG-редактор. Даже те, кто любят обычные текстовые редакторы согласятся, что набирать текст и тэги проще и удобнее, чем собирать их через конкатенации в языке программирования.</p>
 			<p>Конечно, возникает проблема в случае с динамическими страницами, которые, например, берут данные из БД и наполняют ими HTML. Страницы выглядят по-разному каждый раз, и использование обычного HTML-редактора не подходит.</p>
-			<p>Наилучший выход из положения - создание динамических страниц так же, как и статических, но помечая их маркерами, которые могут быть заменены динамической информацией.</p>
+            <p>Наилучший выход из положения - создание динамических страниц так же, как и статических, но помечая их маркерами, которые могут быть заменены динамической информацией.</p>
+
+<h2>Примеры реализации</h2>
+<div class="code-snippet">
+    <div class="code-snippet-header">
+        <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+        <button class="code-snippet-tab" data-language="php">PHP</button>
+        <button class="code-snippet-tab" data-language="go">Go</button>
+    </div>
+    <div class="code-snippet-content">
+        <button class="code-snippet-copy">Copy</button>
+        
+        <div class="code-snippet-panel" data-language="javascript">
+            <pre><code>// Template View Pattern in JavaScript
+class TemplateView {
+    constructor() {
+        this.templates = new Map();
+    }
+    
+    registerTemplate(name, template) {
+        this.templates.set(name, template);
+        console.log(`Template registered: ${name}`);
+    }
+    
+    render(templateName, data) {
+        console.log(`Rendering template: ${templateName}`);
+        
+        const template = this.templates.get(templateName);
+        if (!template) {
+            throw new Error(`Template not found: ${templateName}`);
+        }
+        
+        let html = template;
+        
+        // Replace placeholders with data
+        for (const [key, value] of Object.entries(data)) {
+            const placeholder = `{{${key}}}`;
+            html = html.replace(new RegExp(placeholder, 'g'), value);
+        }
+        
+        console.log('Template rendered successfully');
+        return html;
+    }
+    
+    renderWithHelper(templateName, data, helper) {
+        console.log(`Rendering template with helper: ${templateName}`);
+        
+        const template = this.templates.get(templateName);
+        if (!template) {
+            throw new Error(`Template not found: ${templateName}`);
+        }
+        
+        let html = template;
+        
+        // Replace placeholders with data
+        for (const [key, value] of Object.entries(data)) {
+            const placeholder = `{{${key}}}`;
+            html = html.replace(new RegExp(placeholder, 'g'), value);
+        }
+        
+        // Replace helper functions
+        html = html.replace(/\{\{helper\.(\w+)\(([^)]*)\)\}\}/g, (match, method, args) => {
+            if (helper[method]) {
+                const parsedArgs = args.split(',').map(arg => arg.trim().replace(/['"]/g, ''));
+                return helper[method](...parsedArgs);
+            }
+            return match;
+        });
+        
+        console.log('Template with helper rendered successfully');
+        return html;
+    }
+}
+
+// Helper functions
+const helper = {
+    formatDate: (date) => {
+        return new Date(date).toLocaleDateString();
+    },
+    
+    formatCurrency: (amount) => {
+        return `$${parseFloat(amount).toFixed(2)}`;
+    },
+    
+    capitalize: (text) => {
+        return text.charAt(0).toUpperCase() + text.slice(1);
+    }
+};
+
+// Usage
+const templateView = new TemplateView();
+
+// Register templates
+templateView.registerTemplate('user-profile', `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>{{title}}</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .profile { border: 1px solid #ddd; padding: 20px; border-radius: 5px; }
+            .header { background: #f0f0f0; padding: 10px; margin: -20px -20px 20px -20px; }
+        </style>
+    </head>
+    <body>
+        <div class="profile">
+            <div class="header">
+                <h1>{{name}}</h1>
+                <p>Member since: {{helper.formatDate(joinDate)}}</p>
+            </div>
+            <div class="content">
+                <p><strong>Email:</strong> {{email}}</p>
+                <p><strong>Role:</strong> {{helper.capitalize(role)}}</p>
+                <p><strong>Balance:</strong> {{helper.formatCurrency(balance)}}</p>
+                <p><strong>Bio:</strong> {{bio}}</p>
+            </div>
+        </div>
+    </body>
+    </html>
+`);
+
+templateView.registerTemplate('product-list', `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>{{title}}</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .product { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; }
+            .price { color: #2c3e50; font-weight: bold; }
+        </style>
+    </head>
+    <body>
+        <h1>{{title}}</h1>
+        <div class="products">
+            {{products}}
+        </div>
+    </body>
+    </html>
+`);
+
+// Sample data
+const userData = {
+    title: 'User Profile',
+    name: 'John Doe',
+    email: 'john@example.com',
+    role: 'admin',
+    balance: '1250.75',
+    bio: 'Software developer with 5 years of experience.',
+    joinDate: '2020-01-15'
+};
+
+const productData = {
+    title: 'Product Catalog',
+    products: `
+        <div class="product">
+            <h3>Laptop</h3>
+            <p class="price">$999.99</p>
+            <p>High-performance laptop for professionals</p>
+        </div>
+        <div class="product">
+            <h3>Mouse</h3>
+            <p class="price">$29.99</p>
+            <p>Wireless optical mouse</p>
+        </div>
+    `
+};
+
+// Render templates
+const userHtml = templateView.renderWithHelper('user-profile', userData, helper);
+console.log('User profile HTML generated');
+
+const productHtml = templateView.render('product-list', productData);
+console.log('Product list HTML generated');</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="php">
+            <pre><code>&lt;?php
+// Template View Pattern in PHP
+class TemplateView {
+    private $templates = [];
+    
+    public function registerTemplate($name, $template) {
+        $this->templates[$name] = $template;
+        echo "Template registered: $name\n";
+    }
+    
+    public function render($templateName, $data) {
+        echo "Rendering template: $templateName\n";
+        
+        if (!isset($this->templates[$templateName])) {
+            throw new Exception("Template not found: $templateName");
+        }
+        
+        $template = $this->templates[$templateName];
+        $html = $template;
+        
+        // Replace placeholders with data
+        foreach ($data as $key => $value) {
+            $placeholder = "{{$key}}";
+            $html = str_replace($placeholder, $value, $html);
+        }
+        
+        echo "Template rendered successfully\n";
+        return $html;
+    }
+    
+    public function renderWithHelper($templateName, $data, $helper) {
+        echo "Rendering template with helper: $templateName\n";
+        
+        if (!isset($this->templates[$templateName])) {
+            throw new Exception("Template not found: $templateName");
+        }
+        
+        $template = $this->templates[$templateName];
+        $html = $template;
+        
+        // Replace placeholders with data
+        foreach ($data as $key => $value) {
+            $placeholder = "{{$key}}";
+            $html = str_replace($placeholder, $value, $html);
+        }
+        
+        // Replace helper functions
+        $html = preg_replace_callback('/\{\{helper\.(\w+)\(([^)]*)\)\}\}/', function($matches) use ($helper) {
+            $method = $matches[1];
+            $args = array_map('trim', explode(',', $matches[2]));
+            $args = array_map(function($arg) {
+                return trim($arg, '\'"');
+            }, $args);
+            
+            if (isset($helper[$method])) {
+                return call_user_func_array($helper[$method], $args);
+            }
+            return $matches[0];
+        }, $html);
+        
+        echo "Template with helper rendered successfully\n";
+        return $html;
+    }
+}
+
+// Helper functions
+$helper = [
+    'formatDate' => function($date) {
+        return date('Y-m-d', strtotime($date));
+    },
+    
+    'formatCurrency' => function($amount) {
+        return '$' . number_format($amount, 2);
+    },
+    
+    'capitalize' => function($text) {
+        return ucfirst($text);
+    }
+];
+
+// Usage
+$templateView = new TemplateView();
+
+// Register templates
+$templateView->registerTemplate('user-profile', '
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>{{title}}</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .profile { border: 1px solid #ddd; padding: 20px; border-radius: 5px; }
+            .header { background: #f0f0f0; padding: 10px; margin: -20px -20px 20px -20px; }
+        </style>
+    </head>
+    <body>
+        <div class="profile">
+            <div class="header">
+                <h1>{{name}}</h1>
+                <p>Member since: {{helper.formatDate(joinDate)}}</p>
+            </div>
+            <div class="content">
+                <p><strong>Email:</strong> {{email}}</p>
+                <p><strong>Role:</strong> {{helper.capitalize(role)}}</p>
+                <p><strong>Balance:</strong> {{helper.formatCurrency(balance)}}</p>
+                <p><strong>Bio:</strong> {{bio}}</p>
+            </div>
+        </div>
+    </body>
+    </html>
+');
+
+$templateView->registerTemplate('product-list', '
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>{{title}}</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .product { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; }
+            .price { color: #2c3e50; font-weight: bold; }
+        </style>
+    </head>
+    <body>
+        <h1>{{title}}</h1>
+        <div class="products">
+            {{products}}
+        </div>
+    </body>
+    </html>
+');
+
+// Sample data
+$userData = [
+    'title' => 'User Profile',
+    'name' => 'John Doe',
+    'email' => 'john@example.com',
+    'role' => 'admin',
+    'balance' => '1250.75',
+    'bio' => 'Software developer with 5 years of experience.',
+    'joinDate' => '2020-01-15'
+];
+
+$productData = [
+    'title' => 'Product Catalog',
+    'products' => '
+        <div class="product">
+            <h3>Laptop</h3>
+            <p class="price">$999.99</p>
+            <p>High-performance laptop for professionals</p>
+        </div>
+        <div class="product">
+            <h3>Mouse</h3>
+            <p class="price">$29.99</p>
+            <p>Wireless optical mouse</p>
+        </div>
+    '
+];
+
+// Render templates
+$userHtml = $templateView->renderWithHelper('user-profile', $userData, $helper);
+echo "User profile HTML generated\n";
+
+$productHtml = $templateView->render('product-list', $productData);
+echo "Product list HTML generated\n";
+?&gt;</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="go">
+            <pre><code>// Template View Pattern in Go
+package main
+
+import (
+    "fmt"
+    "regexp"
+    "strconv"
+    "strings"
+    "time"
+)
+
+type TemplateView struct {
+    templates map[string]string
+}
+
+func NewTemplateView() *TemplateView {
+    return &TemplateView{
+        templates: make(map[string]string),
+    }
+}
+
+func (tv *TemplateView) RegisterTemplate(name, template string) {
+    tv.templates[name] = template
+    fmt.Printf("Template registered: %s\n", name)
+}
+
+func (tv *TemplateView) Render(templateName string, data map[string]string) (string, error) {
+    fmt.Printf("Rendering template: %s\n", templateName)
+    
+    template, exists := tv.templates[templateName]
+    if !exists {
+        return "", fmt.Errorf("template not found: %s", templateName)
+    }
+    
+    html := template
+    
+    // Replace placeholders with data
+    for key, value := range data {
+        placeholder := fmt.Sprintf("{{%s}}", key)
+        html = strings.ReplaceAll(html, placeholder, value)
+    }
+    
+    fmt.Println("Template rendered successfully")
+    return html, nil
+}
+
+func (tv *TemplateView) RenderWithHelper(templateName string, data map[string]string, helper map[string]func(...string) string) (string, error) {
+    fmt.Printf("Rendering template with helper: %s\n", templateName)
+    
+    template, exists := tv.templates[templateName]
+    if !exists {
+        return "", fmt.Errorf("template not found: %s", templateName)
+    }
+    
+    html := template
+    
+    // Replace placeholders with data
+    for key, value := range data {
+        placeholder := fmt.Sprintf("{{%s}}", key)
+        html = strings.ReplaceAll(html, placeholder, value)
+    }
+    
+    // Replace helper functions
+    re := regexp.MustCompile(`\{\{helper\.(\w+)\(([^)]*)\)\}\}`)
+    html = re.ReplaceAllStringFunc(html, func(match string) string {
+        matches := re.FindStringSubmatch(match)
+        if len(matches) >= 3 {
+            method := matches[1]
+            argsStr := matches[2]
+            var args []string
+            if argsStr != "" {
+                args = strings.Split(argsStr, ",")
+                for i, arg := range args {
+                    args[i] = strings.TrimSpace(strings.Trim(arg, "'\""))
+                }
+            }
+            
+            if helperFunc, exists := helper[method]; exists {
+                return helperFunc(args...)
+            }
+        }
+        return match
+    })
+    
+    fmt.Println("Template with helper rendered successfully")
+    return html, nil
+}
+
+// Helper functions
+func createHelper() map[string]func(...string) string {
+    return map[string]func(...string) string{
+        "formatDate": func(args ...string) string {
+            if len(args) > 0 {
+                if t, err := time.Parse("2006-01-02", args[0]); err == nil {
+                    return t.Format("Jan 2, 2006")
+                }
+            }
+            return args[0]
+        },
+        
+        "formatCurrency": func(args ...string) string {
+            if len(args) > 0 {
+                if amount, err := strconv.ParseFloat(args[0], 64); err == nil {
+                    return fmt.Sprintf("$%.2f", amount)
+                }
+            }
+            return args[0]
+        },
+        
+        "capitalize": func(args ...string) string {
+            if len(args) > 0 {
+                text := args[0]
+                if len(text) > 0 {
+                    return strings.ToUpper(text[:1]) + text[1:]
+                }
+            }
+            return args[0]
+        },
+    }
+}
+
+func main() {
+    templateView := NewTemplateView()
+    
+    // Register templates
+    templateView.RegisterTemplate("user-profile", `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>{{title}}</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .profile { border: 1px solid #ddd; padding: 20px; border-radius: 5px; }
+                .header { background: #f0f0f0; padding: 10px; margin: -20px -20px 20px -20px; }
+            </style>
+        </head>
+        <body>
+            <div class="profile">
+                <div class="header">
+                    <h1>{{name}}</h1>
+                    <p>Member since: {{helper.formatDate(joinDate)}}</p>
+                </div>
+                <div class="content">
+                    <p><strong>Email:</strong> {{email}}</p>
+                    <p><strong>Role:</strong> {{helper.capitalize(role)}}</p>
+                    <p><strong>Balance:</strong> {{helper.formatCurrency(balance)}}</p>
+                    <p><strong>Bio:</strong> {{bio}}</p>
+                </div>
+            </div>
+        </body>
+        </html>
+    `)
+    
+    templateView.RegisterTemplate("product-list", `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>{{title}}</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .product { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; }
+                .price { color: #2c3e50; font-weight: bold; }
+            </style>
+        </head>
+        <body>
+            <h1>{{title}}</h1>
+            <div class="products">
+                {{products}}
+            </div>
+        </body>
+        </html>
+    `)
+    
+    // Sample data
+    userData := map[string]string{
+        "title":     "User Profile",
+        "name":      "John Doe",
+        "email":     "john@example.com",
+        "role":      "admin",
+        "balance":   "1250.75",
+        "bio":       "Software developer with 5 years of experience.",
+        "joinDate":  "2020-01-15",
+    }
+    
+    productData := map[string]string{
+        "title": "Product Catalog",
+        "products": `
+            <div class="product">
+                <h3>Laptop</h3>
+                <p class="price">$999.99</p>
+                <p>High-performance laptop for professionals</p>
+            </div>
+            <div class="product">
+                <h3>Mouse</h3>
+                <p class="price">$29.99</p>
+                <p>Wireless optical mouse</p>
+            </div>
+        `,
+    }
+    
+    // Render templates
+    helper := createHelper()
+    userHtml, err := templateView.RenderWithHelper("user-profile", userData, helper)
+    if err != nil {
+        fmt.Printf("Error rendering user profile: %v\n", err)
+        return
+    }
+    fmt.Println("User profile HTML generated")
+    
+    productHtml, err := templateView.Render("product-list", productData)
+    if err != nil {
+        fmt.Printf("Error rendering product list: %v\n", err)
+        return
+    }
+    fmt.Println("Product list HTML generated")
+    
+    // Print first 100 characters of each
+    fmt.Printf("User HTML preview: %s...\n", userHtml[:100])
+    fmt.Printf("Product HTML preview: %s...\n", productHtml[:100])
+}</code></pre>
+        </div>
+    </div>
+</div>
 			<p class="expamle"><span class="ex_title">Пример:</span> при обработке шаблона, области, помеченные специальными маркерами (на иллюстрации - тегами &lt;jsp:.../&gt;) заменяются результатами вызовов методов helper'a.</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/templateView.html">Источник</a></noindex></p>        </div>
         <div style="clear:both;margin-top: -2.5em">&nbsp;</div>
     </div>
@@ -55,5 +623,58 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>

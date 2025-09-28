@@ -19,6 +19,404 @@
 			<h2>Описание Transform View</h2>
 			<p>Преобразует записи в HTML по одной.</p>
 			<p>Когда выполняются запросы к БД, вы получаете данные, но этого не достаточно, чтобы отобразить нормальную web-страницу. Задача вида (view) в паттерне <a href="mvc.html" title="Паттерн проектирования MVC - Model View Controller (Модель-Вид-Контроллер)">MVC - Model View Controller</a> - формировать данные в web-страницу. Использование <acronym title="Паттерн Transform View (Преобразователь)">Transform View</acronym> подразумевает преобразование, когда на входе есть модель, а на выходе HTML.</p>
+
+<h2>Примеры реализации</h2>
+<div class="code-snippet">
+    <div class="code-snippet-header">
+        <button class="code-snippet-tab" data-language="javascript">JavaScript</button>
+        <button class="code-snippet-tab" data-language="php">PHP</button>
+        <button class="code-snippet-tab" data-language="go">Go</button>
+    </div>
+    <div class="code-snippet-content">
+        <button class="code-snippet-copy">Copy</button>
+        
+        <div class="code-snippet-panel" data-language="javascript">
+            <pre><code>// Transform View Pattern in JavaScript
+class TransformView {
+    constructor() {
+        this.transformers = new Map();
+    }
+    
+    registerTransformer(name, transformer) {
+        this.transformers.set(name, transformer);
+        console.log(`Transformer registered: ${name}`);
+    }
+    
+    transform(data, transformerName) {
+        console.log(`Transforming data with: ${transformerName}`);
+        
+        const transformer = this.transformers.get(transformerName);
+        if (!transformer) {
+            throw new Error(`Transformer not found: ${transformerName}`);
+        }
+        
+        if (Array.isArray(data)) {
+            return data.map(item => transformer(item));
+        } else {
+            return transformer(data);
+        }
+    }
+    
+    transformToHTML(data, transformerName) {
+        console.log(`Transforming to HTML with: ${transformerName}`);
+        
+        const transformed = this.transform(data, transformerName);
+        
+        if (Array.isArray(transformed)) {
+            return transformed.join('\n');
+        } else {
+            return transformed;
+        }
+    }
+}
+
+// Music album transformer
+const albumTransformer = (album) => {
+    const artistSlug = album.artist.toLowerCase().replace(/\s+/g, '_');
+    const albumSlug = album.album.toLowerCase().replace(/\s+/g, '_');
+    
+    return `<a href="http://example.com/music/${albumSlug}/${artistSlug}">${album.artist}</a>`;
+};
+
+// User profile transformer
+const userTransformer = (user) => {
+    return `
+        <div class="user-profile">
+            <h3>${user.name}</h3>
+            <p><strong>Email:</strong> ${user.email}</p>
+            <p><strong>Role:</strong> ${user.role}</p>
+            <p><strong>Join Date:</strong> ${new Date(user.joinDate).toLocaleDateString()}</p>
+        </div>
+    `;
+};
+
+// Product transformer
+const productTransformer = (product) => {
+    return `
+        <div class="product">
+            <h4>${product.name}</h4>
+            <p class="price">$${product.price.toFixed(2)}</p>
+            <p class="description">${product.description}</p>
+            <button onclick="addToCart(${product.id})">Add to Cart</button>
+        </div>
+    `;
+};
+
+// Usage
+const transformView = new TransformView();
+
+// Register transformers
+transformView.registerTransformer('album', albumTransformer);
+transformView.registerTransformer('user', userTransformer);
+transformView.registerTransformer('product', productTransformer);
+
+// Sample data
+const albums = [
+    { artist: 'The Beatles', album: 'Abbey Road' },
+    { artist: 'Pink Floyd', album: 'Dark Side of the Moon' },
+    { artist: 'Led Zeppelin', album: 'Led Zeppelin IV' }
+];
+
+const users = [
+    { name: 'John Doe', email: 'john@example.com', role: 'admin', joinDate: '2020-01-15' },
+    { name: 'Jane Smith', email: 'jane@example.com', role: 'user', joinDate: '2021-03-20' }
+];
+
+const products = [
+    { id: 1, name: 'Laptop', price: 999.99, description: 'High-performance laptop' },
+    { id: 2, name: 'Mouse', price: 29.99, description: 'Wireless optical mouse' }
+];
+
+// Transform data to HTML
+const albumLinks = transformView.transformToHTML(albums, 'album');
+console.log('Album links generated:');
+console.log(albumLinks);
+
+const userProfiles = transformView.transformToHTML(users, 'user');
+console.log('User profiles generated:');
+console.log(userProfiles);
+
+const productCards = transformView.transformToHTML(products, 'product');
+console.log('Product cards generated:');
+console.log(productCards);</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="php">
+            <pre><code>&lt;?php
+// Transform View Pattern in PHP
+class TransformView {
+    private $transformers = [];
+    
+    public function registerTransformer($name, $transformer) {
+        $this->transformers[$name] = $transformer;
+        echo "Transformer registered: $name\n";
+    }
+    
+    public function transform($data, $transformerName) {
+        echo "Transforming data with: $transformerName\n";
+        
+        if (!isset($this->transformers[$transformerName])) {
+            throw new Exception("Transformer not found: $transformerName");
+        }
+        
+        $transformer = $this->transformers[$transformerName];
+        
+        if (is_array($data)) {
+            return array_map($transformer, $data);
+        } else {
+            return $transformer($data);
+        }
+    }
+    
+    public function transformToHTML($data, $transformerName) {
+        echo "Transforming to HTML with: $transformerName\n";
+        
+        $transformed = $this->transform($data, $transformerName);
+        
+        if (is_array($transformed)) {
+            return implode("\n", $transformed);
+        } else {
+            return $transformed;
+        }
+    }
+}
+
+// Music album transformer
+$albumTransformer = function($album) {
+    $artistSlug = strtolower(str_replace(' ', '_', $album['artist']));
+    $albumSlug = strtolower(str_replace(' ', '_', $album['album']));
+    
+    return "&lt;a href=\"http://example.com/music/{$albumSlug}/{$artistSlug}\"&gt;{$album['artist']}&lt;/a&gt;";
+};
+
+// User profile transformer
+$userTransformer = function($user) {
+    return "
+        &lt;div class=\"user-profile\"&gt;
+            &lt;h3&gt;{$user['name']}&lt;/h3&gt;
+            &lt;p&gt;&lt;strong&gt;Email:&lt;/strong&gt; {$user['email']}&lt;/p&gt;
+            &lt;p&gt;&lt;strong&gt;Role:&lt;/strong&gt; {$user['role']}&lt;/p&gt;
+            &lt;p&gt;&lt;strong&gt;Join Date:&lt;/strong&gt; " . date('Y-m-d', strtotime($user['joinDate'])) . "&lt;/p&gt;
+        &lt;/div&gt;
+    ";
+};
+
+// Product transformer
+$productTransformer = function($product) {
+    return "
+        &lt;div class=\"product\"&gt;
+            &lt;h4&gt;{$product['name']}&lt;/h4&gt;
+            &lt;p class=\"price\"&gt;$" . number_format($product['price'], 2) . "&lt;/p&gt;
+            &lt;p class=\"description\"&gt;{$product['description']}&lt;/p&gt;
+            &lt;button onclick=\"addToCart({$product['id']})\"&gt;Add to Cart&lt;/button&gt;
+        &lt;/div&gt;
+    ";
+};
+
+// Usage
+$transformView = new TransformView();
+
+// Register transformers
+$transformView->registerTransformer('album', $albumTransformer);
+$transformView->registerTransformer('user', $userTransformer);
+$transformView->registerTransformer('product', $productTransformer);
+
+// Sample data
+$albums = [
+    ['artist' => 'The Beatles', 'album' => 'Abbey Road'],
+    ['artist' => 'Pink Floyd', 'album' => 'Dark Side of the Moon'],
+    ['artist' => 'Led Zeppelin', 'album' => 'Led Zeppelin IV']
+];
+
+$users = [
+    ['name' => 'John Doe', 'email' => 'john@example.com', 'role' => 'admin', 'joinDate' => '2020-01-15'],
+    ['name' => 'Jane Smith', 'email' => 'jane@example.com', 'role' => 'user', 'joinDate' => '2021-03-20']
+];
+
+$products = [
+    ['id' => 1, 'name' => 'Laptop', 'price' => 999.99, 'description' => 'High-performance laptop'],
+    ['id' => 2, 'name' => 'Mouse', 'price' => 29.99, 'description' => 'Wireless optical mouse']
+];
+
+// Transform data to HTML
+$albumLinks = $transformView->transformToHTML($albums, 'album');
+echo "Album links generated:\n";
+echo $albumLinks . "\n";
+
+$userProfiles = $transformView->transformToHTML($users, 'user');
+echo "User profiles generated:\n";
+echo $userProfiles . "\n";
+
+$productCards = $transformView->transformToHTML($products, 'product');
+echo "Product cards generated:\n";
+echo $productCards . "\n";
+?&gt;</code></pre>
+        </div>
+        
+        <div class="code-snippet-panel" data-language="go">
+            <pre><code>// Transform View Pattern in Go
+package main
+
+import (
+    "fmt"
+    "strings"
+    "time"
+)
+
+type TransformView struct {
+    transformers map[string]func(interface{}) string
+}
+
+func NewTransformView() *TransformView {
+    return &TransformView{
+        transformers: make(map[string]func(interface{}) string),
+    }
+}
+
+func (tv *TransformView) RegisterTransformer(name string, transformer func(interface{}) string) {
+    tv.transformers[name] = transformer
+    fmt.Printf("Transformer registered: %s\n", name)
+}
+
+func (tv *TransformView) Transform(data interface{}, transformerName string) (interface{}, error) {
+    fmt.Printf("Transforming data with: %s\n", transformerName)
+    
+    transformer, exists := tv.transformers[transformerName]
+    if !exists {
+        return nil, fmt.Errorf("transformer not found: %s", transformerName)
+    }
+    
+    switch v := data.(type) {
+    case []interface{}:
+        result := make([]string, len(v))
+        for i, item := range v {
+            result[i] = transformer(item)
+        }
+        return result, nil
+    default:
+        return transformer(data), nil
+    }
+}
+
+func (tv *TransformView) TransformToHTML(data interface{}, transformerName string) (string, error) {
+    fmt.Printf("Transforming to HTML with: %s\n", transformerName)
+    
+    transformed, err := tv.Transform(data, transformerName)
+    if err != nil {
+        return "", err
+    }
+    
+    switch v := transformed.(type) {
+    case []string:
+        return strings.Join(v, "\n"), nil
+    case string:
+        return v, nil
+    default:
+        return fmt.Sprintf("%v", v), nil
+    }
+}
+
+// Music album transformer
+func albumTransformer(data interface{}) string {
+    album := data.(map[string]interface{})
+    artist := album["artist"].(string)
+    albumName := album["album"].(string)
+    
+    artistSlug := strings.ToLower(strings.ReplaceAll(artist, " ", "_"))
+    albumSlug := strings.ToLower(strings.ReplaceAll(albumName, " ", "_"))
+    
+    return fmt.Sprintf("&lt;a href=\"http://example.com/music/%s/%s\"&gt;%s&lt;/a&gt;", albumSlug, artistSlug, artist)
+}
+
+// User profile transformer
+func userTransformer(data interface{}) string {
+    user := data.(map[string]interface{})
+    name := user["name"].(string)
+    email := user["email"].(string)
+    role := user["role"].(string)
+    joinDate := user["joinDate"].(string)
+    
+    return fmt.Sprintf(`
+        &lt;div class="user-profile"&gt;
+            &lt;h3&gt;%s&lt;/h3&gt;
+            &lt;p&gt;&lt;strong&gt;Email:&lt;/strong&gt; %s&lt;/p&gt;
+            &lt;p&gt;&lt;strong&gt;Role:&lt;/strong&gt; %s&lt;/p&gt;
+            &lt;p&gt;&lt;strong&gt;Join Date:&lt;/strong&gt; %s&lt;/p&gt;
+        &lt;/div&gt;
+    `, name, email, role, joinDate)
+}
+
+// Product transformer
+func productTransformer(data interface{}) string {
+    product := data.(map[string]interface{})
+    id := product["id"].(int)
+    name := product["name"].(string)
+    price := product["price"].(float64)
+    description := product["description"].(string)
+    
+    return fmt.Sprintf(`
+        &lt;div class="product"&gt;
+            &lt;h4&gt;%s&lt;/h4&gt;
+            &lt;p class="price"&gt;$%.2f&lt;/p&gt;
+            &lt;p class="description"&gt;%s&lt;/p&gt;
+            &lt;button onclick="addToCart(%d)"&gt;Add to Cart&lt;/button&gt;
+        &lt;/div&gt;
+    `, name, price, description, id)
+}
+
+func main() {
+    transformView := NewTransformView()
+    
+    // Register transformers
+    transformView.RegisterTransformer("album", albumTransformer)
+    transformView.RegisterTransformer("user", userTransformer)
+    transformView.RegisterTransformer("product", productTransformer)
+    
+    // Sample data
+    albums := []interface{}{
+        map[string]interface{}{"artist": "The Beatles", "album": "Abbey Road"},
+        map[string]interface{}{"artist": "Pink Floyd", "album": "Dark Side of the Moon"},
+        map[string]interface{}{"artist": "Led Zeppelin", "album": "Led Zeppelin IV"},
+    }
+    
+    users := []interface{}{
+        map[string]interface{}{"name": "John Doe", "email": "john@example.com", "role": "admin", "joinDate": "2020-01-15"},
+        map[string]interface{}{"name": "Jane Smith", "email": "jane@example.com", "role": "user", "joinDate": "2021-03-20"},
+    }
+    
+    products := []interface{}{
+        map[string]interface{}{"id": 1, "name": "Laptop", "price": 999.99, "description": "High-performance laptop"},
+        map[string]interface{}{"id": 2, "name": "Mouse", "price": 29.99, "description": "Wireless optical mouse"},
+    }
+    
+    // Transform data to HTML
+    albumLinks, err := transformView.TransformToHTML(albums, "album")
+    if err != nil {
+        fmt.Printf("Error transforming albums: %v\n", err)
+        return
+    }
+    fmt.Println("Album links generated:")
+    fmt.Println(albumLinks)
+    
+    userProfiles, err := transformView.TransformToHTML(users, "user")
+    if err != nil {
+        fmt.Printf("Error transforming users: %v\n", err)
+        return
+    }
+    fmt.Println("User profiles generated:")
+    fmt.Println(userProfiles)
+    
+    productCards, err := transformView.TransformToHTML(products, "product")
+    if err != nil {
+        fmt.Printf("Error transforming products: %v\n", err)
+        return
+    }
+    fmt.Println("Product cards generated:")
+    fmt.Println(productCards)
+}</code></pre>
+        </div>
+    </div>
+</div>
 			<p class="expamle"><span class="ex_title">Пример:</span> на входе преобразователя модель, содержащая имя альбома (album name) и имя артиста (artist name). На выходе - код
 				<code>&lt;a href="http://exapmle.com/music/album_name/artist_name"&gt;artist name&lt;/a&gt;</code> 
 			</p>			<p class="note">Использована иллюстрация с сайта <a href="../martin-fowler.html">Мартина Фаулера</a>.</p>			<p class="note"><noindex><a href="http://martinfowler.com/eaaCatalog/transformView.html">Источник</a></noindex></p>        </div>
@@ -54,5 +452,58 @@
 </script></div>
 <script src="http://mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
 <noscript><div><img src="http://mc.yandex.ru/watch/6876103" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter --></body>
+<!-- /Yandex.Metrika counter -->
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const codeSnippets = document.querySelectorAll('.code-snippet');
+    codeSnippets.forEach(function(snippet) {
+        const tabs = snippet.querySelectorAll('.code-snippet-tab');
+        const panels = snippet.querySelectorAll('.code-snippet-panel');
+        const copyButton = snippet.querySelector('.code-snippet-copy');
+
+        const defaultTab = snippet.querySelector('[data-language="javascript"]');
+        if (defaultTab) {
+            defaultTab.classList.add('active');
+            const defaultPanel = snippet.querySelector('.code-snippet-panel[data-language="javascript"]');
+            if (defaultPanel) {
+                defaultPanel.classList.add('active');
+            }
+        }
+
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const language = this.getAttribute('data-language');
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                const targetPanel = snippet.querySelector(`.code-snippet-panel[data-language="${language}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const activePanel = snippet.querySelector('.code-snippet-panel.active');
+                if (activePanel) {
+                    const codeText = activePanel.textContent;
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        setTimeout(function() {
+                            copyButton.textContent = 'Copy';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
 </html>
